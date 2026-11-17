@@ -73,6 +73,20 @@ textarea.t{min-height:70px;resize:vertical}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:16px;padding:20px;text-align:center;max-width:340px;width:100%}
 .hidden{display:none!important}
+.comp{border:1px solid var(--ln);border-radius:12px;padding:10px;margin-bottom:10px;background:#fffdfa}
+.comp .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);margin-bottom:6px}
+.comp .top button{border:0;background:none;color:var(--bad);font-size:13px}
+.mini{text-decoration:none;display:inline-block;border:1px solid var(--ln);background:#fff;border-radius:10px;padding:9px 10px;font-size:14px;font-weight:600;color:#333}
+.mini.or{background:var(--or);border-color:var(--or);color:#fff}
+.mini.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;color:#fff}
+.b-pend{background:#F28C28}.b-venc{background:#d64545}.b-ok{background:#1f9d55}
+.rcard{display:grid;grid-template-columns:1fr auto;gap:4px;padding:10px 0;border-top:1px solid var(--ln)}
+.rcard:first-child{border-top:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.stat{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:10px}
+.stat b{display:block;font-size:14px}.stat .n{font-size:24px;font-weight:800;color:var(--or2)}.stat span{font-size:12px;color:var(--mut)}
 .docbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .docbar .btn{flex:1}
 
@@ -123,6 +137,7 @@ textarea.t{min-height:70px;resize:vertical}
 <nav class="tabs">
   <button data-v="form" class="on">Nueva evaluación</button>
   <button data-v="hist">Historial</button>
+  <button data-v="rep">Reportes</button>
 </nav>
 
 <main>
@@ -144,6 +159,7 @@ textarea.t{min-height:70px;resize:vertical}
       <div><label class="f">Evaluador</label><input class="t" id="f-evaluador"></div>
       <div><label class="f">Modalidad</label><select class="t" id="f-modalidad"><option>Física</option><option>Virtual</option></select></div>
     </div>
+    <label class="f">Correo de la tienda</label><input class="t" id="f-correo" type="email" inputmode="email" autocomplete="off">
   </div>
 
   <div id="factores"></div>
@@ -159,6 +175,13 @@ textarea.t{min-height:70px;resize:vertical}
     <textarea class="t" id="f-accion" placeholder="Ej.: Productos sin precios, segmentar producto, limpieza profunda…"></textarea>
     <label class="f">Comentarios del evaluado</label>
     <textarea class="t" id="f-comentarios"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>11. Compromisos</h2>
+    <p class="desc">Qué se compromete a mejorar, quién lo hace y para cuándo se revisan los resultados.</p>
+    <div id="comps"></div>
+    <button class="btn sec" id="btnAddComp" style="width:100%">+ Agregar compromiso</button>
   </div>
 
   <div class="card">
@@ -179,7 +202,24 @@ textarea.t{min-height:70px;resize:vertical}
     <button class="btn sec" id="btnShare">📤 Compartir</button>
     <button class="btn gray" id="btnVolver">← Volver</button>
   </div>
+  <div class="card no-print" id="docActs"></div>
   <div id="doc"></div>
+</section>
+
+<!-- ============ REPORTES ============ -->
+<section id="view-rep" class="hidden">
+  <div class="card">
+    <h2>Resumen por tienda</h2>
+    <div class="stats" id="r-stats"></div>
+  </div>
+  <div class="card">
+    <h2>Compromisos</h2>
+    <div class="row2">
+      <div><label class="f">Tienda</label><select class="t" id="r-tienda"></select></div>
+      <div><label class="f">Estado</label><select class="t" id="r-estado"><option value="abiertos">Pendientes y vencidos</option><option value="venc">Solo vencidos</option><option value="ok">Cumplidos</option><option value="">Todos</option></select></div>
+    </div>
+    <div id="r-lista" style="margin-top:10px"></div>
+  </div>
 </section>
 
 <!-- ============ HISTORIAL ============ -->
@@ -1504,14 +1544,15 @@ const ANEXO=[
 ];
 const FIRMAS=[['evaluado','13. Firma del evaluado'],['jefe','14. Firma del Jefe de Área'],['evaluador','15. Firma del evaluador']];
 const ALL_ITEMS=SECCIONES.flatMap(s=>s.items.map(i=>({k:i[0],n:i[1],w:i[2]})));
-const DEF_CFG={evaluador:'David Rodríguez',tiendas:['9 de Octubre','Colón','Feria CCI','Llano Grande','Quicentro Sur','San Luis','Scala','Tienda Mabel']};
+const CORREOS={'9 de Octubre':'Orve9deoctubre1@mabel.com.ec','Colón':'Colon1@mabel.com.ec','Feria CCI':'cci1@mabel.com.ec','Llano Grande':'Llanogrande1@mabel.com.ec','Quicentro Sur':'quicentrosur1@mabel.com.ec','San Luis':'Sanluis1@mabel.com.ec','Scala':'scala1@mabel.com.ec','Tienda Ambato':'ambato1@mabel.com.ec','Tienda Mabel':'mabel1@mabel.com.ec'};
+const DEF_CFG={evaluador:'David Rodríguez',tiendas:Object.keys(CORREOS)};
 
 let CFG=DEF_CFG, INFO=null;
 let st=newState();
 let currentDoc=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function newState(){return{r:{},o:{},a:{},ao:{},firmas:{}}}
+function newState(){return{r:{},o:{},a:{},ao:{},firmas:{},comp:[]}}
 function toast(m,ms){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),ms||2500)}
 
 // ---------------- Render del formulario ----------------
@@ -1534,7 +1575,19 @@ function renderForm(){
   });
   document.querySelectorAll('canvas[data-sig]').forEach(setupSig);
   document.querySelectorAll('[data-clr]').forEach(b=>b.onclick=()=>{delete st.firmas[b.dataset.clr];const c=document.querySelector(`canvas[data-sig="${b.dataset.clr}"]`);c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display='';save()});
-  ['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios'].forEach(f=>{$('f-'+f).addEventListener('input',()=>{save();updNames()});$('f-'+f).addEventListener('change',save)});
+  ['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios','correo'].forEach(f=>{$('f-'+f).addEventListener('input',()=>{save();updNames()});$('f-'+f).addEventListener('change',save)});
+  $('f-tienda').addEventListener('change',()=>{$('f-correo').value=CORREOS[$('f-tienda').value]||'';save()});
+  $('btnAddComp').onclick=()=>{st.comp.push({texto:'',responsable:(($('f-nombres').value+' '+$('f-apellidos').value).trim()),fecha:''});renderComp();save()};
+}
+function renderComp(){
+  $('comps').innerHTML=st.comp.map((c,i)=>`<div class="comp" data-i="${i}">
+    <div class="top"><b>Compromiso ${i+1}</b><button data-del="${i}">Quitar</button></div>
+    <textarea class="t" data-f="texto" placeholder="Ej.: Colocar precios a todos los productos exhibidos" style="min-height:56px">${esc(c.texto)}</textarea>
+    <div class="row2"><div><label class="f">Responsable</label><input class="t" data-f="responsable" value="${esc(c.responsable)}"></div>
+    <div><label class="f">Fecha y hora de resultados</label><input class="t" type="datetime-local" data-f="fecha" value="${esc(c.fecha)}"></div></div></div>`).join('');
+  $('comps').querySelectorAll('.comp').forEach(el=>{const i=+el.dataset.i;
+    el.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=inp.onchange=()=>{st.comp[i][inp.dataset.f]=inp.value;save()});
+    el.querySelector('[data-del]').onclick=()=>{st.comp.splice(i,1);renderComp();save()};});
 }
 function paintItem(el){const p=el.dataset.p,k=el.dataset.k,v=st[p][k];el.querySelectorAll('.yn button').forEach(b=>b.classList.toggle('on',b.dataset.val===v));}
 function updNames(){
@@ -1567,17 +1620,18 @@ function calc(s){
 function update(){const c=calc(st);$('t-score').textContent=c.total+'%';$('t-cnt').textContent=c.n+'/'+ALL_ITEMS.length;$('t-prog').style.width=(c.n/ALL_ITEMS.length*100)+'%';save()}
 
 // ---------------- Borrador (para no perder datos) ----------------
-function readFields(){const d={};['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios'].forEach(f=>d[f]=$('f-'+f).value.trim());return d}
+function readFields(){const d={};['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios','correo'].forEach(f=>d[f]=$('f-'+f).value.trim());return d}
 function save(){try{localStorage.setItem('ev_draft',JSON.stringify({st,f:readFields()}))}catch(e){}}
 function loadDraft(){
   try{const d=JSON.parse(localStorage.getItem('ev_draft')||'null');if(!d)return;st=Object.assign(newState(),d.st);
     Object.entries(d.f||{}).forEach(([k,v])=>{if($('f-'+k)&&v)$('f-'+k).value=v});
     document.querySelectorAll('.item').forEach(el=>{paintItem(el);const p=el.dataset.p,ok=p==='r'?'o':'ao';el.querySelector('[data-obs]').value=st[ok][el.dataset.k]||''});
+    if(!Array.isArray(st.comp))st.comp=[];renderComp();
   }catch(e){}
 }
 function resetForm(){
   st=newState();localStorage.removeItem('ev_draft');
-  ['apellidos','nombres','cedula','accion','comentarios'].forEach(f=>$('f-'+f).value='');
+  ['apellidos','nombres','cedula','accion','comentarios','correo'].forEach(f=>$('f-'+f).value='');$('f-tienda').value='';renderComp();
   $('f-cargo').value='Responsable de tienda';$('f-evaluador').value=CFG.evaluador;
   document.querySelectorAll('.item').forEach(el=>{paintItem(el);el.querySelector('[data-obs]').value=''});
   document.querySelectorAll('canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
@@ -1594,6 +1648,9 @@ async function finalizar(){
   const c=calc(st);
   const faltan=ALL_ITEMS.filter(i=>!st.r[i.k]);
   if(faltan.length){toast('Falta calificar: '+faltan.map(i=>i.n).slice(0,3).join(', ')+(faltan.length>3?'…':''),4000);const el=document.querySelector(`.item[data-p="r"][data-k="${faltan[0].k}"]`);el&&el.scrollIntoView({behavior:'smooth',block:'center'});return}
+  const comps=st.comp.filter(x=>x.texto.trim());
+  const sinFecha=comps.findIndex(x=>!x.fecha);
+  if(sinFecha>=0){toast(`Ponga la fecha y hora de resultados del compromiso ${st.comp.indexOf(comps[sinFecha])+1}`,4000);$('comps').scrollIntoView({behavior:'smooth'});return}
   if(!confirm(`¿Finalizar la evaluación?\n\nTienda: ${f.tienda}\nEvaluado: ${f.nombres} ${f.apellidos}\nCalificación final: ${c.total}%\n\nSe registrará la fecha y hora exacta de este momento.`))return;
   toast('Obteniendo ubicación GPS…',8000);
   let ubic=await getUbicacion();
@@ -1604,7 +1661,8 @@ async function finalizar(){
   const id=`EV-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('')}`;
   const ev={id,fechaHora:now.toISOString(),zona:Intl.DateTimeFormat().resolvedOptions().timeZone,...f,
     respuestas:st.r,observaciones:st.o,anexo:st.a,anexoObs:st.ao,firmas:st.firmas,
-    calificacionFinal:c.total,anexoTotal:c.at,ubicacion:ubic,version:1};
+    calificacionFinal:c.total,anexoTotal:c.at,ubicacion:ubic,version:2,
+    compromisos:comps.map((x,i)=>({n:i+1,texto:x.texto.trim(),responsable:x.responsable.trim(),fecha:x.fecha,estado:'pendiente'}))};
   const ok=await guardarLocal(ev);
   if(!ok){toast('No se pudo guardar en el celular. Use «Compartir» para no perderla.',5000)}
   else toast('Evaluación guardada en el celular ✓ — recuerde enviarla a la PC',4000);
@@ -1652,7 +1710,7 @@ Tienda: ${ev.tienda}
 Evaluado: ${ev.nombres} ${ev.apellidos}
 Evaluador: ${ev.evaluador}
 Modalidad: ${ev.modalidad}
-Calificacion final: ${ev.calificacionFinal}%
+Calificacion final: ${ev.calificacionFinal}%${ev.compromisos&&ev.compromisos.length?'\nCompromisos: '+ev.compromisos.length:''}
 Ubicacion: ${ubicTxt(ev.ubicacion)}${ev.ubicacion&&!ev.ubicacion.error?'\nMapa: '+mapsURL(ev.ubicacion):''}`;
 }
 function docHTML(ev){
@@ -1688,6 +1746,8 @@ function docHTML(ev){
   </div>
 
   <div class="pb">${head}
+  ${(ev.compromisos&&ev.compromisos.length)?`<table style="margin-bottom:8px"><tr><th style="width:4%">#</th><th>11. COMPROMISOS</th><th style="width:22%">Responsable</th><th style="width:20%">Fecha y hora de resultados</th></tr>
+   ${ev.compromisos.map(x=>`<tr><td class="c">${x.n}</td><td>${esc(x.texto)}</td><td>${esc(x.responsable)}</td><td class="c">${fmtLocal(x.fecha)}</td></tr>`).join('')}</table>`:''}
   <table>
    <tr><th style="width:38%">ANEXO · 7.10.1 Técnicas de venta aplicando estándares: gestión de venta efectiva antes, durante y después</th><th style="width:7%">Deficiente<br>NO</th><th style="width:7%">Excelente<br>SI</th><th style="width:9%">% Cumpli&shy;miento</th><th style="width:9%">% Equiva&shy;lente</th><th>Observaciones</th></tr>
    ${anexo}
@@ -1698,7 +1758,91 @@ function docHTML(ev){
 }
 function fitDoc(){const pp=document.querySelector('#doc .paper');if(!pp)return;const w=$('doc').clientWidth-28;pp.style.zoom=w<680?(w/680).toFixed(3):'';}
 window.addEventListener('resize',fitDoc);
-function showDoc(ev){currentDoc=ev;$('doc').innerHTML=docHTML(ev);show('doc');fitDoc();window.scrollTo(0,0)}
+function fmtLocal(v){if(!v)return'';const d=new Date(v);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function correoDe(ev){return ev.correo||CORREOS[ev.tienda]||''}
+function utcCompact(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}
+function textoCorreo(ev){
+  const malos=ALL_ITEMS.filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n} (${i.w}%)${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
+  const anx=ANEXO.filter(a=>ev.anexo[a[0]]==='NO').map(a=>`- ${a[1]}${ev.anexoObs[a[0]]&&ev.anexoObs[a[0]]!=='S/N'?': '+ev.anexoObs[a[0]]:''}`);
+  const comps=(ev.compromisos||[]).map(x=>`${x.n}. ${x.texto}\n   Responsable: ${x.responsable||'-'} | Resultados: ${fmtLocal(x.fecha)}`);
+  return `Estimado/a responsable de la tienda ${ev.tienda}:
+
+Se comparte el resultado de la evaluación de desempeño realizada el ${fmtFecha(ev.fechaHora)} a las ${fmtHora(ev.fechaHora)}.
+
+Evaluado: ${ev.nombres} ${ev.apellidos}
+Evaluador: ${ev.evaluador}
+Modalidad: ${ev.modalidad}
+CALIFICACIÓN FINAL: ${ev.calificacionFinal}%
+Técnicas de venta (anexo 7.10.1): ${ev.anexoTotal}% de 12%
+
+ASPECTOS A MEJORAR:
+${malos.length?malos.join('\n'):'- Ninguno, ¡felicitaciones!'}
+${anx.length?'\nTécnicas de venta por reforzar:\n'+anx.join('\n')+'\n':''}
+ACCIÓN RECOMENDADA:
+${ev.accion||'-'}
+
+COMPROMISOS:
+${comps.length?comps.join('\n'):'- Sin compromisos registrados'}
+
+ID de evaluación: ${ev.id}
+
+Saludos,
+${ev.evaluador}`;
+}
+function mailtoEval(ev){
+  const asunto=`Evaluación de tienda ${ev.tienda} - ${fmtFecha(ev.fechaHora)} - ${ev.calificacionFinal}%`;
+  return `mailto:${encodeURIComponent(correoDe(ev)).replace(/%40/g,'@')}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoCorreo(ev))}`;
+}
+function rangoComp(x){const a=new Date(x.fecha);return [a,new Date(a.getTime()+30*60000)]}
+function detalleComp(ev,x){return `Compromiso de la evaluación del ${fmtFecha(ev.fechaHora)} (nota ${ev.calificacionFinal}%).\n\n${x.texto}\n\nResponsable: ${x.responsable||'-'}\nTienda: ${ev.tienda}\nEvaluador: ${ev.evaluador}\nID: ${ev.id}`}
+function gcalURL(ev,x){const [a,b]=rangoComp(x);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'+
+   '&text='+encodeURIComponent(`Revisar compromiso – ${ev.tienda}`)+'&dates='+utcCompact(a)+'/'+utcCompact(b)+
+   '&details='+encodeURIComponent(detalleComp(ev,x))+'&location='+encodeURIComponent('Tienda '+ev.tienda);}
+function teamsURL(ev,x){const [a,b]=rangoComp(x);
+  return 'https://teams.microsoft.com/l/meeting/new?subject='+encodeURIComponent(`Seguimiento de compromiso – ${ev.tienda}`)+
+   '&attendees='+encodeURIComponent(correoDe(ev))+'&startTime='+encodeURIComponent(a.toISOString())+'&endTime='+encodeURIComponent(b.toISOString())+
+   '&content='+encodeURIComponent(detalleComp(ev,x));}
+function estadoComp(x){if(x.estado==='cumplido')return'ok';return new Date(x.fecha)<new Date()?'venc':'pend'}
+const BADGE={pend:'<span class="badge b-pend">Pendiente</span>',venc:'<span class="badge b-venc">Vencido</span>',ok:'<span class="badge b-ok">Cumplido</span>'};
+function compBotones(ev,x){
+  return `<div class="acts"><a class="mini" href="${gcalURL(ev,x)}" target="_blank" rel="noopener">📅 Recordatorio</a>
+   <a class="mini" href="${teamsURL(ev,x)}" target="_blank" rel="noopener">👥 Reunión Teams</a>
+   <button class="mini ${x.estado==='cumplido'?'':'ok'}" data-cum="${ev.id}|${x.n}">${x.estado==='cumplido'?'↺ Reabrir':'✓ Cumplido'}</button></div>`;
+}
+async function toggleCumplido(key){
+  const [id,n]=key.split('|');const ev=(await idbAll()).find(e=>e.id===id);if(!ev)return;
+  const x=ev.compromisos.find(c=>String(c.n)===n);if(!x)return;
+  if(x.estado==='cumplido'){x.estado='pendiente';delete x.cumplidoEn}else{x.estado='cumplido';x.cumplidoEn=new Date().toISOString()}
+  await idbPut(ev);if(currentDoc&&currentDoc.id===id){currentDoc=ev;renderDocActs()}
+  if(!$('view-rep').classList.contains('hidden'))loadRep();toast(x.estado==='cumplido'?'Compromiso cumplido ✓':'Compromiso reabierto');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cum]');if(b)toggleCumplido(b.dataset.cum)});
+function renderDocActs(){
+  const ev=currentDoc;const c=correoDe(ev);
+  $('docActs').innerHTML=`<h2>Enviar y agendar</h2>
+   <a class="btn" style="display:block;text-align:center;text-decoration:none;margin:6px 0" href="${mailtoEval(ev)}">✉️ Enviar por correo a la tienda</a>
+   <p class="desc">Para: <b>${esc(c||'sin correo')}</b>. Se abre tu app de correo con todo escrito; solo toca Enviar. Para adjuntar el documento usa «📤 Compartir».</p>
+   ${(ev.compromisos||[]).map(x=>`<div class="comp"><div class="top"><b>Compromiso ${x.n}</b>${BADGE[estadoComp(x)]}</div>
+     <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Resultados: <b>${fmtLocal(x.fecha)}</b></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">Esta evaluación no tiene compromisos.</p>'}`;
+}
+function showDoc(ev){currentDoc=ev;$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
+
+// ---------------- Reportes ----------------
+async function loadRep(){
+  const all=(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
+  $('r-stats').innerHTML=CFG.tiendas.map(t=>{const L=all.filter(e=>e.tienda===t);if(!L.length)return'';
+    const prom=Math.round(L.reduce((x,e)=>x+e.calificacionFinal,0)/L.length);
+    const cs=L.flatMap(e=>e.compromisos||[]);const ab=cs.filter(x=>estadoComp(x)!=='ok').length,ve=cs.filter(x=>estadoComp(x)==='venc').length;
+    return `<div class="stat"><b>${esc(t)}</b><div class="n">${L[0].calificacionFinal}%</div><span>Última: ${fmtFecha(L[0].fechaHora)}<br>Promedio: ${prom}% · ${L.length} eval.<br>Compromisos abiertos: ${ab}${ve?` · <b style="color:#d64545">${ve} vencido(s)</b>`:''}</span></div>`}).join('')||'<p class="desc">Aún no hay evaluaciones en este dispositivo.</p>';
+  const ft=$('r-tienda').value,fe=$('r-estado').value;
+  const items=all.flatMap(ev=>(ev.compromisos||[]).map(x=>({ev,x,s:estadoComp(x)})))
+    .filter(o=>(!ft||o.ev.tienda===ft)&&(!fe||(fe==='abiertos'?o.s!=='ok':o.s===fe)))
+    .sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha));
+  $('r-lista').innerHTML=items.map(({ev,x,s})=>`<div class="comp"><div class="top"><b>${esc(ev.tienda)} · ${fmtLocal(x.fecha)}</b>${BADGE[s]}</div>
+     <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Evaluación ${fmtFecha(ev.fechaHora)} (${ev.calificacionFinal}%) · <a href="#" data-ver="${ev.id}">ver</a></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">No hay compromisos con este filtro.</p>';
+  $('r-lista').querySelectorAll('[data-ver]').forEach(a=>a.onclick=e=>{e.preventDefault();const ev=all.find(v=>v.id===a.dataset.ver);ev&&showDoc(ev)});
+}
 
 // ---------------- Historial ----------------
 let HIST=[];
@@ -1758,10 +1902,11 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 
 // ---------------- Navegación ----------------
 function show(v){
-  ['form','doc','hist'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  ['form','doc','hist','rep'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='doc'&&b.dataset.v==='hist'&&false)));
   $('totalbar').classList.toggle('hidden',v!=='form');
   if(v==='hist')loadHist();
+  if(v==='rep')loadRep();
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
@@ -1776,7 +1921,8 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
 (async function init(){
   $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+CFG.tiendas.map(t=>`<option>${esc(t)}</option>`).join('');
   $('h-tienda').innerHTML='<option value="">Todas las tiendas</option>'+CFG.tiendas.map(t=>`<option>${esc(t)}</option>`).join('');
-  renderForm();
+  $('r-tienda').innerHTML=$('h-tienda').innerHTML;$('r-tienda').onchange=$('r-estado').onchange=loadRep;
+  renderForm();renderComp();
   $('f-evaluador').value=CFG.evaluador;
   loadDraft();update();updNames();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
