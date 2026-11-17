@@ -111,7 +111,7 @@ textarea.t{min-height:70px;resize:vertical}
 .paper .firmas img{height:52px;max-width:100%;object-fit:contain;display:block;margin:0 auto}
 .paper .firmas .ln{border-top:1px solid #000;margin-top:2px;padding-top:3px}
 .paper .firmas .ph2{height:52px}
-.paper .pie{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:8px;align-items:stretch;break-inside:avoid}
+.paper .pie{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:8px;align-items:stretch;break-inside:avoid}
 .paper .qrbox{display:flex;gap:10px;align-items:center;border:1px solid #000;padding:6px}
 .paper .qrbox .qr svg{display:block}
 .paper .final{font-size:15px;font-weight:800}
@@ -130,7 +130,7 @@ textarea.t{min-height:70px;resize:vertical}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas</div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v3</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -1709,6 +1709,17 @@ function qrTexto(ev){
   if(u){d.la=u.lat;d.lo=u.lon;d.p=u.precision}else d.ue=(ev.ubicacion&&ev.ubicacion.error)||'no disponible';
   return APP_BASE+'verificar.html#'+b64url(JSON.stringify(d));
 }
+function mapaHTML(u,w,h){
+  if(!u||u.error)return'';const z=17,n=2**z;
+  const xt=(u.lon+180)/360*n, lr=u.lat*Math.PI/180, yt=(1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n;
+  const tx=Math.floor(xt),ty=Math.floor(yt),px=(xt-tx)*256,py=(yt-ty)*256;
+  let im='';for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)im+=`<img src="https://tile.openstreetmap.org/${z}/${tx+dx}/${ty+dy}.png" style="position:absolute;left:${(dx+1)*256}px;top:${(dy+1)*256}px;width:256px;height:256px" alt="">`;
+  const ox=w/2-(256+px),oy=h/2-(256+py);
+  return `<div style="position:relative;width:${w}px;height:${h}px;overflow:hidden;border:1px solid #000;background:#eee">
+   <div style="position:absolute;left:${ox}px;top:${oy}px;width:768px;height:768px">${im}</div>
+   <div style="position:absolute;left:${w/2-9}px;top:${h/2-24}px;font-size:22px;line-height:1">📍</div>
+   <div style="position:absolute;right:2px;bottom:1px;font-size:7px;background:rgba(255,255,255,.8);padding:0 2px">© OpenStreetMap</div></div>`;
+}
 function docHTML(ev){
   const X=(v,want)=>v===want?'X':'';
   const filas=SECCIONES.map(s=>`<tr class="sec"><td colspan="6"><b>${s.id}. ${esc(s.titulo)}:</b> ${esc(s.desc)}</td></tr>`+
@@ -1738,6 +1749,7 @@ function docHTML(ev){
     <table><tr><td><b>Fecha:</b> ${fmtFecha(ev.fechaHora)} &nbsp; <b>Hora:</b> ${fmtHora(ev.fechaHora)} &nbsp; <b>Modalidad:</b> ${esc(ev.modalidad)}<br><b>Ubicación GPS:</b> ${esc(ubicTxt(ev.ubicacion))}<br><b>ID:</b> ${esc(ev.id)}</td></tr>
     <tr><td style="height:58px;vertical-align:top"><b>Comentarios del evaluado:</b><br>${esc(ev.comentarios)}</td></tr></table>
    </div>
+   ${mapaHTML(ev.ubicacion,150,118)?`<div style="border:1px solid #000;padding:4px">${mapaHTML(ev.ubicacion,150,118)}</div>`:''}
    <div class="qrbox"><div class="qr">${window.qrSVG(qrTexto(ev),118)}</div><div style="font-size:8.5px;max-width:105px">Escanee con la cámara (Android o iPhone) para verificar fecha, hora exacta, ubicación y calificación.</div></div>
   </div>
 
@@ -1922,7 +1934,10 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
   $('f-evaluador').value=CFG.evaluador;
   loadDraft();update();updNames();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-  if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+  if('serviceWorker' in navigator&&location.protocol==='https:'){
+    let rec=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rec)return;rec=true;location.reload()});
+    navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});
+  }
 })();
 </script>
 </body>
