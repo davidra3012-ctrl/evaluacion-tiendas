@@ -1701,17 +1701,13 @@ function docStandalone(ev){
 }
 async function guardarLocal(ev){try{await idbPut(ev);return true}catch(e){return false}}
 // ---------------- Documento imprimible con QR ----------------
+const APP_BASE='https://davidra3012-ctrl.github.io/evaluacion-tiendas/app-online/';
+function b64url(str){const b=new TextEncoder().encode(str);let bin='';b.forEach(x=>bin+=String.fromCharCode(x));return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function qrTexto(ev){
-  return `WARENHAUS - EVALUACION RESPONSABLE DE TIENDA
-ID: ${ev.id}
-Fecha: ${fmtFecha(ev.fechaHora)}
-Hora: ${fmtHora(ev.fechaHora)}
-Tienda: ${ev.tienda}
-Evaluado: ${ev.nombres} ${ev.apellidos}
-Evaluador: ${ev.evaluador}
-Modalidad: ${ev.modalidad}
-Calificacion final: ${ev.calificacionFinal}%${ev.compromisos&&ev.compromisos.length?'\nCompromisos: '+ev.compromisos.length:''}
-Ubicacion: ${ubicTxt(ev.ubicacion)}${ev.ubicacion&&!ev.ubicacion.error?'\nMapa: '+mapsURL(ev.ubicacion):''}`;
+  const u=ev.ubicacion&&!ev.ubicacion.error?ev.ubicacion:null;
+  const d={id:ev.id,f:ev.fechaHora,t:ev.tienda,e:`${ev.nombres} ${ev.apellidos}`.trim(),v:ev.evaluador,m:ev.modalidad,n:ev.calificacionFinal,a:ev.anexoTotal,c:(ev.compromisos||[]).length};
+  if(u){d.la=u.lat;d.lo=u.lon;d.p=u.precision}else d.ue=(ev.ubicacion&&ev.ubicacion.error)||'no disponible';
+  return APP_BASE+'verificar.html#'+b64url(JSON.stringify(d));
 }
 function docHTML(ev){
   const X=(v,want)=>v===want?'X':'';
@@ -1742,7 +1738,7 @@ function docHTML(ev){
     <table><tr><td><b>Fecha:</b> ${fmtFecha(ev.fechaHora)} &nbsp; <b>Hora:</b> ${fmtHora(ev.fechaHora)} &nbsp; <b>Modalidad:</b> ${esc(ev.modalidad)}<br><b>Ubicación GPS:</b> ${esc(ubicTxt(ev.ubicacion))}<br><b>ID:</b> ${esc(ev.id)}</td></tr>
     <tr><td style="height:58px;vertical-align:top"><b>Comentarios del evaluado:</b><br>${esc(ev.comentarios)}</td></tr></table>
    </div>
-   <div class="qrbox"><div class="qr">${window.qrSVG(qrTexto(ev),118)}</div><div style="font-size:8.5px;max-width:105px">Escanee para verificar fecha, hora exacta, ubicación y calificación.</div></div>
+   <div class="qrbox"><div class="qr">${window.qrSVG(qrTexto(ev),118)}</div><div style="font-size:8.5px;max-width:105px">Escanee con la cámara (Android o iPhone) para verificar fecha, hora exacta, ubicación y calificación.</div></div>
   </div>
 
   <div class="pb">${head}
