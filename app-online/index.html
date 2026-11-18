@@ -73,6 +73,10 @@ textarea.t{min-height:70px;resize:vertical}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:16px;padding:20px;text-align:center;max-width:340px;width:100%}
 .hidden{display:none!important}
+body.bloq header.top,body.bloq nav.tabs,body.bloq main,body.bloq .totalbar{visibility:hidden}
+#mNube{z-index:99}
+body.bloq #mNube{background:transparent}
+#login.soloFondo .box{display:none}
 #login{position:fixed;inset:0;z-index:95;background:var(--or);display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top))}
 #login .box{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
 #login .lg{font-size:30px;font-weight:800;color:var(--or2);text-transform:lowercase;text-align:center}
@@ -160,7 +164,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v9</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v10</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -386,7 +390,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <label class="f">Contraseña</label><input class="t" id="lgP" type="password" autocomplete="current-password">
   <p id="lgErr" style="color:#d64545;font-size:13px;min-height:18px"></p>
   <button class="btn" id="lgOk" style="width:100%">Entrar</button>
-  <a href="#" id="lgAdmin" style="color:#aaa;font-size:12px;margin-top:18px">Acceso técnico del administrador</a>
+  <a href="#" id="lgAdmin" style="margin-top:16px">Acceso administrador</a>
 </div></div>
 <div class="modal" id="mUser"><div class="box wide" style="max-height:92vh;overflow:auto">
   <h3 style="margin-top:0" id="usTit">Nuevo usuario</h3>
@@ -1680,12 +1684,12 @@ const ANEXO=[
 ];
 const FIRMAS=[['evaluado','13. Firma del evaluado'],['jefe','14. Firma del Jefe de Área'],['evaluador','15. Firma del evaluador']];
 const ALL_ITEMS=SECCIONES.flatMap(s=>s.items.map(i=>({k:i[0],n:i[1],w:i[2]})));
-const CORREOS={'9 de Octubre':'Orve9deoctubre1@mabel.com.ec','Colón':'Colon1@mabel.com.ec','Feria CCI':'cci1@mabel.com.ec','Llano Grande':'Llanogrande1@mabel.com.ec','Quicentro Sur':'quicentrosur1@mabel.com.ec','San Luis':'Sanluis1@mabel.com.ec','Scala':'scala1@mabel.com.ec','Tienda Ambato':'ambato1@mabel.com.ec','Tienda Mabel':'mabel1@mabel.com.ec'};
-const DEF_CFG={evaluador:'David Rodríguez',tiendas:Object.keys(CORREOS)};
+const CORREOS={};
+const DEF_CFG={evaluador:'',tiendas:[]};
 // Datos maestros: tiendas, directores y personal. Se guardan en el dispositivo y en la nube (config/configuracion.json).
 const slug=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const nid=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-let CONF={tiendas:Object.entries(CORREOS).map(([n,c])=>({id:'t-'+slug(n),nombre:n,correo:c,upd:0})),directores:[],personas:[]};
+let CONF={tiendas:[],directores:[],personas:[]};
 let CONF_SHA=null,CONF_PEND=false;
 const activos=k=>(CONF[k]||[]).filter(x=>!x.del);
 const tiendasAct=()=>activos('tiendas').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
@@ -2168,11 +2172,11 @@ async function probarToken(t){
   catch(e){setTok(old);return'Sin conexión a internet'}
 }
 $('btnNubeCfg').onclick=()=>{$('tokIn').value='';$('tokMsg').textContent=getTok()?'Ya hay una clave guardada. Pegue otra para reemplazarla.':'';$('mNube').classList.add('show')};
-$('tokCancel').onclick=()=>{$('mNube').classList.remove('show');if(!getTok())mostrarLogin(true)};
+$('tokCancel').onclick=()=>{$('mNube').classList.remove('show');$('login').classList.remove('soloFondo')};
 $('tokOk').onclick=async()=>{const t=$('tokIn').value.trim();if(!t){$('tokMsg').textContent='Pegue la clave';return}
   $('tokMsg').textContent='Probando…';const err=await probarToken(t);
   if(err){$('tokMsg').innerHTML='<span style="color:#d64545">'+esc(err)+'</span>';return}
-  $('mNube').classList.remove('show');const s=getSes();if(s&&s.rol!=='admin')setSes(null);aplicarRol();toast('Nube conectada ✓');sincronizar();if(!$('view-aj').classList.contains('hidden')&&ROL()==='admin')pintarUsuarios();};
+  $('mNube').classList.remove('show');$('login').classList.remove('soloFondo');mostrarLogin(false);const s=getSes();if(s&&s.rol!=='admin')setSes(null);aplicarRol();toast('Nube conectada ✓');sincronizar();if(!$('view-aj').classList.contains('hidden')&&ROL()==='admin')pintarUsuarios();};
 $('btnSync').onclick=()=>sincronizar();
 $('btnImportar').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.multiple=true;
   i.onchange=async()=>{let n=0;const local=await idbAll();
@@ -2348,7 +2352,7 @@ $('usCancel').onclick=()=>$('mUser').classList.remove('show');
 $('btnNewUs').onclick=nuevoUsuario;
 document.addEventListener('click',e=>{const a=e.target.closest('[data-ued]'),d=e.target.closest('[data-udel]');if(a)editarUsuario(a.dataset.ued);if(d)borrarUsuario(d.dataset.udel)});
 // ---- Login ----
-function mostrarLogin(v){$('login').classList.toggle('hidden',!v);if(v){$('lgErr').textContent='';setTimeout(()=>$('lgU').focus(),100)}}
+function mostrarLogin(v){$('login').classList.toggle('hidden',!v);document.body.classList.toggle('bloq',!!v);if(v){$('lgErr').textContent='';setTimeout(()=>$('lgU').focus(),100)}}
 $('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP').value;if(!u||!p){$('lgErr').textContent='Escriba usuario y contraseña';return}
   $('lgErr').textContent='Entrando…';await cargarUsuarios();const x=USUARIOS.find(o=>o.usuario===u&&!o.del);
   if(!x||!x.cred){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
@@ -2357,7 +2361,7 @@ $('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP
   try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local')}catch(e){}
   $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();toast('Bienvenido/a, '+x.nombre);sincronizar();};
 $('lgP').onkeydown=e=>{if(e.key==='Enter')$('lgOk').click()};
-$('lgAdmin').onclick=e=>{e.preventDefault();mostrarLogin(false);show('aj');$('btnNubeCfg').click()};
+$('lgAdmin').onclick=e=>{e.preventDefault();$('login').classList.add('soloFondo');$('tokIn').value='';$('tokMsg').textContent='';$('mNube').classList.add('show')};
 $('btnLogin').onclick=()=>mostrarLogin(true);
 async function cerrarSesion(forzar){const pend=(await idbAll()).filter(e=>!e._sync).length;
   if(!forzar&&!confirm(pend?`Hay ${pend} evaluación(es) sin subir a la nube que se perderán.\n\n¿Cerrar sesión de todos modos?`:'¿Cerrar sesión en este dispositivo?'))return;
