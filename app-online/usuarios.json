@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-18T01:17:18.277Z",
+ "actualizado": "2026-11-18T21:36:25.814Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -13,6 +13,21 @@
     "iv": "RcnS1wjnSzophjvn",
     "iter": 310000,
     "ct": "1gDbJAxvP3b+lb7osl5IxHoWfsgLYI7rjlvuvY9HpNta3QohKudC/DAtvRfqAP6dRXym6NBMvx8neMb+WgxTlqglPmBwcNVQ1vLZfeS3PkCare6AVyKkk2jx3QhhUHcRG32c6uwAF5CVfk8Zlg=="
+   }
+  },
+  {
+   "usuario": "pilarcarlosama",
+   "nombre": "PILAR CARLOSAMA",
+   "rol": "responsable",
+   "tiendas": [
+    "Scala"
+   ],
+   "upd": 1795037785696,
+   "cred": {
+    "salt": "8do+zDkJHmB7AlK6WPB88Q==",
+    "iv": "7tXXad8ZXsjeRGU3",
+    "iter": 310000,
+    "ct": "AHTnVNJu7fAMfxZksSryGci918mGSXqzBFvOnws5H4B29GFb4XHem14TpgjpDl/VXZ6n5d90AFJKOJ4jcUzXQMUJ5XrpPewo9dtMtXJheW6eQsv7GIZMBRoj7ESRVbZpHvIsD+n/fXCYTcn6RQ=="
    }
   }
  ]
