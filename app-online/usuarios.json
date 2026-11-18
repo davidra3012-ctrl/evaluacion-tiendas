@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "actualizado": "2026-11-18T01:17:18.277Z",
+ "usuarios": [
+  {
+   "usuario": "davidrodriguez",
+   "nombre": "DAVIDRODRIGUEZ",
+   "rol": "admin",
+   "tiendas": [],
+   "upd": 1794964638130,
+   "cred": {
+    "salt": "Lw0uz/b8H1rBtSV/K+sMnQ==",
+    "iv": "RcnS1wjnSzophjvn",
+    "iter": 310000,
+    "ct": "1gDbJAxvP3b+lb7osl5IxHoWfsgLYI7rjlvuvY9HpNta3QohKudC/DAtvRfqAP6dRXym6NBMvx8neMb+WgxTlqglPmBwcNVQ1vLZfeS3PkCare6AVyKkk2jx3QhhUHcRG32c6uwAF5CVfk8Zlg=="
+   }
+  }
+ ]
+}
