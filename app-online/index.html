@@ -154,7 +154,8 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 @media print{
   @page{size:A4;margin:9mm}
   body{background:#fff}
-  .no-print,header.top,nav.tabs,.totalbar,.docbar,.toast{display:none!important}
+  .no-print,header.top,nav.tabs,.totalbar,.docbar,.toast,#login,.modal{display:none!important}
+  body.bloq main{visibility:visible}
   main{padding:0;max-width:none}
   #doc{padding:0;border-radius:0;overflow:visible}
   .paper{min-width:0;zoom:1!important}
@@ -164,7 +165,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v10</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v11</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -179,6 +180,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <main>
 <!-- ============ FORMULARIO ============ -->
 <section id="view-form">
+  <div class="card no-print modoEval"><h2>Evaluar a</h2><div class="yn" style="margin-top:4px"><button class="si" data-modo="form">👔 Responsable de tienda</button><button class="si" data-modo="colab">🧑‍💼 Colaborador</button></div></div>
   <div class="card">
     <h2>Datos de identificación</h2>
     <label class="f">Persona evaluada</label>
@@ -231,6 +233,62 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <div class="card no-print" style="text-align:center">
     <button class="btn gray" id="btnLimpiar">Borrar formulario</button>
   </div>
+</section>
+
+<!-- ============ EVALUACIÓN DE COLABORADOR ============ -->
+<section id="view-colab" class="hidden">
+  <div class="card no-print modoEval"><h2>Evaluar a</h2><div class="yn" style="margin-top:4px"><button class="si" data-modo="form">👔 Responsable de tienda</button><button class="si" data-modo="colab">🧑‍💼 Colaborador</button></div></div>
+  <div class="card">
+    <h2>Datos del colaborador</h2>
+    <label class="f">Tienda *</label><select class="t" id="c-f-tienda"></select>
+    <label class="f">Colaborador *</label>
+    <button class="btn sec pbtn" id="btnPickC" type="button">🔍 Buscar colaborador</button>
+    <div class="row2">
+      <div><label class="f">Apellidos *</label><input class="t" id="c-f-apellidos" autocomplete="off"></div>
+      <div><label class="f">Nombres *</label><input class="t" id="c-f-nombres" autocomplete="off"></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">Cédula</label><input class="t" id="c-f-cedula" inputmode="numeric" autocomplete="off"></div>
+      <div><label class="f">Cargo</label><input class="t" id="c-f-cargo" value="Vendedor/a"></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">Sección o área a cargo</label><input class="t" id="c-f-seccion" placeholder="Ej.: Ollas y sartenes" autocomplete="off"></div>
+      <div><label class="f">Período evaluado</label><input class="t" id="c-f-periodo" type="month"></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">Evaluador (responsable)</label><input class="t" id="c-f-evaluador"></div>
+      <div><label class="f">Modalidad</label><select class="t" id="c-f-modalidad"><option>Física</option><option>Virtual</option></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>C1 RESULTADOS COMERCIALES <span class="w" style="font-size:12px;background:#fdeedd;color:var(--or2);padding:3px 8px;border-radius:20px">25%</span></h2>
+    <p class="desc">Presupuesto de ventas del período y venta real del colaborador. El puntaje es proporcional al cumplimiento (máximo 25% al llegar al 100%).</p>
+    <div class="row2">
+      <div><label class="f">Presupuesto de ventas ($)</label><input class="t" id="c-f-pres" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+      <div><label class="f">Venta real ($)</label><input class="t" id="c-f-venta" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+    </div>
+    <div id="c-ventas-res" style="margin-top:10px;font-size:15px"></div>
+  </div>
+  <div id="c-factores"></div>
+  <div class="card">
+    <h2>Acción recomendada</h2>
+    <textarea class="t" id="c-f-accion" placeholder="Ej.: Reforzar reposición diaria, revisar precios de la sección…"></textarea>
+    <label class="f">Comentarios del colaborador</label>
+    <textarea class="t" id="c-f-comentarios"></textarea>
+  </div>
+  <div class="card">
+    <h2>Compromisos</h2>
+    <p class="desc">Qué se compromete a mejorar y para cuándo se revisan los resultados.</p>
+    <div id="c-comps"></div>
+    <button class="btn sec" id="btnAddCompC" style="width:100%">+ Agregar compromiso</button>
+  </div>
+  <div class="card">
+    <h2>Firmas</h2>
+    <p class="desc">Firme con el dedo dentro del recuadro.</p>
+    <label class="f">Firma del colaborador</label><div class="sigwrap"><canvas data-sig="c:colab"></canvas><div class="ph">Firme aquí</div></div><div class="sigbar"><span id="c-sn-colab"></span><button data-clrc="c:colab">Borrar firma</button></div>
+    <label class="f">Firma del responsable de tienda</label><div class="sigwrap"><canvas data-sig="c:resp"></canvas><div class="ph">Firme aquí</div></div><div class="sigbar"><span id="c-sn-resp"></span><button data-clrc="c:resp">Borrar firma</button></div>
+  </div>
+  <div class="card no-print" style="text-align:center"><button class="btn gray" id="btnLimpiarC">Borrar formulario</button></div>
 </section>
 
 <!-- ============ DOCUMENTO ============ -->
@@ -300,6 +358,14 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <p class="desc">Se guarda en este dispositivo y aparece en cada evaluación que hagas aquí.</p>
     <input class="t" id="aj-evaluador" autocomplete="off">
   </div>
+  <div class="card" id="cardColab">
+    <h2>🧑‍💼 Colaboradores de tienda</h2>
+    <p class="desc">Personal que evalúan los responsables de tienda.</p>
+    <div class="srch"><span>🔍</span><input id="aj-cq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
+    <select class="t" id="aj-ct" style="margin-top:8px"></select>
+    <div id="aj-colab" style="margin-top:6px"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewCol">+ Nuevo colaborador</button>
+  </div>
   <div class="card" id="cardPersonal">
     <h2>Personal evaluado</h2>
     <div class="srch"><span>🔍</span><input id="aj-pq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
@@ -332,6 +398,11 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </section>
 </main>
 
+<div class="totalbar no-print hidden" id="totalbarC">
+  <div><div class="sc" id="tc-score">0%</div><div class="lb"><span id="tc-cnt">0/0</span> calificados</div><div class="prog"><i id="tc-prog"></i></div></div>
+  <div class="sp"></div>
+  <button class="btn" id="btnFinalizarC">Finalizar ✓</button>
+</div>
 <div class="totalbar no-print" id="totalbar">
   <div><div class="sc" id="t-score">0%</div><div class="lb"><span id="t-cnt">0/16</span> calificados</div><div class="prog"><i id="t-prog"></i></div></div>
   <div class="sp"></div>
@@ -1689,14 +1760,14 @@ const DEF_CFG={evaluador:'',tiendas:[]};
 // Datos maestros: tiendas, directores y personal. Se guardan en el dispositivo y en la nube (config/configuracion.json).
 const slug=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const nid=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-let CONF={tiendas:[],directores:[],personas:[]};
+let CONF={tiendas:[],directores:[],personas:[],colaboradores:[]};
 let CONF_SHA=null,CONF_PEND=false;
 const activos=k=>(CONF[k]||[]).filter(x=>!x.del);
 const tiendasAct=()=>activos('tiendas').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
 function correoTienda(n){const t=activos('tiendas').find(x=>x.nombre===n);return t?t.correo:(CORREOS[n]||'')}
-function mergeConf(a,b){const r={};for(const k of ['tiendas','directores','personas']){const m=new Map();
+function mergeConf(a,b){const r={};for(const k of ['tiendas','directores','personas','colaboradores']){const m=new Map();
   for(const x of [...(a[k]||[]),...(b[k]||[])]){const o=m.get(x.id);if(!o||(x.upd||0)>(o.upd||0))m.set(x.id,x)}r[k]=[...m.values()]}return r}
-const confKey=c=>JSON.stringify(['tiendas','directores','personas'].map(k=>(c[k]||[]).map(x=>x.id+':'+(x.upd||0)).sort()));
+const confKey=c=>JSON.stringify(['tiendas','directores','personas','colaboradores'].map(k=>(c[k]||[]).map(x=>x.id+':'+(x.upd||0)).sort()));
 async function cargarConf(){try{const c=await kvGet('conf');if(c){CONF=mergeConf(CONF,c.data);CONF_SHA=c.sha||null;CONF_PEND=!!c.pend}}catch(e){}}
 async function guardarConf(pend){if(pend)CONF_PEND=true;try{await kvSet('conf',{data:CONF,sha:CONF_SHA,pend:CONF_PEND})}catch(e){}}
 function getEvaluador(){const s=getSes();try{return localStorage.getItem('ev_evaluador')||(s&&s.nombre)||CFG.evaluador}catch(e){return CFG.evaluador}}
@@ -1722,13 +1793,13 @@ function renderForm(){
   $('factores').innerHTML=SECCIONES.map(s=>`<div class="card"><h2>${s.id} ${esc(s.titulo)}</h2><p class="desc">${esc(s.desc)}</p>${s.items.map(i=>itemHTML('r',i[0],i[1],'',i[2])).join('')}</div>`).join('');
   $('anexo').innerHTML=ANEXO.map(a=>itemHTML('a',a[0],a[1],a[2],a[3])).join('');
   $('firmas').innerHTML=FIRMAS.map(f=>`<label class="f">${f[1]}</label><div class="sigwrap"><canvas data-sig="${f[0]}"></canvas><div class="ph">Firme aquí</div></div><div class="sigbar"><span id="sn-${f[0]}"></span><button data-clr="${f[0]}">Borrar firma</button></div>`).join('');
-  document.querySelectorAll('.item').forEach(el=>{
+  document.querySelectorAll('#view-form .item').forEach(el=>{
     const k=el.dataset.k,p=el.dataset.p,obsKey=p==='r'?'o':'ao';
     el.querySelectorAll('.yn button').forEach(b=>b.onclick=()=>{st[p][k]=st[p][k]===b.dataset.val?undefined:b.dataset.val;if(st[p][k]===undefined)delete st[p][k];paintItem(el);update();});
     const inp=el.querySelector('[data-obs]');inp.oninput=()=>{st[obsKey][k]=inp.value;save()};
     el.querySelector('[data-sn]').onclick=()=>{inp.value='S/N';st[obsKey][k]='S/N';save()};
   });
-  document.querySelectorAll('canvas[data-sig]').forEach(setupSig);
+  document.querySelectorAll('#view-form canvas[data-sig]').forEach(setupSig);
   document.querySelectorAll('[data-clr]').forEach(b=>b.onclick=()=>{delete st.firmas[b.dataset.clr];const c=document.querySelector(`canvas[data-sig="${b.dataset.clr}"]`);c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display='';save()});
   ['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios','correo'].forEach(f=>{$('f-'+f).addEventListener('input',()=>{save();updNames()});$('f-'+f).addEventListener('change',save)});
   $('f-tienda').addEventListener('change',()=>{$('f-correo').value=correoTienda($('f-tienda').value);save()});
@@ -1753,13 +1824,13 @@ function updNames(){
 
 // ---------------- Firmas táctiles ----------------
 function setupSig(c){
-  const k=c.dataset.sig,ctx=c.getContext('2d');let drawing=false,last=null;
-  function size(){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;if(!r.width)return;const old=st.firmas[k];c.width=r.width*d;c.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#1a2a6c';if(old)drawImg(c,old);}
+  const k=c.dataset.sig,ctx=c.getContext('2d');let drawing=false,last=null;const S=()=>k.startsWith('c:')?stC:st,SV=()=>k.startsWith('c:')?saveC():save();
+  function size(){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;if(!r.width)return;const old=S().firmas[k];c.width=r.width*d;c.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#1a2a6c';if(old)drawImg(c,old);}
   c._resize=size;
   const pos=e=>{const r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
   c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);drawing=true;last=pos(e);ctx.beginPath();ctx.arc(last.x,last.y,1,0,7);ctx.fillStyle='#1a2a6c';ctx.fill();c.parentNode.querySelector('.ph').style.display='none'});
   c.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p});
-  const end=()=>{if(!drawing)return;drawing=false;st.firmas[k]=c.toDataURL('image/png');save()};
+  const end=()=>{if(!drawing)return;drawing=false;S().firmas[k]=c.toDataURL('image/png');SV()};
   c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
   setTimeout(size,30);
 }
@@ -1781,7 +1852,7 @@ function save(){try{localStorage.setItem('ev_draft',JSON.stringify({st,f:readFie
 function loadDraft(){
   try{const d=JSON.parse(localStorage.getItem('ev_draft')||'null');if(!d)return;st=Object.assign(newState(),d.st);
     Object.entries(d.f||{}).forEach(([k,v])=>{if($('f-'+k)&&v)$('f-'+k).value=v});
-    document.querySelectorAll('.item').forEach(el=>{paintItem(el);const p=el.dataset.p,ok=p==='r'?'o':'ao';el.querySelector('[data-obs]').value=st[ok][el.dataset.k]||''});
+    document.querySelectorAll('#view-form .item').forEach(el=>{paintItem(el);const p=el.dataset.p,ok=p==='r'?'o':'ao';el.querySelector('[data-obs]').value=st[ok][el.dataset.k]||''});
     if(!Array.isArray(st.comp))st.comp=[];renderComp();
   }catch(e){}
 }
@@ -1789,8 +1860,8 @@ function resetForm(){
   st=newState();localStorage.removeItem('ev_draft');
   ['apellidos','nombres','cedula','accion','comentarios','correo'].forEach(f=>$('f-'+f).value='');$('f-tienda').value='';renderComp();
   $('f-cargo').value='Responsable de tienda';$('f-evaluador').value=getEvaluador();
-  document.querySelectorAll('.item').forEach(el=>{paintItem(el);el.querySelector('[data-obs]').value=''});
-  document.querySelectorAll('canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
+  document.querySelectorAll('#view-form .item').forEach(el=>{paintItem(el);el.querySelector('[data-obs]').value=''});
+  document.querySelectorAll('#view-form canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
   update();updNames();window.scrollTo(0,0);
 }
 
@@ -1845,7 +1916,7 @@ async function kvGet(k){const d=await idb();return new Promise(res=>{const q=d.t
 async function kvSet(k,v){const d=await idb();return new Promise(res=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>res()})}
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const limpio=t=>String(t||'Sin tienda').replace(/[\\/:*?"<>|]/g,'').trim()||'Sin tienda';
-function nombreBase(ev){const d=new Date(ev.fechaHora);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${DIAS[d.getDay()]}_${limpio(ev.tienda)}_${pad(d.getHours())}h${pad(d.getMinutes())}m${pad(d.getSeconds())}s`}
+function nombreBase(ev){const d=new Date(ev.fechaHora);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${DIAS[d.getDay()]}_${ev.tipo==='colaborador'?limpio((ev.apellidos+' '+ev.nombres).trim()):limpio(ev.tienda)}_${pad(d.getHours())}h${pad(d.getMinutes())}m${pad(d.getSeconds())}s`}
 function descargar(nombre,contenido,tipo){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([contenido],{type:tipo}));a.download=nombre;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 async function compartirArchivo(nombre,contenido,tipo,titulo){
   try{const f=new File([contenido],nombre,{type:tipo});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:titulo});return true}}catch(e){if(e&&e.name==='AbortError')return false}
@@ -1861,7 +1932,7 @@ const APP_BASE='https://davidra3012-ctrl.github.io/evaluacion-tiendas/app-online
 function b64url(str){const b=new TextEncoder().encode(str);let bin='';b.forEach(x=>bin+=String.fromCharCode(x));return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function qrTexto(ev){
   const u=ev.ubicacion&&!ev.ubicacion.error?ev.ubicacion:null;
-  const d={id:ev.id,f:ev.fechaHora,t:ev.tienda,e:`${ev.nombres} ${ev.apellidos}`.trim(),v:ev.evaluador,m:ev.modalidad,n:ev.calificacionFinal,a:ev.anexoTotal,c:(ev.compromisos||[]).length};
+  const d={k:ev.tipo==='colaborador'?'c':undefined,s:ev.seccion||undefined,vt:ev.ventas?ev.ventas.cumplimiento:undefined,id:ev.id,f:ev.fechaHora,t:ev.tienda,e:`${ev.nombres} ${ev.apellidos}`.trim(),v:ev.evaluador,m:ev.modalidad,n:ev.calificacionFinal,a:ev.anexoTotal,c:(ev.compromisos||[]).length};
   if(u){d.la=u.lat;d.lo=u.lon;d.p=u.precision}else d.ue=(ev.ubicacion&&ev.ubicacion.error)||'no disponible';
   return APP_BASE+'verificar.html#'+b64url(JSON.stringify(d));
 }
@@ -1877,6 +1948,7 @@ function mapaHTML(u,w,h){
    <div style="position:absolute;right:2px;bottom:1px;font-size:7px;background:rgba(255,255,255,.8);padding:0 2px">© OpenStreetMap</div></div>`;
 }
 function docHTML(ev){
+  if(ev.tipo==='colaborador')return docHTMLColab(ev);
   const X=(v,want)=>v===want?'X':'';
   const filas=SECCIONES.map(s=>`<tr class="sec"><td colspan="6"><b>${s.id}. ${esc(s.titulo)}:</b> ${esc(s.desc)}</td></tr>`+
     s.items.map(i=>{const v=ev.respuestas[i[0]];return `<tr><td class="r">${esc(i[1].toUpperCase())}</td><td class="x">${X(v,'NO')}</td><td class="x">${X(v,'SI')}</td><td class="c">${v==='SI'?i[2]:0}%</td><td class="c">${i[2]}%</td><td>${esc(ev.observaciones[i[0]]||'')}</td></tr>`}).join('')).join('');
@@ -1955,6 +2027,7 @@ Saludos,
 ${ev.evaluador}`;
 }
 function mailtoEval(ev){
+  if(ev.tipo==='colaborador')return `mailto:${encodeURIComponent(correoDe(ev)).replace(/%40/g,'@')}?subject=${encodeURIComponent(`Evaluación de colaborador ${ev.nombres} ${ev.apellidos} - ${ev.tienda} - ${ev.calificacionFinal}%`)}&body=${encodeURIComponent(textoCorreoColab(ev))}`;
   const asunto=`Evaluación de tienda ${ev.tienda} - ${fmtFecha(ev.fechaHora)} - ${ev.calificacionFinal}%`;
   const cc=ccDirectores();
   return `mailto:${encodeURIComponent(correoDe(ev)).replace(/%40/g,'@')}?${cc.length?'cc='+cc.map(x=>encodeURIComponent(x).replace(/%40/g,'@')).join(',')+'&':''}subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoCorreo(ev))}`;
@@ -1989,7 +2062,7 @@ function renderDocActs(){
   const ev=currentDoc;const c=correoDe(ev);
   $('docActs').innerHTML=`<h2>Enviar y agendar</h2>
    <a class="btn" style="display:block;text-align:center;text-decoration:none;margin:6px 0" href="${mailtoEval(ev)}">✉️ Enviar por correo a la tienda</a>
-   <p class="desc">Para: <b>${esc(c||'sin correo')}</b>${ccDirectores().length?' · CC: '+esc(ccDirectores().join(', ')):''}. Se abre tu app de correo con todo escrito; solo toca Enviar. Para adjuntar el documento usa «📤 Compartir».</p>
+   <p class="desc">Para: <b>${esc(c||'sin correo')}</b>${ev.tipo!=='colaborador'&&ccDirectores().length?' · CC: '+esc(ccDirectores().join(', ')):''}. Se abre tu app de correo con todo escrito; solo toca Enviar. Para adjuntar el documento usa «📤 Compartir».</p>
    ${(ev.compromisos||[]).map(x=>`<div class="comp"><div class="top"><b>Compromiso ${x.n}</b>${BADGE[estadoComp(x)]}</div>
      <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Resultados: <b>${fmtLocal(x.fecha)}</b></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">Esta evaluación no tiene compromisos.</p>'}`;
 }
@@ -2013,11 +2086,12 @@ function lineaSVG(P){ // P=[{n:'2026-11',v:..,c:..}]
 }
 function pintarTablero(all){
   const ft=$('r-tienda').value,dias=+$('r-per').value;const desde=dias?Date.now()-dias*864e5:0;
-  const L=all.filter(e=>(!ft||e.tienda===ft)&&new Date(e.fechaHora).getTime()>=desde);
-  if(!L.length){$('r-dash').innerHTML='<p class="desc">No hay evaluaciones en este período.</p>';return}
+  const LL=all.filter(e=>(!ft||e.tienda===ft)&&new Date(e.fechaHora).getTime()>=desde);
+  const L=LL.filter(e=>e.tipo!=='colaborador'),Lc=LL.filter(e=>e.tipo==='colaborador');
+  if(!L.length){$('r-dash').innerHTML=LL.length?tableroColab(Lc,ft):'<p class="desc">No hay evaluaciones en este período.</p>';return}
   const cs=L.flatMap(e=>e.compromisos||[]);const cOk=cs.filter(x=>x.estado==='cumplido').length,cV=cs.filter(x=>estadoComp(x)==='venc').length;
   const gen=prom(L.map(e=>e.calificacionFinal)),anx=prom(L.map(e=>(e.anexoTotal||0)/12*100));
-  let h=`<div class="kpis">
+  let h=`${Lc.length?'<div class="sub2" style="margin-top:0;font-size:16px"><b>👔 Responsables de tienda</b></div>':''}<div class="kpis">
     <div class="kpi"><div class="v">${pc(gen)}</div><div class="l">Promedio general</div></div>
     <div class="kpi"><div class="v">${L.length}</div><div class="l">Evaluaciones</div></div>
     <div class="kpi"><div class="v">${pc(anx)}</div><div class="l">Técnicas de venta (anexo)</div></div>
@@ -2035,8 +2109,8 @@ function pintarTablero(all){
   h+=`<div class="sub2"><b>Técnicas de venta por paso</b></div>${barras(A)}`;
   const PR={};L.forEach(e=>{const k=(e.nombres+' '+e.apellidos).trim()+'|'+e.tienda;(PR[k]=PR[k]||[]).push(e)});
   const R=Object.entries(PR).map(([k,E])=>{const [n,t]=k.split('|');return{n,t,c:E.length,v:prom(E.map(e=>e.calificacionFinal)),u:E.map(e=>e.fechaHora).sort().pop()}}).sort((a,b)=>b.v-a.v);
-  h+=`<div class="sub2"><b>Resultados por persona evaluada</b></div><table class="rk"><tr><th>Persona</th><th>Tienda</th><th class="r">Eval.</th><th class="r">Prom.</th></tr>${R.map(x=>`<tr title="Última: ${fmtFecha(x.u)}"><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td class="r">${x.c}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table>`;
-  $('r-dash').innerHTML=h;
+  h+=`<div class="sub2"><b>Resultados por responsable evaluado</b></div><table class="rk"><tr><th>Persona</th><th>Tienda</th><th class="r">Eval.</th><th class="r">Prom.</th></tr>${R.map(x=>`<tr title="Última: ${fmtFecha(x.u)}"><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td class="r">${x.c}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table>`;
+  $('r-dash').innerHTML=h+tableroColab(Lc,ft);
 }
 async function loadRep(){
   const all=visibles(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
@@ -2068,7 +2142,7 @@ function paintHist(){
   const t=$('h-tienda').value;const L=HIST.filter(e=>!t||e.tienda===t);
   if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay evaluaciones todavía.</p>';return}
   $('h-lista').innerHTML=L.map((e,i)=>{const col=e.calificacionFinal>=85?'#1f9d55':e.calificacionFinal>=70?'#F28C28':'#d64545';
-    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e._sync?'':'<span class="pill">sin subir</span>'}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}</span></div><div>›</div></div>`}).join('');
+    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.tipo==='colaborador'?'<span class="pill" style="background:#e8f5e9;color:#1f9d55">colaborador</span>':''}${e._sync?'':'<span class="pill">sin subir</span>'}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}</span></div><div>›</div></div>`}).join('');
   document.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>showDoc(HIST[+el.dataset.i]));
 }
 
@@ -2088,6 +2162,7 @@ const usrActivos=()=>USUARIOS.filter(u=>!u.del);
 function reposLectura(){return[NUBE.repo]}
 function visibles(L){const s=getSes();if(!s)return L;
   if(s.rol==='evaluador')return L.filter(e=>e.evaluadorUsuario===s.usuario);
+  if(s.rol==='responsable')return L.filter(e=>e.tipo==='colaborador'&&(s.tiendas||[]).includes(e.tienda));
   if(s.rol==='director'&&Array.isArray(s.tiendas)&&s.tiendas.length)return L.filter(e=>s.tiendas.includes(e.tienda));return L}
 function revisarSesion(){const s=getSes();if(!s||!USUARIOS.length)return false;const u=USUARIOS.find(x=>x.usuario===s.usuario);
   if(!u||u.del){SYNCING=false;toast('Tu acceso fue retirado',4000);setTimeout(()=>cerrarSesion(true),1500);return true}
@@ -2103,7 +2178,7 @@ async function gh(path,opt,repo){opt=opt||{};
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
 function utf8b64(b64){const bin=atob(String(b64).replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
 const jsonLimpio=ev=>JSON.stringify(ev,(k,v)=>k&&k[0]==='_'?undefined:v);
-const rutaNube=(ev,ext)=>`datos/${limpio(ev.tienda)}/${nombreBase(ev)}${ext}`;
+const rutaNube=(ev,ext)=>`datos/${limpio(ev.tienda)}/${ev.tipo==='colaborador'?'colaboradores/':''}${nombreBase(ev)}${ext}`;
 const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
 async function putFile(path,content,sha,msg,repo){
   const body={message:msg,content:b64utf8(content),branch:NUBE.branch};if(sha)body.sha=sha;
@@ -2198,9 +2273,9 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 const CONF_PATH='config/configuracion.json';
 async function syncConf(item,repo){
-  if(ROL()!=='admin'){ // solo lectura: adopta la configuración del administrador
+  if(!['admin','responsable'].includes(ROL())){ // solo lectura: adopta la configuración del administrador
     if(item&&item.sha!==CONF_SHA){const g=await gh('/git/blobs/'+item.sha,null,repo);if(g.ok){const rem=JSON.parse(utf8b64((await g.json()).content));const antes=confKey(CONF);
-      CONF={tiendas:rem.tiendas||[],directores:rem.directores||[],personas:rem.personas||[]};CONF_SHA=item.sha;CONF_PEND=false;await guardarConf(false);if(antes!==confKey(CONF))refrescarListas();}}
+      CONF={tiendas:rem.tiendas||[],directores:rem.directores||[],personas:rem.personas||[],colaboradores:rem.colaboradores||[]};CONF_SHA=item.sha;CONF_PEND=false;await guardarConf(false);if(antes!==confKey(CONF))refrescarListas();}}
     return;}
   const antes=confKey(CONF);let remSha=item?item.sha:null;
   if(item&&item.sha!==CONF_SHA){const g=await gh('/git/blobs/'+item.sha);if(g.ok){const rem=JSON.parse(utf8b64((await g.json()).content));CONF=mergeConf(CONF,rem);
@@ -2219,12 +2294,13 @@ function refrescarListas(){
   $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+opts+(cur&&!T.includes(cur)?`<option>${esc(cur)}</option>`:'');$('f-tienda').value=cur;
   for(const id of ['h-tienda','r-tienda','c-tienda']){const v=$(id).value;$(id).innerHTML='<option value="">Todas las tiendas</option>'+opts;$(id).value=v}
   const v=$('aj-pt').value;$('aj-pt').innerHTML='<option value="">Todas las tiendas</option>'+opts;$('aj-pt').value=v;
+  if(window.refrescarColab)refrescarColab();
   if(!$('view-aj').classList.contains('hidden'))pintarAjustes();
 }
 const filaHTML=(tipo,x,tit,sub)=>`<div class="lrow"><div class="i"><b>${esc(tit)}</b><span>${esc(sub)}</span></div><button class="ico" data-ed="${tipo}|${x.id}">✏️</button><button class="ico" data-del="${tipo}|${x.id}">🗑️</button></div>`;
 const nomPer=x=>`${x.apellidos||''} ${x.nombres||''}`.trim();
-function buscarPersonas(q,tienda){q=String(q||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-  return activos('personas').filter(x=>(!tienda||x.tienda===tienda)&&(!q||`${x.nombres} ${x.apellidos} ${x.apellidos} ${x.nombres} ${x.cedula||''}`.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().includes(q)))
+function buscarPersonas(q,tienda,col){col=col||'personas';q=String(q||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  return activos(col).filter(x=>(!tienda||x.tienda===tienda)&&(!q||`${x.nombres} ${x.apellidos} ${x.apellidos} ${x.nombres} ${x.cedula||''}`.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().includes(q)))
     .sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'));}
 function pintarAjustes(){
   $('aj-evaluador').value=getEvaluador();
@@ -2233,25 +2309,30 @@ function pintarAjustes(){
   const L=buscarPersonas($('aj-pq').value,$('aj-pt').value);
   $('aj-personas').innerHTML=(L.slice(0,200).map(x=>filaHTML('personas',x,nomPer(x),[x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>200?`<p class="desc">Mostrando 200 de ${L.length}. Use el buscador.</p>`:'');
   $('btnRespaldo').classList.toggle('hidden',!window.showDirectoryPicker);
+  const MT=misTiendas();const vt=$('aj-ct').value;$('aj-ct').innerHTML=(MT.length>1||ROL()!=='responsable'?'<option value="">Todas las tiendas</option>':'')+MT.map(t=>`<option>${esc(t)}</option>`).join('');$('aj-ct').value=MT.includes(vt)?vt:$('aj-ct').options[0]?$('aj-ct').options[0].value:'';
+  const LC=buscarPersonas($('aj-cq').value,$('aj-ct').value,'colaboradores').filter(x=>MT.includes(x.tienda));
+  $('aj-colab').innerHTML=(LC.slice(0,200).map(x=>filaHTML('colaboradores',x,nomPer(x),[x.tienda,x.seccion,x.cargo,x.cedula].filter(Boolean).join(' · '))).join('')||'<p class="desc">No hay colaboradores con ese filtro.</p>')+(LC.length>200?`<p class="desc">Mostrando 200 de ${LC.length}.</p>`:'');
 }
 const CAMPOS={
   tiendas:[['nombre','Nombre de la tienda','text',1],['correo','Correo de la tienda','email',0]],
   directores:[['nombre','Nombre','text',1],['correo','Correo','email',1]],
-  personas:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['tienda','Tienda','tienda',0]]};
-const TIT={tiendas:'tienda',directores:'director',personas:'persona'};
+  personas:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['tienda','Tienda','tienda',0]],
+  colaboradores:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['seccion','Sección o área a cargo','text',0],['tienda','Tienda','tienda',1]]};
+const TIT={tiendas:'tienda',directores:'director',personas:'persona',colaboradores:'colaborador'};
+const misTiendas=()=>{const s=getSes();return ROL()==='responsable'&&s&&Array.isArray(s.tiendas)?s.tiendas:tiendasAct()};
 function editar(tipo,id,pre,despues){
-  const x=id?CONF[tipo].find(o=>o.id===id):Object.assign({cargo:tipo==='personas'?'Responsable de tienda':''},pre||{});
+  const x=id?CONF[tipo].find(o=>o.id===id):Object.assign({cargo:tipo==='personas'?'Responsable de tienda':tipo==='colaboradores'?'Vendedor/a':''},pre||{});
   $('edTit').textContent=(id?'Editar ':'Nuevo/a ')+TIT[tipo];$('edErr').textContent='';
-  $('edBody').innerHTML=CAMPOS[tipo].map(([k,l,t])=>`<label class="f">${l}</label>`+(t==='tienda'?`<select class="t" data-k="${k}"><option value="">— Sin tienda —</option>${tiendasAct().map(n=>`<option ${x[k]===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:`<input class="t" data-k="${k}" type="${t==='tel'?'text':t}" ${t==='tel'?'inputmode="numeric"':''} value="${esc(x[k]||'')}" autocomplete="off">`)).join('');
+  $('edBody').innerHTML=CAMPOS[tipo].map(([k,l,t])=>`<label class="f">${l}</label>`+(t==='tienda'?`<select class="t" data-k="${k}"><option value="">— Sin tienda —</option>${(tipo==='colaboradores'?misTiendas():tiendasAct()).map(n=>`<option ${x[k]===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:`<input class="t" data-k="${k}" type="${t==='tel'?'text':t}" ${t==='tel'?'inputmode="numeric"':''} value="${esc(x[k]||'')}" autocomplete="off">`)).join('');
   $('mEdit').classList.add('show');setTimeout(()=>{const f=$('edBody').querySelector('input');f&&f.focus()},100);
   $('edOk').onclick=async()=>{
     const v={};$('edBody').querySelectorAll('[data-k]').forEach(i=>v[i.dataset.k]=i.value.trim());
     for(const [k,l,t,req] of CAMPOS[tipo]){if(req&&!v[k]){$('edErr').textContent='Complete: '+l;return}if(t==='email'&&v[k]&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v[k])){$('edErr').textContent='Correo no válido: '+v[k];return}}
     if(tipo==='tiendas'&&activos('tiendas').some(o=>o.id!==id&&o.nombre.toLowerCase()===v.nombre.toLowerCase())){$('edErr').textContent='Ya existe una tienda con ese nombre';return}
-    if(tipo==='personas'&&v.cedula&&activos('personas').some(o=>o.id!==id&&o.cedula===v.cedula)){$('edErr').textContent='Ya existe una persona con esa cédula';return}
+    if((tipo==='personas'||tipo==='colaboradores')&&v.cedula&&activos(tipo).some(o=>o.id!==id&&o.cedula===v.cedula)){$('edErr').textContent='Ya existe una persona con esa cédula';return}
     let obj;
     if(id){obj=CONF[tipo].find(o=>o.id===id);const viejo=obj.nombre;Object.assign(obj,v,{upd:Date.now()});
-      if(tipo==='tiendas'&&viejo!==v.nombre){activos('personas').filter(p=>p.tienda===viejo).forEach(p=>{p.tienda=v.nombre;p.upd=Date.now()})}}
+      if(tipo==='tiendas'&&viejo!==v.nombre){[...activos('personas'),...activos('colaboradores')].filter(p=>p.tienda===viejo).forEach(p=>{p.tienda=v.nombre;p.upd=Date.now()})}}
     else{obj=Object.assign({id:nid(tipo[0])},v,{upd:Date.now()});CONF[tipo].push(obj)}
     $('mEdit').classList.remove('show');await guardarConf(true);refrescarListas();pintarAjustes();
     if(tipo==='tiendas')crearCarpetaTienda(obj.nombre);
@@ -2259,25 +2340,27 @@ function editar(tipo,id,pre,despues){
   };
 }
 async function borrar(tipo,id){const x=CONF[tipo].find(o=>o.id===id);if(!x)return;
-  const n=tipo==='personas'?nomPer(x):x.nombre;
+  const n=(tipo==='personas'||tipo==='colaboradores')?nomPer(x):x.nombre;
   if(!confirm(`¿Eliminar ${TIT[tipo]} «${n}»?${tipo==='tiendas'?'\n\nLas evaluaciones ya hechas de esta tienda NO se borran.':''}`))return;
   x.del=true;x.upd=Date.now();await guardarConf(true);refrescarListas();pintarAjustes();toast('Eliminado');sincronizar(true);}
 async function crearCarpetaTienda(nombre){try{const root=await kvGet('carpeta');if(root&&(await root.queryPermission({mode:'readwrite'}))==='granted')await root.getDirectoryHandle(limpio(nombre),{create:true})}catch(e){}}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-ed]'),d=e.target.closest('[data-del]');
   if(a){const [t,i]=a.dataset.ed.split('|');editar(t,i)}if(d){const [t,i]=d.dataset.del.split('|');borrar(t,i)}});
 $('btnNewTi').onclick=()=>editar('tiendas');$('btnNewDi').onclick=()=>editar('directores');$('btnNewPer').onclick=()=>editar('personas',null,{tienda:$('aj-pt').value});
-$('aj-pq').oninput=pintarAjustes;$('aj-pt').onchange=pintarAjustes;
+$('aj-pq').oninput=pintarAjustes;$('aj-pt').onchange=pintarAjustes;$('aj-cq').oninput=pintarAjustes;$('aj-ct').onchange=pintarAjustes;
+$('btnNewCol').onclick=()=>editar('colaboradores',null,{tienda:$('aj-ct').value||misTiendas()[0]||''});
 $('aj-evaluador').onchange=()=>{const v=$('aj-evaluador').value.trim();if(!v)return;setEvaluador(v);$('f-evaluador').value=v;updNames();save();toast('Nombre guardado ✓')};
 // ---- buscador de persona en el formulario ----
 function usarPersona(x){$('f-apellidos').value=x.apellidos||'';$('f-nombres').value=x.nombres||'';$('f-cedula').value=x.cedula||'';if(x.cargo)$('f-cargo').value=x.cargo;
   if(x.tienda){if(![...$('f-tienda').options].some(o=>o.value===x.tienda))refrescarListas();$('f-tienda').value=x.tienda;$('f-correo').value=correoTienda(x.tienda)}
   $('mPick').classList.remove('show');updNames();save();toast('Persona seleccionada: '+nomPer(x));}
-function pintarPick(){const solo=$('pkSolo').checked&&$('f-tienda').value;const L=buscarPersonas($('pkQ').value,solo?$('f-tienda').value:'');
+let PICK='personas';
+function pintarPick(){const tf=PICK==='colaboradores'?$('c-f-tienda').value:$('f-tienda').value;const solo=$('pkSolo').checked&&tf;let L=buscarPersonas($('pkQ').value,solo?tf:'',PICK);if(PICK==='colaboradores')L=L.filter(x=>misTiendas().includes(x.tienda));
   $('pkList').innerHTML=L.slice(0,100).map(x=>`<div class="lrow" data-pk="${x.id}"><div class="i"><b>${esc(nomPer(x))}</b><span>${esc([x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))}</span></div><span>›</span></div>`).join('')||'<p class="desc" style="padding:8px 0">No se encontró. Puede registrarla abajo.</p>';
-  $('pkList').querySelectorAll('[data-pk]').forEach(el=>el.onclick=()=>usarPersona(CONF.personas.find(o=>o.id===el.dataset.pk)));}
-$('btnPick').onclick=()=>{$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').value;$('pkSolo').parentNode.style.display=$('f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
+  $('pkList').querySelectorAll('[data-pk]').forEach(el=>el.onclick=()=>{const x=CONF[PICK].find(o=>o.id===el.dataset.pk);PICK==='colaboradores'?usarColab(x):usarPersona(x)});}
+$('btnPick').onclick=()=>{PICK='personas';$('pkNew').textContent='+ Registrar nueva persona';$('pkNew').classList.toggle('hidden',!esAdmin());$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').value;$('pkSolo').parentNode.style.display=$('f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
 $('pkQ').oninput=pintarPick;$('pkSolo').onchange=pintarPick;
-$('pkNew').onclick=()=>{$('mPick').classList.remove('show');editar('personas',null,{tienda:$('f-tienda').value,nombres:'',apellidos:''},usarPersona)};
+$('pkNew').onclick=()=>{$('mPick').classList.remove('show');PICK==='colaboradores'?editar('colaboradores',null,{tienda:$('c-f-tienda').value||misTiendas()[0]||''},usarColab):editar('personas',null,{tienda:$('f-tienda').value,nombres:'',apellidos:''},usarPersona)};
 
 // ---------------- Usuarios (claves cifradas con la contraseña) ----------------
 const te=new TextEncoder();
@@ -2295,12 +2378,12 @@ async function guardarUsuarios(){
 async function ghApi(url,opt,tok){opt=opt||{};return fetch('https://api.github.com'+url,Object.assign({},opt,{cache:'no-store',headers:{'Authorization':'Bearer '+(tok||getTok()),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}))}
 async function adminPuede(){try{const r=await ghApi('/repos/'+NUBE.owner+'/'+APP_REPO);if(!r.ok)return false;const j=await r.json();return !!(j.permissions&&j.permissions.push)}catch(e){return false}}
 const urlToken=(nombre,desc,perm)=>'https://github.com/settings/personal-access-tokens/new?name='+encodeURIComponent(nombre)+'&description='+encodeURIComponent(desc)+'&expires_in=none&'+perm;
-const ROLES={admin:'Administrador',evaluador:'Evaluador',director:'Director con acceso'};
+const ROLES={admin:'Administrador',evaluador:'Evaluador',director:'Director con acceso',responsable:'Responsable de tienda'};
 async function pintarUsuarios(){
   const ok=await adminPuede();
   $('aj-admwarn').innerHTML=ok?'':'<div style="background:#fff4e5;border:1px solid #f5c48a;border-radius:10px;padding:10px;font-size:13px;margin-bottom:8px">Falta activar un permiso de la clave de la nube para guardar usuarios (se hace una sola vez).</div>';
   $('btnNewUs').disabled=!ok;$('btnNewUs').style.opacity=ok?1:.5;
-  $('aj-usuarios').innerHTML=usrActivos().map(u=>`<div class="lrow"><div class="i"><b>${esc(u.nombre)} <span class="rolp">${ROLES[u.rol]}</span></b><span>usuario: ${esc(u.usuario)}${u.rol==='director'?' · '+(Array.isArray(u.tiendas)&&u.tiendas.length?esc(u.tiendas.join(', ')):'todas las tiendas'):''}</span></div><button class="ico" data-ued="${esc(u.usuario)}">✏️</button><button class="ico" data-udel="${esc(u.usuario)}">🗑️</button></div>`).join('')||'<p class="desc">Aún no hay usuarios.</p>';
+  $('aj-usuarios').innerHTML=usrActivos().map(u=>`<div class="lrow"><div class="i"><b>${esc(u.nombre)} <span class="rolp">${ROLES[u.rol]}</span></b><span>usuario: ${esc(u.usuario)}${u.rol==='director'||u.rol==='responsable'?' · '+(Array.isArray(u.tiendas)&&u.tiendas.length?esc(u.tiendas.join(', ')):'todas las tiendas'):''}</span></div><button class="ico" data-ued="${esc(u.usuario)}">✏️</button><button class="ico" data-udel="${esc(u.usuario)}">🗑️</button></div>`).join('')||'<p class="desc">Aún no hay usuarios.</p>';
 }
 function tiendasCheck(sel){const todas=!Array.isArray(sel)||!sel.length;
   return `<label class="chk"><input type="checkbox" id="usTodas" ${todas?'checked':''}> <b>Todas las tiendas</b></label><div id="usTList" style="${todas?'display:none':''}">${tiendasAct().map(t=>`<label class="chk"><input type="checkbox" class="usT" value="${esc(t)}" ${!todas&&sel.includes(t)?'checked':''}> ${esc(t)}</label>`).join('')}</div>`}
@@ -2314,10 +2397,14 @@ function formUsuario(u){
    <label class="f">Tipo de usuario</label><select class="t" id="usR">
      <option value="evaluador" ${u.rol==='evaluador'?'selected':''}>Evaluador — evalúa y ve solo sus evaluaciones</option>
      <option value="director" ${u.rol==='director'?'selected':''}>Director con acceso — ve reportes, historial y compromisos</option>
+     <option value="responsable" ${u.rol==='responsable'?'selected':''}>Responsable de tienda — evalúa a sus colaboradores</option>
      <option value="admin" ${u.rol==='admin'?'selected':''}>Administrador — ve y administra todo</option></select>
-   <div id="usTW" style="${u.rol==='director'?'':'display:none'}"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u.tiendas)}</div>
+   <div id="usPW" style="${nuevo&&u.rol==='responsable'?'':'display:none'}"><label class="f">Tomar datos del personal registrado (opcional)</label><select class="t" id="usPer"><option value="">— Elegir —</option>${activos('personas').sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es')).map(x=>`<option value="${x.id}">${esc(nomPer(x))}${x.tienda?' · '+esc(x.tienda):''}</option>`).join('')}</select></div>
+   <div id="usTW" style="${u.rol==='director'||u.rol==='responsable'?'':'display:none'}"><label class="f" id="usTL">${u.rol==='responsable'?'Tienda(s) a cargo':'Tiendas que puede ver'}</label>${tiendasCheck(u.tiendas)}</div>
    <label class="f">${nuevo?'Contraseña (mínimo 6 caracteres)':'Nueva contraseña (vacío = no cambiar)'}</label><input class="t" id="usP" type="text" autocomplete="off">`;
-  bindTodas();$('usR').onchange=()=>$('usTW').style.display=$('usR').value==='director'?'':'none';
+  bindTodas();$('usR').onchange=()=>{const r=$('usR').value;$('usTW').style.display=r==='director'||r==='responsable'?'':'none';$('usPW').style.display=nuevo&&r==='responsable'?'':'none';$('usTL').textContent=r==='responsable'?'Tienda(s) a cargo':'Tiendas que puede ver';if(r==='responsable'&&$('usTodas').checked){$('usTodas').checked=false;$('usTList').style.display=''}};
+  $('usPer').onchange=()=>{const x=CONF.personas.find(o=>o.id===$('usPer').value);if(!x)return;$('usN').value=(x.nombres+' '+x.apellidos).trim();if(!$('usU')._t)$('usU').value=slug((x.nombres.split(' ')[0]||'')+' '+(x.apellidos.split(' ')[0]||'')).replace(/-/g,'').slice(0,20);
+    if(x.tienda){$('usTodas').checked=false;$('usTList').style.display='';document.querySelectorAll('.usT').forEach(c=>c.checked=c.value===x.tienda)}};
   if(nuevo){$('usN').oninput=()=>{if(!$('usU')._t)$('usU').value=slug($('usN').value).replace(/-/g,'').slice(0,20)};$('usU').oninput=()=>$('usU')._t=1;}
   $('mUser').classList.add('show');
   $('usOk').onclick=async()=>{
@@ -2326,10 +2413,11 @@ function formUsuario(u){
     if(nuevo&&!/^[a-z0-9.]{3,20}$/.test(un)){$('usErr').textContent='Usuario: letras minúsculas y números (3 a 20)';return}
     if(nuevo&&USUARIOS.some(x=>x.usuario===un&&!x.del)){$('usErr').textContent='Ese usuario ya existe';return}
     if((nuevo||p)&&p.length<6){$('usErr').textContent='La contraseña debe tener al menos 6 caracteres';return}
+    if(r==='responsable'&&!leerTiendas().length){$('usErr').textContent='Marque la tienda a cargo del responsable';return}
     $('usOk').disabled=true;$('usErr').textContent='Guardando…';
     try{
       let o=nuevo?{usuario:un}:USUARIOS.find(x=>x.usuario===un);
-      Object.assign(o,{nombre:n,rol:r,tiendas:r==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
+      Object.assign(o,{nombre:n,rol:r,tiendas:(r==='director'||r==='responsable')?leerTiendas():[],upd:Date.now()});delete o.del;
       if(p)o.cred=await cifrar(getTok(),p);
       if(nuevo){USUARIOS=USUARIOS.filter(x=>x.usuario!==un);USUARIOS.push(o)}
       await guardarUsuarios();
@@ -2359,7 +2447,7 @@ $('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP
   let t;try{t=await descifrar(x.cred,p)}catch(e){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
   setTok(t);setSes({usuario:x.usuario,nombre:x.nombre,rol:x.rol,tiendas:x.tiendas||[]});
   try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local')}catch(e){}
-  $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();toast('Bienvenido/a, '+x.nombre);sincronizar();};
+  $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();$('c-f-evaluador').value=getEvaluador();refrescarColab();if(x.rol==='responsable')show('colab');toast('Bienvenido/a, '+x.nombre);sincronizar();};
 $('lgP').onkeydown=e=>{if(e.key==='Enter')$('lgOk').click()};
 $('lgAdmin').onclick=e=>{e.preventDefault();$('login').classList.add('soloFondo');$('tokIn').value='';$('tokMsg').textContent='';$('mNube').classList.add('show')};
 $('btnLogin').onclick=()=>mostrarLogin(true);
@@ -2372,15 +2460,151 @@ $('btnLogout').onclick=()=>cerrarSesion(false);
 function aplicarRol(){
   const r=ROL(),s=getSes();
   const navForm=document.querySelector('nav.tabs button[data-v="form"]');navForm.classList.toggle('hidden',r==='director');
+  document.querySelectorAll('.modoEval').forEach(x=>x.classList.toggle('hidden',r!=='admin'&&r!=='local'));
+  $('cardColab').classList.toggle('hidden',!(r==='admin'||r==='local'||r==='responsable'));
+  if(r==='responsable'&&!$('view-form').classList.contains('hidden'))show('colab');
   const adm=r==='admin'||r==='local';
   ['cardPersonal','cardTiendas','cardDirectores'].forEach(id=>$(id).classList.toggle('hidden',!adm));
   $('cardNube').classList.toggle('hidden',!(adm));$('cardUsuarios').classList.toggle('hidden',r!=='admin');
   $('cardNombre').classList.toggle('hidden',r==='director');
   $('pkNew').classList.toggle('hidden',!adm);
-  $('aj-sesion').innerHTML=s?`<b>${esc(s.nombre)}</b> <span class="rolp">${ROLES[s.rol]}</span><div class="desc" style="margin:4px 0 0">usuario: ${esc(s.usuario)}${s.rol==='director'?' · '+(s.tiendas&&s.tiendas.length?esc(s.tiendas.join(', ')):'todas las tiendas'):''}</div>`:
+  $('aj-sesion').innerHTML=s?`<b>${esc(s.nombre)}</b> <span class="rolp">${ROLES[s.rol]}</span><div class="desc" style="margin:4px 0 0">usuario: ${esc(s.usuario)}${s.rol==='director'||s.rol==='responsable'?' · '+(s.tiendas&&s.tiendas.length?esc(s.tiendas.join(', ')):'todas las tiendas'):''}</div>`:
     (r==='admin'?'<b>Administrador</b> <span class="rolp">conectado con clave</span>':'Sin cuenta: las evaluaciones quedan solo en este dispositivo.');
   $('btnLogout').classList.toggle('hidden',r==='local');$('btnLogin').classList.toggle('hidden',r!=='local');
   if(r==='director'&&!$('view-form').classList.contains('hidden'))show('rep');
+}
+
+// ================= EVALUACIÓN DE COLABORADORES =================
+const SECC_COLAB=[
+ {id:'C2',titulo:'EXHIBICIÓN DEL ÁREA A CARGO',desc:'Estado de la sección que tiene a cargo el colaborador: reposición, exposición según lineamientos y criterios COMEI (Color, Orden, Movilidad, Equilibrio e Iluminación).',items:[
+  ['reposicion','Reposición de producto (sin espacios vacíos)',5],['exposicion','Correcta exposición según lineamientos',5],
+  ['comei_color','COMEI · Color (bloques y armonía de colores)',3],['comei_orden','COMEI · Orden (productos alineados y agrupados)',3],
+  ['comei_movilidad','COMEI · Movilidad (pasillos libres, fácil circulación)',3],['comei_equilibrio','COMEI · Equilibrio (alturas y volúmenes balanceados)',3],
+  ['comei_iluminacion','COMEI · Iluminación (producto bien iluminado)',3],['limpieza','Limpieza del área y del producto',5],['precios','Precios y rotulación correctos y visibles',5]]},
+ {id:'C3',titulo:'PROMOCIONES Y COMUNICACIÓN',desc:'Ofertas vigentes publicadas y material de comunicación en buen estado.',items:[
+  ['ofertas','Ofertas y promociones publicadas y exhibidas',5],['pop','Material POP en buen estado y vigente',5]]},
+ {id:'C4',titulo:'ATENCIÓN Y TÉCNICA DE VENTA',desc:'Cómo atiende y vende al cliente.',items:[
+  ['saludo','Saludo y bienvenida al cliente',3],['conocimiento','Conocimiento de los productos de su sección',4],['adicionales','Ofrece productos adicionales o complementarios',4],['cierre','Cierre de venta y despedida',4]]},
+ {id:'C5',titulo:'COMPROMISO INSTITUCIONAL',desc:'Actitud, presentación y cultura de la empresa.',items:[
+  ['puntualidad','Puntualidad y asistencia',4],['uniforme','Uniforme e imagen personal',4],['mision','Conoce la misión y visión de la empresa',4],['equipo','Trabajo en equipo y actitud',3]]}];
+const ITEMS_C=SECC_COLAB.flatMap(s=>s.items.map(i=>({k:i[0],n:i[1],w:i[2]})));
+const PESO_VENTAS=25;
+let stC=newStateC();
+function newStateC(){return{r:{},o:{},firmas:{},comp:[]}}
+const num=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.'));return isFinite(n)?n:0};
+const money=v=>'$'+Number(v||0).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
+function ventasC(pres,venta){pres=num(pres);venta=num(venta);const cump=pres>0?venta/pres*100:0;return{presupuesto:pres,venta,cumplimiento:Math.round(cump*10)/10,puntaje:Math.round(Math.min(cump,100)/100*PESO_VENTAS*10)/10}}
+function calcC(s,pres,venta){const v=ventasC(pres,venta);let t=v.puntaje,n=0;ITEMS_C.forEach(i=>{if(s.r[i.k]){n++;if(s.r[i.k]==='SI')t+=i.w}});return{total:Math.round(t),n,v}}
+function refrescarColab(){const T=misTiendas(),cur=$('c-f-tienda').value;$('c-f-tienda').innerHTML=(T.length===1?'':'<option value="">— Seleccione la tienda —</option>')+T.map(t=>`<option>${esc(t)}</option>`).join('');$('c-f-tienda').value=T.includes(cur)?cur:(T.length===1?T[0]:'')}
+window.refrescarColab=refrescarColab;
+const CF=['tienda','apellidos','nombres','cedula','cargo','seccion','periodo','evaluador','modalidad','accion','comentarios','pres','venta'];
+function readC(){const d={};CF.forEach(f=>d[f]=$('c-f-'+f).value.trim());return d}
+function saveC(){try{localStorage.setItem('ev_draft_c',JSON.stringify({st:stC,f:readC()}))}catch(e){}}
+function updateC(){const f=readC(),c=calcC(stC,f.pres,f.venta);$('tc-score').textContent=c.total+'%';$('tc-cnt').textContent=c.n+'/'+ITEMS_C.length;$('tc-prog').style.width=(c.n/ITEMS_C.length*100)+'%';
+  $('c-ventas-res').innerHTML=c.v.presupuesto>0?`Cumplimiento: <b style="font-size:20px;color:${c.v.cumplimiento>=100?'#1f9d55':c.v.cumplimiento>=80?'#d9731a':'#d64545'}">${c.v.cumplimiento}%</b> · Puntaje: <b>${c.v.puntaje} de ${PESO_VENTAS}%</b>`:'<span class="desc">Ingrese el presupuesto y la venta para calcular el cumplimiento.</span>';
+  $('c-sn-colab').textContent=(f.nombres+' '+f.apellidos).trim();$('c-sn-resp').textContent=f.evaluador;saveC()}
+function renderCompC(){
+  $('c-comps').innerHTML=stC.comp.map((c,i)=>`<div class="comp" data-i="${i}"><div class="top"><b>Compromiso ${i+1}</b><button data-delc="${i}">Quitar</button></div>
+    <textarea class="t" data-f="texto" placeholder="Ej.: Mantener la sección repuesta todos los días" style="min-height:56px">${esc(c.texto)}</textarea>
+    <div class="row2"><div><label class="f">Responsable</label><input class="t" data-f="responsable" value="${esc(c.responsable)}"></div>
+    <div><label class="f">Fecha y hora de resultados</label><input class="t" type="datetime-local" data-f="fecha" value="${esc(c.fecha)}"></div></div></div>`).join('');
+  $('c-comps').querySelectorAll('.comp').forEach(el=>{const i=+el.dataset.i;el.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=inp.onchange=()=>{stC.comp[i][inp.dataset.f]=inp.value;saveC()});
+    el.querySelector('[data-delc]').onclick=()=>{stC.comp.splice(i,1);renderCompC();saveC()}});
+}
+function paintItemC(el){const v=stC.r[el.dataset.k];el.querySelectorAll('.yn button').forEach(b=>b.classList.toggle('on',b.dataset.val===v))}
+function renderColab(){
+  $('c-factores').innerHTML=SECC_COLAB.map(s=>`<div class="card"><h2>${s.id} ${esc(s.titulo)}</h2><p class="desc">${esc(s.desc)}</p>${s.items.map(i=>itemHTML('c',i[0],i[1],'',i[2])).join('')}</div>`).join('');
+  document.querySelectorAll('#view-colab .item').forEach(el=>{const k=el.dataset.k;
+    el.querySelectorAll('.yn button').forEach(b=>b.onclick=()=>{stC.r[k]=stC.r[k]===b.dataset.val?undefined:b.dataset.val;if(stC.r[k]===undefined)delete stC.r[k];paintItemC(el);updateC()});
+    const inp=el.querySelector('[data-obs]');inp.oninput=()=>{stC.o[k]=inp.value;saveC()};el.querySelector('[data-sn]').onclick=()=>{inp.value='S/N';stC.o[k]='S/N';saveC()}});
+  document.querySelectorAll('#view-colab canvas[data-sig]').forEach(setupSig);
+  document.querySelectorAll('[data-clrc]').forEach(b=>b.onclick=()=>{delete stC.firmas[b.dataset.clrc];const c=document.querySelector(`canvas[data-sig="${b.dataset.clrc}"]`);c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display='';saveC()});
+  CF.forEach(f=>{$('c-f-'+f).addEventListener('input',updateC);$('c-f-'+f).addEventListener('change',updateC)});
+  $('btnAddCompC').onclick=()=>{stC.comp.push({texto:'',responsable:(($('c-f-nombres').value+' '+$('c-f-apellidos').value).trim()),fecha:''});renderCompC();saveC()};
+  $('btnLimpiarC').onclick=()=>{if(confirm('¿Borrar todo lo ingresado en este formulario?'))resetC()};
+  $('btnFinalizarC').onclick=finalizarC;
+  $('btnPickC').onclick=()=>{PICK='colaboradores';$('pkNew').textContent='+ Registrar nuevo colaborador';$('pkNew').classList.remove('hidden');$('pkQ').value='';$('pkSolo').checked=!!$('c-f-tienda').value;$('pkSolo').parentNode.style.display=$('c-f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
+}
+function usarColab(x){['apellidos','nombres','cedula','cargo','seccion'].forEach(k=>{if(x[k]!=null&&x[k]!=='')$('c-f-'+k).value=x[k]});if(x.tienda){refrescarColab();$('c-f-tienda').value=x.tienda}
+  $('mPick').classList.remove('show');updateC();toast('Colaborador seleccionado: '+nomPer(x))}
+function loadDraftC(){try{const d=JSON.parse(localStorage.getItem('ev_draft_c')||'null');if(!d)return;stC=Object.assign(newStateC(),d.st);
+  Object.entries(d.f||{}).forEach(([k,v])=>{if($('c-f-'+k)&&v)$('c-f-'+k).value=v});
+  document.querySelectorAll('#view-colab .item').forEach(el=>{paintItemC(el);el.querySelector('[data-obs]').value=stC.o[el.dataset.k]||''});renderCompC()}catch(e){}}
+function resetC(){stC=newStateC();localStorage.removeItem('ev_draft_c');
+  ['apellidos','nombres','cedula','seccion','accion','comentarios','pres','venta'].forEach(f=>$('c-f-'+f).value='');$('c-f-cargo').value='Vendedor/a';
+  const d=new Date();$('c-f-periodo').value=d.getFullYear()+'-'+pad(d.getMonth()+1);$('c-f-evaluador').value=getEvaluador();refrescarColab();
+  document.querySelectorAll('#view-colab .item').forEach(el=>{paintItemC(el);el.querySelector('[data-obs]').value=''});
+  document.querySelectorAll('#view-colab canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
+  renderCompC();updateC();window.scrollTo(0,0)}
+async function finalizarC(){
+  const f=readC();
+  if(!f.tienda||!f.apellidos||!f.nombres){toast('Complete tienda, apellidos y nombres del colaborador');window.scrollTo({top:0,behavior:'smooth'});return}
+  if(!(num(f.pres)>0)){toast('Ingrese el presupuesto de ventas del período');$('c-f-pres').focus();return}
+  const faltan=ITEMS_C.filter(i=>!stC.r[i.k]);
+  if(faltan.length){toast('Falta calificar: '+faltan.map(i=>i.n).slice(0,2).join(', ')+(faltan.length>2?'…':''),4000);const el=document.querySelector(`#view-colab .item[data-k="${faltan[0].k}"]`);el&&el.scrollIntoView({behavior:'smooth',block:'center'});return}
+  const comps=stC.comp.filter(x=>x.texto.trim());if(comps.some(x=>!x.fecha)){toast('Ponga la fecha y hora de resultados de cada compromiso',4000);return}
+  const c=calcC(stC,f.pres,f.venta);
+  if(!confirm(`¿Finalizar la evaluación del colaborador?\n\nTienda: ${f.tienda}\nColaborador: ${f.nombres} ${f.apellidos}\nCumplimiento de ventas: ${c.v.cumplimiento}%\nCalificación final: ${c.total}%\n\nSe registrará la fecha y hora exacta de este momento.`))return;
+  toast('Obteniendo ubicación GPS…',8000);const ubic=await getUbicacion();
+  if(ubic.error&&!confirm('No se pudo obtener la ubicación: '+ubic.error+'\n\nAceptar = guardar SIN ubicación\nCancelar = volver'))return;
+  const now=new Date();
+  const id=`EC-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('')}`;
+  const ev={tipo:'colaborador',id,fechaHora:now.toISOString(),zona:Intl.DateTimeFormat().resolvedOptions().timeZone,
+    tienda:f.tienda,nombres:f.nombres,apellidos:f.apellidos,cedula:f.cedula,cargo:f.cargo,seccion:f.seccion,periodo:f.periodo,evaluador:f.evaluador,modalidad:f.modalidad,
+    accion:f.accion,comentarios:f.comentarios,correo:correoTienda(f.tienda),ventas:c.v,respuestas:stC.r,observaciones:stC.o,
+    firmas:{colaborador:stC.firmas['c:colab'],responsable:stC.firmas['c:resp']},calificacionFinal:c.total,ubicacion:ubic,version:3,
+    evaluadorUsuario:(getSes()||{}).usuario||'admin',compromisos:comps.map((x,i)=>({n:i+1,texto:x.texto.trim(),responsable:x.responsable.trim(),fecha:x.fecha,estado:'pendiente'}))};
+  const ok=await guardarLocal(ev);toast(ok?'Evaluación guardada ✓ — subiendo a la nube…':'No se pudo guardar en el dispositivo',3500);
+  localStorage.removeItem('ev_draft_c');showDoc(ev);resetC();
+}
+const MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const periodoTxt=p=>{if(!p)return'-';const [a,m]=p.split('-');return MESES_L[+m-1]+' '+a};
+function docHTMLColab(ev){
+  const X=(v,w)=>v===w?'X':'';const V=ev.ventas||{};
+  const filas=SECC_COLAB.map(s=>`<tr class="sec"><td colspan="6"><b>${s.id}. ${esc(s.titulo)}:</b> ${esc(s.desc)}</td></tr>`+
+    s.items.map(i=>{const v=ev.respuestas[i[0]];return `<tr><td>${esc(i[1])}</td><td class="x">${X(v,'NO')}</td><td class="x">${X(v,'SI')}</td><td class="c">${v==='SI'?i[2]:0}%</td><td class="c">${i[2]}%</td><td>${esc(ev.observaciones[i[0]]||'')}</td></tr>`}).join('')).join('');
+  const firma=(img,nombre,tit)=>`<div>${img?`<img src="${img}">`:'<div class="ph2"></div>'}<div class="ln">${esc(tit)}${nombre?`<br><b>${esc(nombre)}</b>`:''}</div></div>`;
+  const comps=(ev.compromisos||[]).length?`<table class="blk"><tr><th style="width:4%">#</th><th>COMPROMISOS</th><th style="width:22%">Responsable</th><th style="width:20%">Fecha y hora de resultados</th></tr>${ev.compromisos.map(x=>`<tr><td class="c">${x.n}</td><td>${esc(x.texto)}</td><td>${esc(x.responsable)}</td><td class="c">${fmtLocal(x.fecha)}</td></tr>`).join('')}</table>`:'';
+  return `<div class="paper"><div class="ph"><div><h1>EVALUACIÓN DE COLABORADORES DE TIENDA</h1><div>DATOS DEL COLABORADOR EVALUADO</div></div><div class="logo">warenhaus</div></div>
+  <table><tr><td style="width:50%"><b>Apellidos:</b> ${esc(ev.apellidos)}</td><td><b>Nombres:</b> ${esc(ev.nombres)}</td><td><b>Cédula:</b> ${esc(ev.cedula)}</td></tr>
+   <tr><td><b>Cargo:</b> ${esc(ev.cargo)} · <b>Sección:</b> ${esc(ev.seccion||'-')}</td><td><b>Tienda:</b> ${esc(ev.tienda)}</td><td><b>Período:</b> ${esc(periodoTxt(ev.periodo))}</td></tr></table>
+  <table class="blk"><tr><th colspan="4">C1. RESULTADOS COMERCIALES (25%)</th></tr><tr><th>Presupuesto de ventas</th><th>Venta real</th><th>% Cumplimiento</th><th>Puntaje obtenido</th></tr>
+   <tr><td class="c">${money(V.presupuesto)}</td><td class="c">${money(V.venta)}</td><td class="c"><b>${V.cumplimiento??0}%</b></td><td class="c"><b>${V.puntaje??0}%</b> de 25%</td></tr></table>
+  <table class="blk"><tr><th style="width:47%">FACTORES</th><th style="width:7%">NO</th><th style="width:7%">SI</th><th style="width:8%">% Cumpl.</th><th style="width:8%">% Equiv.</th><th>Observaciones</th></tr>
+   ${filas}<tr class="tot"><td class="r">TOTAL (incluye resultados comerciales)</td><td></td><td></td><td class="c">${ev.calificacionFinal}%</td><td class="c">100%</td><td></td></tr></table>
+  <table class="blk"><tr><td style="width:70%"><b>Acción recomendada:</b> ${esc(ev.accion)||'—'}</td><td class="r"><b>Calificación final</b></td><td class="c final">${ev.calificacionFinal}%</td></tr></table>
+  ${comps}
+  <div class="firmas" style="grid-template-columns:1fr 1fr;margin-top:6px">${firma(ev.firmas&&ev.firmas.colaborador,(ev.nombres+' '+ev.apellidos).trim(),'Firma del colaborador')}${firma(ev.firmas&&ev.firmas.responsable,ev.evaluador,'Firma del responsable de tienda')}</div>
+  <div class="pie"><div><table><tr><td><b>Fecha:</b> ${fmtFecha(ev.fechaHora)} &nbsp; <b>Hora:</b> ${fmtHora(ev.fechaHora)} &nbsp; <b>Modalidad:</b> ${esc(ev.modalidad)}<br><b>Evaluador:</b> ${esc(ev.evaluador)}<br><b>Ubicación GPS:</b> ${esc(ubicTxt(ev.ubicacion))}<br><b>ID:</b> ${esc(ev.id)}</td></tr>
+    <tr><td style="height:36px;vertical-align:top"><b>Comentarios del colaborador:</b><br>${esc(ev.comentarios)}</td></tr></table></div>
+   ${mapaHTML(ev.ubicacion,150,118)?`<div style="border:1px solid #000;padding:4px">${mapaHTML(ev.ubicacion,150,118)}</div>`:''}
+   <div class="qrbox"><div class="qr">${window.qrSVG(qrTexto(ev),118)}</div><div style="font-size:8.5px;max-width:105px">Escanee con la cámara para verificar fecha, hora exacta, ubicación y calificación.</div></div></div></div>`;
+}
+function textoCorreoColab(ev){const V=ev.ventas||{};
+  const malos=ITEMS_C.filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n}${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
+  const comps=(ev.compromisos||[]).map(x=>`${x.n}. ${x.texto}\n   Responsable: ${x.responsable||'-'} | Resultados: ${fmtLocal(x.fecha)}`);
+  return `Evaluación de colaborador — tienda ${ev.tienda}\n\nColaborador: ${ev.nombres} ${ev.apellidos}\nSección: ${ev.seccion||'-'}\nPeríodo: ${periodoTxt(ev.periodo)}\nEvaluador: ${ev.evaluador}\nFecha: ${fmtFecha(ev.fechaHora)} ${fmtHora(ev.fechaHora)}\n\nVENTAS: presupuesto ${money(V.presupuesto)} · venta ${money(V.venta)} · cumplimiento ${V.cumplimiento}%\nCALIFICACIÓN FINAL: ${ev.calificacionFinal}%\n\nASPECTOS A MEJORAR:\n${malos.length?malos.join('\n'):'- Ninguno'}\n\nACCIÓN RECOMENDADA:\n${ev.accion||'-'}\n\nCOMPROMISOS:\n${comps.length?comps.join('\n'):'- Sin compromisos'}\n\nID: ${ev.id}\n\nSaludos,\n${ev.evaluador}`;
+}
+// ---- Tablero de colaboradores ----
+function tableroColab(Lc,ft){
+  if(!Lc.length)return ft?'<div class="sub2"><b>👥 Colaboradores</b></div><p class="desc">Aún no hay evaluaciones de colaboradores en esta tienda para este período.</p>':'';
+  const prc=prom(Lc.map(e=>e.calificacionFinal)),pv=prom(Lc.map(e=>(e.ventas||{}).cumplimiento||0));
+  let h=`<div class="sub2" style="margin-top:22px;font-size:16px"><b>👥 Colaboradores${ft?' · '+esc(ft):''}</b></div><div class="kpis">
+   <div class="kpi"><div class="v">${pc(prc)}</div><div class="l">Promedio de colaboradores</div></div>
+   <div class="kpi"><div class="v">${Lc.length}</div><div class="l">Evaluaciones</div></div>
+   <div class="kpi"><div class="v">${pc(pv)}</div><div class="l">Cumplimiento de ventas</div></div>
+   <div class="kpi"><div class="v">${new Set(Lc.map(e=>(e.nombres+' '+e.apellidos).trim()+e.tienda)).size}</div><div class="l">Colaboradores evaluados</div></div></div>`;
+  if(!ft){const T=[...new Set(Lc.map(e=>e.tienda))].map(t=>{const E=Lc.filter(e=>e.tienda===t);return{n:t,v:prom(E.map(e=>e.calificacionFinal)),t:E.length+' evaluación(es)'}}).sort((a,b)=>b.v-a.v);
+    h+=`<div class="sub2"><b>Promedio de colaboradores por tienda</b></div>${barras(T)}`}
+  const P={};Lc.forEach(e=>{const k=(e.apellidos+' '+e.nombres).trim()+'|'+e.tienda;(P[k]=P[k]||[]).push(e)});
+  const R=Object.entries(P).map(([k,E])=>{const [n,t]=k.split('|');return{n,tienda:t,sec:E[E.length-1].seccion||'',c:E.length,v:prom(E.map(e=>e.calificacionFinal)),vt:prom(E.map(e=>(e.ventas||{}).cumplimiento||0))}}).sort((a,b)=>b.v-a.v);
+  h+=`<div class="sub2"><b>Resultado por colaborador</b></div>${barras(R.map(x=>({n:x.n,v:x.v,t:'ventas '+pc(x.vt)})))}`;
+  const S=[{n:'C1 Resultados comerciales',v:prom(Lc.map(e=>((e.ventas||{}).puntaje||0)/PESO_VENTAS*100))},...SECC_COLAB.map(s=>{const max=s.items.reduce((x,i)=>x+i[2],0);return{n:s.id+' '+s.titulo.charAt(0)+s.titulo.slice(1).toLowerCase(),v:prom(Lc.map(e=>s.items.reduce((x,i)=>x+(e.respuestas[i[0]]==='SI'?i[2]:0),0)/max*100))}})];
+  h+=`<div class="sub2"><b>Cumplimiento por área</b></div>${barras(S)}`;
+  const I=ITEMS_C.map(i=>{const RR=Lc.filter(e=>e.respuestas[i.k]);return{n:i.n,v:RR.length?RR.filter(e=>e.respuestas[i.k]==='SI').length/RR.length*100:0}}).sort((a,b)=>a.v-b.v);
+  h+=`<div class="sub2"><b>Aspectos de los colaboradores</b> <span class="desc">(los más débiles primero)</span></div>${barras(I)}`;
+  h+=`<div class="sub2"><b>Detalle por colaborador</b></div><table class="rk"><tr><th>Colaborador</th>${ft?'':'<th>Tienda</th>'}<th>Sección</th><th class="r">Eval.</th><th class="r">Ventas</th><th class="r">Prom.</th></tr>${R.map(x=>`<tr><td>${esc(x.n)}</td>${ft?'':`<td>${esc(x.tienda)}</td>`}<td>${esc(x.sec)}</td><td class="r">${x.c}</td><td class="r">${pc(x.vt)}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table>`;
+  return h;
 }
 
 // ---------------- Enviar a la PC / Importar en la PC ----------------
@@ -2414,7 +2638,7 @@ async function guardarEnCarpetas(){
   let n=0;const bk=(await kvGet('respaldo'))||{};
   for(const ev of IMP){
     try{
-      const dir=await root.getDirectoryHandle(limpio(ev.tienda),{create:true});const base=nombreBase(ev);
+      let dir=await root.getDirectoryHandle(limpio(ev.tienda),{create:true});if(ev.tipo==='colaborador')dir=await dir.getDirectoryHandle('colaboradores',{create:true});const base=nombreBase(ev);
       for(const [ext,txt] of [['.json',JSON.stringify(ev)],['.html',docStandalone(ev)]]){const fh=await dir.getFileHandle(base+ext,{create:true});const w=await fh.createWritable();await w.write(txt);await w.close()}
       bk[ev.id]=ev._sha||ev.id;n++;
     }catch(e){console.error(e)}
@@ -2426,16 +2650,21 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 
 // ---------------- Navegación ----------------
 function show(v){
-  ['form','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='doc'&&b.dataset.v==='hist'&&false)));
-  $('totalbar').classList.toggle('hidden',v!=='form');
+  if(v==='form'&&(ROL()==='responsable'||((ROL()==='admin'||ROL()==='local')&&MODO==='colab')))v='colab';
+  ['form','colab','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='colab'&&b.dataset.v==='form')));
+  $('totalbar').classList.toggle('hidden',v!=='form');$('totalbarC').classList.toggle('hidden',v!=='colab');
+  document.querySelectorAll('[data-modo]').forEach(b=>b.classList.toggle('on',b.dataset.modo===v));
+  if(v==='colab'){refrescarColab();setTimeout(()=>document.querySelectorAll('#view-colab canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30)}
   if(v==='hist')loadHist();
   if(v==='rep')loadRep();
   if(v==='comp')loadComp();
   if(v==='aj'){pintarAjustes();pintarNube();aplicarRol();if(ROL()==='admin')pintarUsuarios()}
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
+let MODO=(function(){try{return localStorage.getItem('ev_modo')||'form'}catch(e){return'form'}})();
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll('[data-modo]').forEach(b=>b.onclick=()=>{MODO=b.dataset.modo;try{localStorage.setItem('ev_modo',MODO)}catch(e){}show(MODO)});
 $('btnFinalizar').onclick=finalizar;
 $('btnPrint').onclick=()=>window.print();
 $('btnVolver').onclick=()=>show('hist');
@@ -2448,7 +2677,7 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
   await cargarConf();
   $('r-tienda').onchange=$('r-per').onchange=loadRep;$('c-tienda').onchange=$('r-estado').onchange=loadComp;
   refrescarListas();
-  renderForm();renderComp();
+  renderForm();renderComp();renderColab();refrescarColab();{const d=new Date();$('c-f-periodo').value=d.getFullYear()+'-'+pad(d.getMonth()+1);}$('c-f-evaluador').value=getEvaluador();loadDraftC();updateC();
   $('f-evaluador').value=getEvaluador();
   loadDraft();update();updNames();
   if(location.hash.startsWith('#vincular=')){

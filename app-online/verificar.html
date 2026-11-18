@@ -52,9 +52,9 @@ main{max-width:560px;margin:0 auto;padding:14px}
     return `<div style="position:relative;width:100%;height:${h}px;overflow:hidden;border-radius:12px;margin-top:10px;background:#eee"><div style="position:absolute;left:calc(50% - ${256+px}px);top:${h/2-256-py}px;width:768px;height:768px">${im}</div><div style="position:absolute;left:calc(50% - 12px);top:${h/2-30}px;font-size:30px">📍</div><div style="position:absolute;right:4px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);padding:0 3px">© OpenStreetMap</div></div>`}
   const row=(k,v)=>`<div class="row"><span>${k}</span><b>${v}</b></div>`;
   M.innerHTML=`
-  <div class="card ok"><div class="i">✓</div><div><h1>Evaluación registrada</h1><p>Datos leídos del código QR del documento.</p></div></div>
+  <div class="card ok"><div class="i">✓</div><div><h1>${d.k==='c'?'Evaluación de colaborador':'Evaluación registrada'}</h1><p>Datos leídos del código QR del documento.</p></div></div>
   <div class="card"><div class="nota">${esc(d.n)}%</div><div class="nl">Calificación final</div>
-    ${row('Tienda',esc(d.t))}${row('Evaluado',esc(d.e))}${row('Evaluador',esc(d.v))}${row('Modalidad',esc(d.m||'-'))}
+    ${row('Tienda',esc(d.t))}${row(d.k==='c'?'Colaborador':'Evaluado',esc(d.e))}${d.s?row('Sección',esc(d.s)):''}${d.vt!=null?row('Cumplimiento de ventas',esc(d.vt)+'%'):''}${row('Evaluador',esc(d.v))}${row('Modalidad',esc(d.m||'-'))}
     ${d.a!=null?row('Técnicas de venta (anexo)',esc(d.a)+'% de 12%'):''}${d.c?row('Compromisos',esc(d.c)):''}</div>
   <div class="card">${row('Fecha',fecha)}${row('Hora exacta',hora)}
     ${tieneU?row('Ubicación GPS',`${esc(d.la)}, ${esc(d.lo)}`)+row('Precisión','± '+esc(d.p)+' m'):row('Ubicación GPS','<span class="err">No disponible</span>')}
