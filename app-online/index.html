@@ -160,7 +160,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v8</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v9</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -386,8 +386,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <label class="f">Contraseña</label><input class="t" id="lgP" type="password" autocomplete="current-password">
   <p id="lgErr" style="color:#d64545;font-size:13px;min-height:18px"></p>
   <button class="btn" id="lgOk" style="width:100%">Entrar</button>
-  <a href="#" id="lgLocal">Continuar sin cuenta (solo en este dispositivo)</a>
-  <a href="#" id="lgAdmin">Soy administrador: entrar con clave de GitHub</a>
+  <a href="#" id="lgAdmin" style="color:#aaa;font-size:12px;margin-top:18px">Acceso técnico del administrador</a>
 </div></div>
 <div class="modal" id="mUser"><div class="box wide" style="max-height:92vh;overflow:auto">
   <h3 style="margin-top:0" id="usTit">Nuevo usuario</h3>
@@ -2169,7 +2168,7 @@ async function probarToken(t){
   catch(e){setTok(old);return'Sin conexión a internet'}
 }
 $('btnNubeCfg').onclick=()=>{$('tokIn').value='';$('tokMsg').textContent=getTok()?'Ya hay una clave guardada. Pegue otra para reemplazarla.':'';$('mNube').classList.add('show')};
-$('tokCancel').onclick=()=>$('mNube').classList.remove('show');
+$('tokCancel').onclick=()=>{$('mNube').classList.remove('show');if(!getTok())mostrarLogin(true)};
 $('tokOk').onclick=async()=>{const t=$('tokIn').value.trim();if(!t){$('tokMsg').textContent='Pegue la clave';return}
   $('tokMsg').textContent='Probando…';const err=await probarToken(t);
   if(err){$('tokMsg').innerHTML='<span style="color:#d64545">'+esc(err)+'</span>';return}
@@ -2358,7 +2357,6 @@ $('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP
   try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local')}catch(e){}
   $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();toast('Bienvenido/a, '+x.nombre);sincronizar();};
 $('lgP').onkeydown=e=>{if(e.key==='Enter')$('lgOk').click()};
-$('lgLocal').onclick=e=>{e.preventDefault();try{localStorage.setItem('ev_local','1')}catch(x){}mostrarLogin(false);aplicarRol()};
 $('lgAdmin').onclick=e=>{e.preventDefault();mostrarLogin(false);show('aj');$('btnNubeCfg').click()};
 $('btnLogin').onclick=()=>mostrarLogin(true);
 async function cerrarSesion(forzar){const pend=(await idbAll()).filter(e=>!e._sync).length;
@@ -2455,7 +2453,7 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
   }
   await cargarUsuarios();
   aplicarRol();
-  if(!getTok()&&!(function(){try{return localStorage.getItem('ev_local')}catch(e){}})())mostrarLogin(true);
+  if(!getTok())mostrarLogin(true);
   pintarNube();sincronizar(true);
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   if('serviceWorker' in navigator&&location.protocol==='https:'){
