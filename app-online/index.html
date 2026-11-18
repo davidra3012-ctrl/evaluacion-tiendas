@@ -73,6 +73,29 @@ textarea.t{min-height:70px;resize:vertical}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:16px;padding:20px;text-align:center;max-width:340px;width:100%}
 .hidden{display:none!important}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:620px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:#faf8f5;border:1px solid var(--ln);border-radius:12px;padding:10px}
+.kpi .v{font-size:28px;font-weight:800;color:var(--tx);line-height:1.1}.kpi .l{font-size:12px;color:var(--mut)}
+.hb{display:grid;grid-template-columns:minmax(110px,46%) 1fr 42px;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+.hb .n{color:var(--tx);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hb .tr{background:#f0ece6;border-radius:4px;height:14px;position:relative}
+.hb .br{background:var(--or);height:100%;border-radius:0 4px 4px 0;min-width:2px}
+.hb .vv{text-align:right;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums}
+.sub2{font-size:14px;margin:14px 0 4px;color:var(--tx)}
+table.rk{width:100%;border-collapse:collapse;font-size:13px}table.rk th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--ln);padding:6px 4px}
+table.rk td{border-bottom:1px solid var(--ln);padding:6px 4px}table.rk td.r,table.rk th.r{text-align:right;font-variant-numeric:tabular-nums}
+nav.tabs button{font-size:14px}
+.lrow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--ln)}
+.lrow:first-child{border-top:0}
+.lrow .i{flex:1;min-width:0}.lrow .i b{display:block;font-size:15px}.lrow .i span{font-size:13px;color:var(--mut);word-break:break-all}
+.ico{border:1px solid var(--ln);background:#fff;border-radius:9px;width:38px;height:38px;font-size:16px;flex:none}
+.srch{display:flex;align-items:center;gap:6px;border:1px solid var(--ln);border-radius:10px;padding:0 10px;background:#fff}
+.srch input{border:0;outline:0;flex:1;padding:11px 0;font-size:16px;background:none}
+.pick{max-height:52vh;overflow:auto;text-align:left;margin-top:8px}
+.pick .lrow{cursor:pointer}
+.pbtn{width:100%;display:flex;align-items:center;gap:8px;justify-content:center;margin-top:4px}
+.modal .box.wide{max-width:460px;text-align:left}
 .comp{border:1px solid var(--ln);border-radius:12px;padding:10px;margin-bottom:10px;background:#fffdfa}
 .comp .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);margin-bottom:6px}
 .comp .top button{border:0;background:none;color:var(--bad);font-size:13px}
@@ -130,7 +153,7 @@ textarea.t{min-height:70px;resize:vertical}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v4</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v6</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -138,6 +161,7 @@ textarea.t{min-height:70px;resize:vertical}
   <button data-v="form" class="on">Nueva evaluación</button>
   <button data-v="hist">Historial</button>
   <button data-v="rep">Reportes</button>
+  <button data-v="aj">⚙️ Ajustes</button>
 </nav>
 
 <main>
@@ -145,6 +169,8 @@ textarea.t{min-height:70px;resize:vertical}
 <section id="view-form">
   <div class="card">
     <h2>Datos de identificación</h2>
+    <label class="f">Persona evaluada</label>
+    <button class="btn sec pbtn" id="btnPick" type="button">🔍 Buscar en el personal registrado</button>
     <label class="f">Tienda *</label>
     <select class="t" id="f-tienda"></select>
     <div class="row2">
@@ -209,14 +235,17 @@ textarea.t{min-height:70px;resize:vertical}
 <!-- ============ REPORTES ============ -->
 <section id="view-rep" class="hidden">
   <div class="card">
-    <h2>Resumen por tienda</h2>
-    <div class="stats" id="r-stats"></div>
+    <h2>📊 Estadísticas</h2>
+    <div class="row2">
+      <div><label class="f">Tienda</label><select class="t" id="r-tienda"></select></div>
+      <div><label class="f">Período</label><select class="t" id="r-per"><option value="30">Últimos 30 días</option><option value="90">Últimos 3 meses</option><option value="365">Último año</option><option value="0" selected>Todo</option></select></div>
+    </div>
+    <div id="r-dash" style="margin-top:12px"></div>
   </div>
   <div class="card">
     <h2>Compromisos</h2>
     <div class="row2">
-      <div><label class="f">Tienda</label><select class="t" id="r-tienda"></select></div>
-      <div><label class="f">Estado</label><select class="t" id="r-estado"><option value="abiertos">Pendientes y vencidos</option><option value="venc">Solo vencidos</option><option value="ok">Cumplidos</option><option value="">Todos</option></select></div>
+      <div><label class="f">Estado</label><select class="t" id="r-estado"><option value="abiertos">Pendientes y vencidos</option><option value="venc">Solo vencidos</option><option value="ok">Cumplidos</option><option value="">Todos</option></select></div><div></div>
     </div>
     <div id="r-lista" style="margin-top:10px"></div>
   </div>
@@ -226,19 +255,49 @@ textarea.t{min-height:70px;resize:vertical}
 <section id="view-hist" class="hidden">
   <div class="card">
     <h2>Evaluaciones guardadas</h2>
-    <div id="nubeBox" style="background:#faf8f5;border:1px solid var(--ln);border-radius:12px;padding:10px;margin:6px 0 10px">
-      <div style="display:flex;align-items:center;gap:8px"><div id="nubeEstado" style="flex:1;font-size:14px">☁️ …</div><button class="mini" id="btnSync">↻ Sincronizar</button></div>
-      <div class="acts">
-        <button class="mini or" id="btnRespaldo">💾 Respaldar en esta PC</button>
-        <button class="mini" id="btnVincular">📱 Vincular otro dispositivo</button>
-        <button class="mini" id="btnNubeCfg">⚙️ Configurar nube</button>
-        <button class="mini" id="btnImportar">📥 Importar archivo</button>
-      </div>
-    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:4px 0 6px"><div id="nubeEstado" style="flex:1;font-size:14px">☁️ …</div><button class="mini" id="btnSync">↻</button></div>
     <p class="desc" id="h-info"></p>
     <label class="f">Filtrar por tienda</label>
     <select class="t" id="h-tienda"></select>
     <div id="h-lista" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- ============ AJUSTES ============ -->
+<section id="view-aj" class="hidden">
+  <div class="card">
+    <h2>Mi nombre como evaluador</h2>
+    <p class="desc">Se guarda en este dispositivo y aparece en cada evaluación que hagas aquí.</p>
+    <input class="t" id="aj-evaluador" autocomplete="off">
+  </div>
+  <div class="card">
+    <h2>Personal evaluado</h2>
+    <div class="srch"><span>🔍</span><input id="aj-pq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
+    <select class="t" id="aj-pt" style="margin-top:8px"></select>
+    <div id="aj-personas" style="margin-top:6px"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewPer">+ Nueva persona</button>
+  </div>
+  <div class="card">
+    <h2>Tiendas</h2>
+    <p class="desc">Las tiendas nuevas aparecen solas en las evaluaciones. Al respaldar en la PC se crea su carpeta.</p>
+    <div id="aj-tiendas"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewTi">+ Nueva tienda</button>
+  </div>
+  <div class="card">
+    <h2>Directores (copia de evaluaciones)</h2>
+    <p class="desc">Reciben copia (CC) de cada evaluación que envíes por correo.</p>
+    <div id="aj-directores"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewDi">+ Nuevo director</button>
+  </div>
+  <div class="card">
+    <h2>Nube y respaldo</h2>
+    <div id="nubeEstado2" class="desc" style="font-size:14px;color:#333"></div>
+    <div class="acts">
+      <button class="mini or" id="btnRespaldo">💾 Respaldar en esta PC</button>
+      <button class="mini" id="btnVincular">📱 Vincular otro dispositivo</button>
+      <button class="mini" id="btnNubeCfg">⚙️ Configurar nube</button>
+      <button class="mini" id="btnImportar">📥 Importar archivo</button>
+    </div>
   </div>
 </section>
 </main>
@@ -271,6 +330,21 @@ textarea.t{min-height:70px;resize:vertical}
   <div id="vincQR"></div>
   <p style="font-size:12px;color:#d64545">No comparta este código: da acceso a las evaluaciones.</p>
   <button class="btn" style="width:100%" onclick="document.getElementById('mVinc').classList.remove('show');document.getElementById('vincQR').innerHTML=''">Cerrar</button>
+</div></div>
+<div class="modal" id="mEdit"><div class="box wide">
+  <h3 style="margin-top:0" id="edTit"></h3>
+  <div id="edBody"></div>
+  <p id="edErr" style="color:#d64545;font-size:13px;min-height:16px"></p>
+  <button class="btn" id="edOk" style="width:100%">Guardar</button>
+  <button class="btn gray" style="width:100%;margin-top:8px" onclick="document.getElementById('mEdit').classList.remove('show')">Cancelar</button>
+</div></div>
+<div class="modal" id="mPick"><div class="box wide">
+  <h3 style="margin-top:0">Buscar persona</h3>
+  <div class="srch"><span>🔍</span><input id="pkQ" placeholder="Nombre, apellido o cédula" autocomplete="off"></div>
+  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-top:8px"><input type="checkbox" id="pkSolo" checked> Solo de la tienda seleccionada</label>
+  <div class="pick" id="pkList"></div>
+  <button class="btn sec" style="width:100%;margin-top:8px" id="pkNew">+ Registrar nueva persona</button>
+  <button class="btn gray" style="width:100%;margin-top:8px" onclick="document.getElementById('mPick').classList.remove('show')">Cerrar</button>
 </div></div>
 <div class="modal" id="mImp"><div class="box">
   <h3 style="margin-top:0">Guardar en carpetas</h3>
@@ -1566,6 +1640,21 @@ const FIRMAS=[['evaluado','13. Firma del evaluado'],['jefe','14. Firma del Jefe 
 const ALL_ITEMS=SECCIONES.flatMap(s=>s.items.map(i=>({k:i[0],n:i[1],w:i[2]})));
 const CORREOS={'9 de Octubre':'Orve9deoctubre1@mabel.com.ec','Colón':'Colon1@mabel.com.ec','Feria CCI':'cci1@mabel.com.ec','Llano Grande':'Llanogrande1@mabel.com.ec','Quicentro Sur':'quicentrosur1@mabel.com.ec','San Luis':'Sanluis1@mabel.com.ec','Scala':'scala1@mabel.com.ec','Tienda Ambato':'ambato1@mabel.com.ec','Tienda Mabel':'mabel1@mabel.com.ec'};
 const DEF_CFG={evaluador:'David Rodríguez',tiendas:Object.keys(CORREOS)};
+// Datos maestros: tiendas, directores y personal. Se guardan en el dispositivo y en la nube (config/configuracion.json).
+const slug=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const nid=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let CONF={tiendas:Object.entries(CORREOS).map(([n,c])=>({id:'t-'+slug(n),nombre:n,correo:c,upd:0})),directores:[],personas:[]};
+let CONF_SHA=null,CONF_PEND=false;
+const activos=k=>(CONF[k]||[]).filter(x=>!x.del);
+const tiendasAct=()=>activos('tiendas').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
+function correoTienda(n){const t=activos('tiendas').find(x=>x.nombre===n);return t?t.correo:(CORREOS[n]||'')}
+function mergeConf(a,b){const r={};for(const k of ['tiendas','directores','personas']){const m=new Map();
+  for(const x of [...(a[k]||[]),...(b[k]||[])]){const o=m.get(x.id);if(!o||(x.upd||0)>(o.upd||0))m.set(x.id,x)}r[k]=[...m.values()]}return r}
+const confKey=c=>JSON.stringify(['tiendas','directores','personas'].map(k=>(c[k]||[]).map(x=>x.id+':'+(x.upd||0)).sort()));
+async function cargarConf(){try{const c=await kvGet('conf');if(c){CONF=mergeConf(CONF,c.data);CONF_SHA=c.sha||null;CONF_PEND=!!c.pend}}catch(e){}}
+async function guardarConf(pend){if(pend)CONF_PEND=true;try{await kvSet('conf',{data:CONF,sha:CONF_SHA,pend:CONF_PEND})}catch(e){}}
+function getEvaluador(){try{return localStorage.getItem('ev_evaluador')||CFG.evaluador}catch(e){return CFG.evaluador}}
+function setEvaluador(v){try{localStorage.setItem('ev_evaluador',v)}catch(e){}}
 
 let CFG=DEF_CFG, INFO=null;
 let st=newState();
@@ -1596,7 +1685,8 @@ function renderForm(){
   document.querySelectorAll('canvas[data-sig]').forEach(setupSig);
   document.querySelectorAll('[data-clr]').forEach(b=>b.onclick=()=>{delete st.firmas[b.dataset.clr];const c=document.querySelector(`canvas[data-sig="${b.dataset.clr}"]`);c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display='';save()});
   ['tienda','apellidos','nombres','cedula','cargo','evaluador','modalidad','accion','comentarios','correo'].forEach(f=>{$('f-'+f).addEventListener('input',()=>{save();updNames()});$('f-'+f).addEventListener('change',save)});
-  $('f-tienda').addEventListener('change',()=>{$('f-correo').value=CORREOS[$('f-tienda').value]||'';save()});
+  $('f-tienda').addEventListener('change',()=>{$('f-correo').value=correoTienda($('f-tienda').value);save()});
+  $('f-evaluador').addEventListener('change',()=>setEvaluador($('f-evaluador').value.trim()));
   $('btnAddComp').onclick=()=>{st.comp.push({texto:'',responsable:(($('f-nombres').value+' '+$('f-apellidos').value).trim()),fecha:''});renderComp();save()};
 }
 function renderComp(){
@@ -1652,7 +1742,7 @@ function loadDraft(){
 function resetForm(){
   st=newState();localStorage.removeItem('ev_draft');
   ['apellidos','nombres','cedula','accion','comentarios','correo'].forEach(f=>$('f-'+f).value='');$('f-tienda').value='';renderComp();
-  $('f-cargo').value='Responsable de tienda';$('f-evaluador').value=CFG.evaluador;
+  $('f-cargo').value='Responsable de tienda';$('f-evaluador').value=getEvaluador();
   document.querySelectorAll('.item').forEach(el=>{paintItem(el);el.querySelector('[data-obs]').value=''});
   document.querySelectorAll('canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
   update();updNames();window.scrollTo(0,0);
@@ -1787,7 +1877,8 @@ function docHTML(ev){
 function fitDoc(){const pp=document.querySelector('#doc .paper');if(!pp)return;const w=$('doc').clientWidth-28;pp.style.zoom=w<680?(w/680).toFixed(3):'';}
 window.addEventListener('resize',fitDoc);
 function fmtLocal(v){if(!v)return'';const d=new Date(v);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
-function correoDe(ev){return ev.correo||CORREOS[ev.tienda]||''}
+function correoDe(ev){return ev.correo||correoTienda(ev.tienda)||''}
+const ccDirectores=()=>activos('directores').map(d=>d.correo).filter(Boolean);
 function utcCompact(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}
 function textoCorreo(ev){
   const malos=ALL_ITEMS.filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n} (${i.w}%)${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
@@ -1819,7 +1910,8 @@ ${ev.evaluador}`;
 }
 function mailtoEval(ev){
   const asunto=`Evaluación de tienda ${ev.tienda} - ${fmtFecha(ev.fechaHora)} - ${ev.calificacionFinal}%`;
-  return `mailto:${encodeURIComponent(correoDe(ev)).replace(/%40/g,'@')}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoCorreo(ev))}`;
+  const cc=ccDirectores();
+  return `mailto:${encodeURIComponent(correoDe(ev)).replace(/%40/g,'@')}?${cc.length?'cc='+cc.map(x=>encodeURIComponent(x).replace(/%40/g,'@')).join(',')+'&':''}subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoCorreo(ev))}`;
 }
 function rangoComp(x){const a=new Date(x.fecha);return [a,new Date(a.getTime()+30*60000)]}
 function detalleComp(ev,x){return `Compromiso de la evaluación del ${fmtFecha(ev.fechaHora)} (nota ${ev.calificacionFinal}%).\n\n${x.texto}\n\nResponsable: ${x.responsable||'-'}\nTienda: ${ev.tienda}\nEvaluador: ${ev.evaluador}\nID: ${ev.id}`}
@@ -1850,19 +1942,58 @@ function renderDocActs(){
   const ev=currentDoc;const c=correoDe(ev);
   $('docActs').innerHTML=`<h2>Enviar y agendar</h2>
    <a class="btn" style="display:block;text-align:center;text-decoration:none;margin:6px 0" href="${mailtoEval(ev)}">✉️ Enviar por correo a la tienda</a>
-   <p class="desc">Para: <b>${esc(c||'sin correo')}</b>. Se abre tu app de correo con todo escrito; solo toca Enviar. Para adjuntar el documento usa «📤 Compartir».</p>
+   <p class="desc">Para: <b>${esc(c||'sin correo')}</b>${ccDirectores().length?' · CC: '+esc(ccDirectores().join(', ')):''}. Se abre tu app de correo con todo escrito; solo toca Enviar. Para adjuntar el documento usa «📤 Compartir».</p>
    ${(ev.compromisos||[]).map(x=>`<div class="comp"><div class="top"><b>Compromiso ${x.n}</b>${BADGE[estadoComp(x)]}</div>
      <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Resultados: <b>${fmtLocal(x.fecha)}</b></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">Esta evaluación no tiene compromisos.</p>'}`;
 }
 function showDoc(ev){currentDoc=ev;$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
 
 // ---------------- Reportes ----------------
+// ---------------- Tablero de estadísticas ----------------
+const prom=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const pc=v=>Math.round(v)+'%';
+function barras(L,fmt){fmt=fmt||pc;return L.map(x=>`<div class="hb" title="${esc(x.n)}: ${fmt(x.v)}${x.t?' · '+esc(x.t):''}"><div class="n">${esc(x.n)}</div><div class="tr"><div class="br" style="width:${Math.max(0,Math.min(100,x.v))}%"></div></div><div class="vv">${fmt(x.v)}</div></div>`).join('')}
+function lineaSVG(P){ // P=[{n:'2026-11',v:..,c:..}]
+  const W=360,H=180,l=34,r=22,t=16,b=26,w=W-l-r,h=H-t-b,x=i=>l+(P.length===1?w/2:i*w/(P.length-1)),y=v=>t+h-(v/100)*h;
+  const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const lab=k=>{const [a,m]=k.split('-');return MES[+m-1]+' '+a.slice(2)};
+  let g=[0,50,100].map(v=>`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="#e7e2db" stroke-width="1"/><text x="${l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8a8580">${v}%</text>`).join('');
+  const d=P.map((p,i)=>(i?'L':'M')+x(i)+' '+y(p.v)).join(' ');
+  const pts=P.map((p,i)=>`<g><circle cx="${x(i)}" cy="${y(p.v)}" r="5" fill="#F28C28" stroke="#fff" stroke-width="2"/><circle cx="${x(i)}" cy="${y(p.v)}" r="16" fill="transparent"><title>${lab(p.n)}: ${pc(p.v)} (${p.c} evaluación${p.c>1?'es':''})</title></circle></g>`).join('');
+  const step=Math.ceil(P.length/5);const xl=P.map((p,i)=>i%step&&i!==P.length-1?'':`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="#8a8580">${lab(p.n)}</text>`).join('');
+  const last=P[P.length-1];
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Promedio mensual">${g}<path d="${d}" fill="none" stroke="#F28C28" stroke-width="2"/>${pts}${xl}<text x="${x(P.length-1)}" y="${y(last.v)-10}" text-anchor="${P.length>1?'end':'middle'}" font-size="12" font-weight="700" fill="#222">${pc(last.v)}</text></svg>`;
+}
+function pintarTablero(all){
+  const ft=$('r-tienda').value,dias=+$('r-per').value;const desde=dias?Date.now()-dias*864e5:0;
+  const L=all.filter(e=>(!ft||e.tienda===ft)&&new Date(e.fechaHora).getTime()>=desde);
+  if(!L.length){$('r-dash').innerHTML='<p class="desc">No hay evaluaciones en este período.</p>';return}
+  const cs=L.flatMap(e=>e.compromisos||[]);const cOk=cs.filter(x=>x.estado==='cumplido').length,cV=cs.filter(x=>estadoComp(x)==='venc').length;
+  const gen=prom(L.map(e=>e.calificacionFinal)),anx=prom(L.map(e=>(e.anexoTotal||0)/12*100));
+  let h=`<div class="kpis">
+    <div class="kpi"><div class="v">${pc(gen)}</div><div class="l">Promedio general</div></div>
+    <div class="kpi"><div class="v">${L.length}</div><div class="l">Evaluaciones</div></div>
+    <div class="kpi"><div class="v">${pc(anx)}</div><div class="l">Técnicas de venta (anexo)</div></div>
+    <div class="kpi"><div class="v">${cs.length?pc(cOk/cs.length*100):'—'}</div><div class="l">Compromisos cumplidos${cs.length?` (${cOk}/${cs.length})`:''}${cV?` · <b style="color:#d64545">${cV} vencido${cV>1?'s':''}</b>`:''}</div></div></div>`;
+  if(!ft){const T=[...new Set(L.map(e=>e.tienda))].map(t=>{const E=L.filter(e=>e.tienda===t);return{n:t,v:prom(E.map(e=>e.calificacionFinal)),t:E.length+' evaluación(es)'}}).sort((a,b)=>b.v-a.v);
+    h+=`<div class="sub2"><b>Promedio por tienda</b></div>${barras(T)}`;}
+  const M={};L.forEach(e=>{const d=new Date(e.fechaHora),k=d.getFullYear()+'-'+pad(d.getMonth()+1);(M[k]=M[k]||[]).push(e.calificacionFinal)});
+  const P=Object.keys(M).sort().map(k=>({n:k,v:prom(M[k]),c:M[k].length}));
+  h+=`<div class="sub2"><b>Evolución del promedio por mes</b></div>${P.length>1?lineaSVG(P):'<p class="desc">Se mostrará cuando haya evaluaciones de al menos 2 meses distintos.</p>'}`;
+  const S=SECCIONES.map(s=>{const max=s.items.reduce((x,i)=>x+i[2],0);return{n:s.id+' '+s.titulo.charAt(0)+s.titulo.slice(1).toLowerCase(),v:prom(L.map(e=>s.items.reduce((x,i)=>x+(e.respuestas[i[0]]==='SI'?i[2]:0),0)/max*100))}});
+  h+=`<div class="sub2"><b>Cumplimiento por área</b></div>${barras(S)}`;
+  const I=ALL_ITEMS.map(i=>{const R=L.filter(e=>e.respuestas[i.k]);return{n:i.n,v:R.length?R.filter(e=>e.respuestas[i.k]==='SI').length/R.length*100:0,t:`peso ${i.w}%`}}).sort((a,b)=>a.v-b.v);
+  h+=`<div class="sub2"><b>Cumplimiento por aspecto</b> <span class="desc">(los más débiles primero)</span></div>${barras(I)}`;
+  const A=ANEXO.map(a=>{const R=L.filter(e=>e.anexo&&e.anexo[a[0]]);return{n:a[1],v:R.length?R.filter(e=>e.anexo[a[0]]==='SI').length/R.length*100:0}});
+  h+=`<div class="sub2"><b>Técnicas de venta por paso</b></div>${barras(A)}`;
+  const PR={};L.forEach(e=>{const k=(e.nombres+' '+e.apellidos).trim()+'|'+e.tienda;(PR[k]=PR[k]||[]).push(e)});
+  const R=Object.entries(PR).map(([k,E])=>{const [n,t]=k.split('|');return{n,t,c:E.length,v:prom(E.map(e=>e.calificacionFinal)),u:E.map(e=>e.fechaHora).sort().pop()}}).sort((a,b)=>b.v-a.v);
+  h+=`<div class="sub2"><b>Resultados por persona evaluada</b></div><table class="rk"><tr><th>Persona</th><th>Tienda</th><th class="r">Eval.</th><th class="r">Prom.</th></tr>${R.map(x=>`<tr title="Última: ${fmtFecha(x.u)}"><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td class="r">${x.c}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table>`;
+  $('r-dash').innerHTML=h;
+}
 async function loadRep(){
   const all=(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
-  $('r-stats').innerHTML=CFG.tiendas.map(t=>{const L=all.filter(e=>e.tienda===t);if(!L.length)return'';
-    const prom=Math.round(L.reduce((x,e)=>x+e.calificacionFinal,0)/L.length);
-    const cs=L.flatMap(e=>e.compromisos||[]);const ab=cs.filter(x=>estadoComp(x)!=='ok').length,ve=cs.filter(x=>estadoComp(x)==='venc').length;
-    return `<div class="stat"><b>${esc(t)}</b><div class="n">${L[0].calificacionFinal}%</div><span>Última: ${fmtFecha(L[0].fechaHora)}<br>Promedio: ${prom}% · ${L.length} eval.<br>Compromisos abiertos: ${ab}${ve?` · <b style="color:#d64545">${ve} vencido(s)</b>`:''}</span></div>`}).join('')||'<p class="desc">Aún no hay evaluaciones en este dispositivo.</p>';
+  pintarTablero(all);
   const ft=$('r-tienda').value,fe=$('r-estado').value;
   const items=all.flatMap(ev=>(ev.compromisos||[]).map(x=>({ev,x,s:estadoComp(x)})))
     .filter(o=>(!ft||o.ev.tienda===ft)&&(!fe||(fe==='abiertos'?o.s!=='ok':o.s===fe)))
@@ -1908,6 +2039,7 @@ async function putFile(path,content,sha,msg){
 }
 let SYNCING=false,LAST_SYNC=null,SYNC_ERR='';
 function pintarNube(extra){
+  setTimeout(()=>{const a=$('nubeEstado'),b=$('nubeEstado2');if(a&&b)b.innerHTML=a.innerHTML},0);
   const el=$('nubeEstado');if(!el)return;
   if(!getTok()){el.innerHTML='☁️ <b>Nube sin configurar</b> — las evaluaciones quedan solo en este dispositivo';return}
   if(SYNCING){el.textContent='☁️ Sincronizando…';return}
@@ -1930,6 +2062,7 @@ async function sincronizar(silencio){
     if(r.status===401||r.status===403)throw new Error('La clave de la nube no es válida o venció');
     if(r.ok){
       const t=await r.json();const local=await idbAll();const shas=new Set(local.map(e=>e._sha));
+      await syncConf((t.tree||[]).find(x=>x.path===CONF_PATH));
       for(const it of (t.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
         const g=await gh('/git/blobs/'+it.sha);if(!g.ok)continue;
@@ -1968,12 +2101,91 @@ $('btnVincular').onclick=()=>{if(!getTok()){toast('Primero configure la nube en 
 $('btnRespaldo').onclick=async()=>{
   if(!window.showDirectoryPicker){toast('Abra la app en Chrome o Edge de la computadora para respaldar',4500);return}
   const bk=(await kvGet('respaldo'))||{};IMP=(await idbAll()).filter(e=>bk[e.id]!==(e._sha||e.id));
-  if(!IMP.length){toast('Todo ya está respaldado en esta PC ✓');return}
+  if(!IMP.length){$('impTxt').textContent='Todas las evaluaciones ya están respaldadas. Se crearán/actualizarán las carpetas de las tiendas.';$('mImp').classList.add('show');return}
   $('impTxt').textContent=`${IMP.length} evaluación(es) por respaldar.`;$('mImp').classList.add('show');
 };
 window.addEventListener('online',()=>sincronizar(true));
 setInterval(()=>{if(document.visibilityState==='visible')sincronizar(true)},5*60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sincronizar(true)});
+
+const CONF_PATH='config/configuracion.json';
+async function syncConf(item){
+  const antes=confKey(CONF);let remSha=item?item.sha:null;
+  if(item&&item.sha!==CONF_SHA){const g=await gh('/git/blobs/'+item.sha);if(g.ok){const rem=JSON.parse(utf8b64((await g.json()).content));CONF=mergeConf(CONF,rem);
+      if(confKey(CONF)!==confKey(mergeConf(rem,{}))) CONF_PEND=true;}}
+  if(!item)CONF_PEND=true;
+  if(CONF_PEND){CONF_SHA=await putFile(CONF_PATH,JSON.stringify({version:1,actualizado:new Date().toISOString(),...CONF},null,1),remSha,'Actualiza tiendas, directores y personal');CONF_PEND=false}
+  else CONF_SHA=remSha;
+  await guardarConf(false);
+  if(antes!==confKey(CONF))refrescarListas();
+}
+
+// ---------------- Ajustes: tiendas, directores, personal ----------------
+function refrescarListas(){
+  const T=tiendasAct(),cur=$('f-tienda').value;
+  const opts=T.map(t=>`<option>${esc(t)}</option>`).join('');
+  $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+opts+(cur&&!T.includes(cur)?`<option>${esc(cur)}</option>`:'');$('f-tienda').value=cur;
+  for(const id of ['h-tienda','r-tienda']){const v=$(id).value;$(id).innerHTML='<option value="">Todas las tiendas</option>'+opts;$(id).value=v}
+  const v=$('aj-pt').value;$('aj-pt').innerHTML='<option value="">Todas las tiendas</option>'+opts;$('aj-pt').value=v;
+  if(!$('view-aj').classList.contains('hidden'))pintarAjustes();
+}
+const filaHTML=(tipo,x,tit,sub)=>`<div class="lrow"><div class="i"><b>${esc(tit)}</b><span>${esc(sub)}</span></div><button class="ico" data-ed="${tipo}|${x.id}">✏️</button><button class="ico" data-del="${tipo}|${x.id}">🗑️</button></div>`;
+const nomPer=x=>`${x.apellidos||''} ${x.nombres||''}`.trim();
+function buscarPersonas(q,tienda){q=String(q||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  return activos('personas').filter(x=>(!tienda||x.tienda===tienda)&&(!q||`${x.nombres} ${x.apellidos} ${x.apellidos} ${x.nombres} ${x.cedula||''}`.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().includes(q)))
+    .sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'));}
+function pintarAjustes(){
+  $('aj-evaluador').value=getEvaluador();
+  $('aj-tiendas').innerHTML=activos('tiendas').sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(x=>filaHTML('tiendas',x,x.nombre,x.correo||'sin correo')).join('')||'<p class="desc">No hay tiendas.</p>';
+  $('aj-directores').innerHTML=activos('directores').map(x=>filaHTML('directores',x,x.nombre,x.correo)).join('')||'<p class="desc">Aún no hay directores registrados.</p>';
+  const L=buscarPersonas($('aj-pq').value,$('aj-pt').value);
+  $('aj-personas').innerHTML=(L.slice(0,200).map(x=>filaHTML('personas',x,nomPer(x),[x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>200?`<p class="desc">Mostrando 200 de ${L.length}. Use el buscador.</p>`:'');
+  $('btnRespaldo').classList.toggle('hidden',!window.showDirectoryPicker);
+}
+const CAMPOS={
+  tiendas:[['nombre','Nombre de la tienda','text',1],['correo','Correo de la tienda','email',0]],
+  directores:[['nombre','Nombre','text',1],['correo','Correo','email',1]],
+  personas:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['tienda','Tienda','tienda',0]]};
+const TIT={tiendas:'tienda',directores:'director',personas:'persona'};
+function editar(tipo,id,pre,despues){
+  const x=id?CONF[tipo].find(o=>o.id===id):Object.assign({cargo:tipo==='personas'?'Responsable de tienda':''},pre||{});
+  $('edTit').textContent=(id?'Editar ':'Nuevo/a ')+TIT[tipo];$('edErr').textContent='';
+  $('edBody').innerHTML=CAMPOS[tipo].map(([k,l,t])=>`<label class="f">${l}</label>`+(t==='tienda'?`<select class="t" data-k="${k}"><option value="">— Sin tienda —</option>${tiendasAct().map(n=>`<option ${x[k]===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:`<input class="t" data-k="${k}" type="${t==='tel'?'text':t}" ${t==='tel'?'inputmode="numeric"':''} value="${esc(x[k]||'')}" autocomplete="off">`)).join('');
+  $('mEdit').classList.add('show');setTimeout(()=>{const f=$('edBody').querySelector('input');f&&f.focus()},100);
+  $('edOk').onclick=async()=>{
+    const v={};$('edBody').querySelectorAll('[data-k]').forEach(i=>v[i.dataset.k]=i.value.trim());
+    for(const [k,l,t,req] of CAMPOS[tipo]){if(req&&!v[k]){$('edErr').textContent='Complete: '+l;return}if(t==='email'&&v[k]&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v[k])){$('edErr').textContent='Correo no válido: '+v[k];return}}
+    if(tipo==='tiendas'&&activos('tiendas').some(o=>o.id!==id&&o.nombre.toLowerCase()===v.nombre.toLowerCase())){$('edErr').textContent='Ya existe una tienda con ese nombre';return}
+    if(tipo==='personas'&&v.cedula&&activos('personas').some(o=>o.id!==id&&o.cedula===v.cedula)){$('edErr').textContent='Ya existe una persona con esa cédula';return}
+    let obj;
+    if(id){obj=CONF[tipo].find(o=>o.id===id);const viejo=obj.nombre;Object.assign(obj,v,{upd:Date.now()});
+      if(tipo==='tiendas'&&viejo!==v.nombre){activos('personas').filter(p=>p.tienda===viejo).forEach(p=>{p.tienda=v.nombre;p.upd=Date.now()})}}
+    else{obj=Object.assign({id:nid(tipo[0])},v,{upd:Date.now()});CONF[tipo].push(obj)}
+    $('mEdit').classList.remove('show');await guardarConf(true);refrescarListas();pintarAjustes();
+    if(tipo==='tiendas')crearCarpetaTienda(obj.nombre);
+    toast('Guardado ✓');sincronizar(true);if(despues)despues(obj);
+  };
+}
+async function borrar(tipo,id){const x=CONF[tipo].find(o=>o.id===id);if(!x)return;
+  const n=tipo==='personas'?nomPer(x):x.nombre;
+  if(!confirm(`¿Eliminar ${TIT[tipo]} «${n}»?${tipo==='tiendas'?'\n\nLas evaluaciones ya hechas de esta tienda NO se borran.':''}`))return;
+  x.del=true;x.upd=Date.now();await guardarConf(true);refrescarListas();pintarAjustes();toast('Eliminado');sincronizar(true);}
+async function crearCarpetaTienda(nombre){try{const root=await kvGet('carpeta');if(root&&(await root.queryPermission({mode:'readwrite'}))==='granted')await root.getDirectoryHandle(limpio(nombre),{create:true})}catch(e){}}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-ed]'),d=e.target.closest('[data-del]');
+  if(a){const [t,i]=a.dataset.ed.split('|');editar(t,i)}if(d){const [t,i]=d.dataset.del.split('|');borrar(t,i)}});
+$('btnNewTi').onclick=()=>editar('tiendas');$('btnNewDi').onclick=()=>editar('directores');$('btnNewPer').onclick=()=>editar('personas',null,{tienda:$('aj-pt').value});
+$('aj-pq').oninput=pintarAjustes;$('aj-pt').onchange=pintarAjustes;
+$('aj-evaluador').onchange=()=>{const v=$('aj-evaluador').value.trim();if(!v)return;setEvaluador(v);$('f-evaluador').value=v;updNames();save();toast('Nombre guardado ✓')};
+// ---- buscador de persona en el formulario ----
+function usarPersona(x){$('f-apellidos').value=x.apellidos||'';$('f-nombres').value=x.nombres||'';$('f-cedula').value=x.cedula||'';if(x.cargo)$('f-cargo').value=x.cargo;
+  if(x.tienda){if(![...$('f-tienda').options].some(o=>o.value===x.tienda))refrescarListas();$('f-tienda').value=x.tienda;$('f-correo').value=correoTienda(x.tienda)}
+  $('mPick').classList.remove('show');updNames();save();toast('Persona seleccionada: '+nomPer(x));}
+function pintarPick(){const solo=$('pkSolo').checked&&$('f-tienda').value;const L=buscarPersonas($('pkQ').value,solo?$('f-tienda').value:'');
+  $('pkList').innerHTML=L.slice(0,100).map(x=>`<div class="lrow" data-pk="${x.id}"><div class="i"><b>${esc(nomPer(x))}</b><span>${esc([x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))}</span></div><span>›</span></div>`).join('')||'<p class="desc" style="padding:8px 0">No se encontró. Puede registrarla abajo.</p>';
+  $('pkList').querySelectorAll('[data-pk]').forEach(el=>el.onclick=()=>usarPersona(CONF.personas.find(o=>o.id===el.dataset.pk)));}
+$('btnPick').onclick=()=>{$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').value;$('pkSolo').parentNode.style.display=$('f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
+$('pkQ').oninput=pintarPick;$('pkSolo').onchange=pintarPick;
+$('pkNew').onclick=()=>{$('mPick').classList.remove('show');editar('personas',null,{tienda:$('f-tienda').value,nombres:'',apellidos:''},usarPersona)};
 
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
@@ -2002,6 +2214,7 @@ async function guardarEnCarpetas(){
   try{root=await kvGet('carpeta');if(root&&(await root.requestPermission({mode:'readwrite'}))!=='granted')root=null}catch(e){root=null}
   if(!root){try{root=await showDirectoryPicker({id:'evaluaciones',mode:'readwrite'})}catch(e){return}}
   try{await kvSet('carpeta',root)}catch(e){}
+  for(const t of tiendasAct()){try{await root.getDirectoryHandle(limpio(t),{create:true})}catch(e){}}
   let n=0;const bk=(await kvGet('respaldo'))||{};
   for(const ev of IMP){
     try{
@@ -2017,11 +2230,12 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 
 // ---------------- Navegación ----------------
 function show(v){
-  ['form','doc','hist','rep'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  ['form','doc','hist','rep','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='doc'&&b.dataset.v==='hist'&&false)));
   $('totalbar').classList.toggle('hidden',v!=='form');
   if(v==='hist')loadHist();
   if(v==='rep')loadRep();
+  if(v==='aj'){pintarAjustes();pintarNube()}
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
@@ -2034,11 +2248,11 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
 
 // ---------------- Inicio ----------------
 (async function init(){
-  $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+CFG.tiendas.map(t=>`<option>${esc(t)}</option>`).join('');
-  $('h-tienda').innerHTML='<option value="">Todas las tiendas</option>'+CFG.tiendas.map(t=>`<option>${esc(t)}</option>`).join('');
-  $('r-tienda').innerHTML=$('h-tienda').innerHTML;$('r-tienda').onchange=$('r-estado').onchange=loadRep;
+  await cargarConf();
+  $('r-tienda').onchange=$('r-estado').onchange=$('r-per').onchange=loadRep;
+  refrescarListas();
   renderForm();renderComp();
-  $('f-evaluador').value=CFG.evaluador;
+  $('f-evaluador').value=getEvaluador();
   loadDraft();update();updNames();
   if(location.hash.startsWith('#vincular=')){
     try{let h=location.hash.slice(10).replace(/-/g,'+').replace(/_/g,'/');while(h.length%4)h+='=';const t=utf8b64(h);
