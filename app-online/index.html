@@ -130,7 +130,7 @@ textarea.t{min-height:70px;resize:vertical}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v3</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v4</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -226,11 +226,16 @@ textarea.t{min-height:70px;resize:vertical}
 <section id="view-hist" class="hidden">
   <div class="card">
     <h2>Evaluaciones guardadas</h2>
-    <p class="desc" id="h-info"></p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-      <button class="btn" id="btnExport" style="flex:1">📤 Enviar a la PC</button>
-      <button class="btn sec" id="btnImport" style="flex:1">📥 Importar a carpetas (PC)</button>
+    <div id="nubeBox" style="background:#faf8f5;border:1px solid var(--ln);border-radius:12px;padding:10px;margin:6px 0 10px">
+      <div style="display:flex;align-items:center;gap:8px"><div id="nubeEstado" style="flex:1;font-size:14px">☁️ …</div><button class="mini" id="btnSync">↻ Sincronizar</button></div>
+      <div class="acts">
+        <button class="mini or" id="btnRespaldo">💾 Respaldar en esta PC</button>
+        <button class="mini" id="btnVincular">📱 Vincular otro dispositivo</button>
+        <button class="mini" id="btnNubeCfg">⚙️ Configurar nube</button>
+        <button class="mini" id="btnImportar">📥 Importar archivo</button>
+      </div>
     </div>
+    <p class="desc" id="h-info"></p>
     <label class="f">Filtrar por tienda</label>
     <select class="t" id="h-tienda"></select>
     <div id="h-lista" style="margin-top:10px"></div>
@@ -251,6 +256,21 @@ textarea.t{min-height:70px;resize:vertical}
   <p id="celURL" style="font-weight:700;word-break:break-all"></p>
   <p style="font-size:12px;color:#888">En el celular: menú ⋮ → «Agregar a pantalla de inicio» para tenerla como app.</p>
   <button class="btn" onclick="document.getElementById('mCel').classList.remove('show')">Cerrar</button>
+</div></div>
+<div class="modal" id="mNube"><div class="box">
+  <h3 style="margin-top:0">Configurar nube</h3>
+  <p style="font-size:13px;color:#666">Pegue la <b>clave de acceso</b> de GitHub (empieza con <b>github_pat_</b>). Se guarda solo en este dispositivo.</p>
+  <input class="t" id="tokIn" type="password" autocomplete="off" placeholder="github_pat_…">
+  <p id="tokMsg" style="font-size:13px;min-height:18px"></p>
+  <button class="btn" id="tokOk" style="width:100%">Guardar y probar</button>
+  <button class="btn gray" style="width:100%;margin-top:8px" id="tokCancel">Cerrar</button>
+</div></div>
+<div class="modal" id="mVinc"><div class="box">
+  <h3 style="margin-top:0">Vincular otro dispositivo</h3>
+  <p style="font-size:13px;color:#666">Escanee este código con la cámara del otro celular o computadora. Quedará conectado a la misma nube.</p>
+  <div id="vincQR"></div>
+  <p style="font-size:12px;color:#d64545">No comparta este código: da acceso a las evaluaciones.</p>
+  <button class="btn" style="width:100%" onclick="document.getElementById('mVinc').classList.remove('show');document.getElementById('vincQR').innerHTML=''">Cerrar</button>
 </div></div>
 <div class="modal" id="mImp"><div class="box">
   <h3 style="margin-top:0">Guardar en carpetas</h3>
@@ -1665,7 +1685,7 @@ async function finalizar(){
     compromisos:comps.map((x,i)=>({n:i+1,texto:x.texto.trim(),responsable:x.responsable.trim(),fecha:x.fecha,estado:'pendiente'}))};
   const ok=await guardarLocal(ev);
   if(!ok){toast('No se pudo guardar en el celular. Use «Compartir» para no perderla.',5000)}
-  else toast('Evaluación guardada en el celular ✓ — recuerde enviarla a la PC',4000);
+  else toast('Evaluación guardada ✓ — subiendo a la nube…',3500);
   localStorage.removeItem('ev_draft');
   showDoc(ev);
   resetForm();
@@ -1699,7 +1719,7 @@ function docStandalone(ev){
   const css=document.querySelector('style').textContent;const paper=css.slice(css.indexOf('/*PAPER*/'),css.indexOf('/*ENDPAPER*/'));
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Evaluación ${esc(ev.tienda)} ${fmtFecha(ev.fechaHora)}</title><style>body{margin:0;padding:14px;background:#fff}${paper}@page{size:A4;margin:9mm}@media print{body{padding:0}.paper{min-width:0}}</style></head><body>${docHTML(ev)}</body></html>`;
 }
-async function guardarLocal(ev){try{await idbPut(ev);return true}catch(e){return false}}
+async function guardarLocal(ev){try{ev._sync=false;ev._html=false;await idbPut(ev);setTimeout(sincronizar,300);return true}catch(e){return false}}
 // ---------------- Documento imprimible con QR ----------------
 const APP_BASE='https://davidra3012-ctrl.github.io/evaluacion-tiendas/app-online/';
 function b64url(str){const b=new TextEncoder().encode(str);let bin='';b.forEach(x=>bin+=String.fromCharCode(x));return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -1822,7 +1842,7 @@ async function toggleCumplido(key){
   const [id,n]=key.split('|');const ev=(await idbAll()).find(e=>e.id===id);if(!ev)return;
   const x=ev.compromisos.find(c=>String(c.n)===n);if(!x)return;
   if(x.estado==='cumplido'){x.estado='pendiente';delete x.cumplidoEn}else{x.estado='cumplido';x.cumplidoEn=new Date().toISOString()}
-  await idbPut(ev);if(currentDoc&&currentDoc.id===id){currentDoc=ev;renderDocActs()}
+  ev._sync=false;ev._html=false;await idbPut(ev);setTimeout(sincronizar,300);if(currentDoc&&currentDoc.id===id){currentDoc=ev;renderDocActs()}
   if(!$('view-rep').classList.contains('hidden'))loadRep();toast(x.estado==='cumplido'?'Compromiso cumplido ✓':'Compromiso reabierto');
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cum]');if(b)toggleCumplido(b.dataset.cum)});
@@ -1856,17 +1876,104 @@ async function loadRep(){
 let HIST=[];
 async function loadHist(){
   HIST=(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
-  const pend=HIST.filter(e=>!e.exportado).length;
-  $('h-info').textContent=HIST.length?`${HIST.length} evaluación(es) en este dispositivo · ${pend} sin enviar a la PC`:'';
+  const pend=HIST.filter(e=>!e._sync).length;const bk=(await kvGet('respaldo'))||{};const sinBk=HIST.filter(e=>bk[e.id]!==(e._sha||e.id)).length;
+  $('h-info').textContent=HIST.length?`${HIST.length} evaluación(es) · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
   paintHist();
 }
 function paintHist(){
   const t=$('h-tienda').value;const L=HIST.filter(e=>!t||e.tienda===t);
   if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay evaluaciones todavía.</p>';return}
   $('h-lista').innerHTML=L.map((e,i)=>{const col=e.calificacionFinal>=85?'#1f9d55':e.calificacionFinal>=70?'#F28C28':'#d64545';
-    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.exportado?'':'<span class="pill">sin enviar</span>'}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}</span></div><div>›</div></div>`}).join('');
+    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e._sync?'':'<span class="pill">sin subir</span>'}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}</span></div><div>›</div></div>`}).join('');
   document.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>showDoc(HIST[+el.dataset.i]));
 }
+
+// ---------------- Nube (repositorio privado de GitHub) ----------------
+const NUBE={owner:'davidra3012-ctrl',repo:'evaluaciones-datos',branch:'main'};
+function getTok(){try{return localStorage.getItem('ev_token')||''}catch(e){return''}}
+function setTok(t){try{t?localStorage.setItem('ev_token',t):localStorage.removeItem('ev_token')}catch(e){}}
+async function gh(path,opt){opt=opt||{};
+  return fetch('https://api.github.com/repos/'+NUBE.owner+'/'+NUBE.repo+path,Object.assign({},opt,{cache:'no-store',headers:Object.assign({'Authorization':'Bearer '+getTok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.headers||{})}));}
+function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
+function utf8b64(b64){const bin=atob(String(b64).replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
+const jsonLimpio=ev=>JSON.stringify(ev,(k,v)=>k&&k[0]==='_'?undefined:v);
+const rutaNube=(ev,ext)=>`datos/${limpio(ev.tienda)}/${nombreBase(ev)}${ext}`;
+const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
+async function putFile(path,content,sha,msg){
+  const body={message:msg,content:b64utf8(content),branch:NUBE.branch};if(sha)body.sha=sha;
+  let r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)});
+  if(r.status===409||r.status===422){const g=await gh('/contents/'+encPath(path)+'?ref='+NUBE.branch);
+    if(g.ok){body.sha=(await g.json()).sha;r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)})}}
+  if(!r.ok)throw new Error('GitHub '+r.status);return (await r.json()).content.sha;
+}
+let SYNCING=false,LAST_SYNC=null,SYNC_ERR='';
+function pintarNube(extra){
+  const el=$('nubeEstado');if(!el)return;
+  if(!getTok()){el.innerHTML='☁️ <b>Nube sin configurar</b> — las evaluaciones quedan solo en este dispositivo';return}
+  if(SYNCING){el.textContent='☁️ Sincronizando…';return}
+  if(SYNC_ERR){el.innerHTML='⚠️ '+esc(SYNC_ERR);return}
+  el.innerHTML='☁️ <b>Sincronizado</b>'+(LAST_SYNC?' · '+pad(LAST_SYNC.getHours())+':'+pad(LAST_SYNC.getMinutes()):'')+(extra||'');
+}
+async function sincronizar(silencio){
+  if(!getTok()||SYNCING){pintarNube();return}
+  if(!navigator.onLine){SYNC_ERR='Sin internet: se subirá al volver la conexión';pintarNube();return}
+  SYNCING=true;SYNC_ERR='';pintarNube();let sub=0,baj=0;
+  try{
+    // 1) subir lo pendiente
+    for(const e of (await idbAll()).filter(x=>!x._sync)){
+      e._sha=await putFile(rutaNube(e,'.json'),jsonLimpio(e),e._sha,`Evaluación ${e.tienda} ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}`);
+      if(!e._html){try{await putFile(rutaNube(e,'.html'),docStandalone(e),null,`Documento ${e.tienda} ${fmtFecha(e.fechaHora)}`);e._html=true}catch(x){}}
+      e._sync=true;await idbPut(e);sub++;
+    }
+    // 2) bajar lo que hay en la nube
+    const r=await gh('/git/trees/'+NUBE.branch+'?recursive=1');
+    if(r.status===401||r.status===403)throw new Error('La clave de la nube no es válida o venció');
+    if(r.ok){
+      const t=await r.json();const local=await idbAll();const shas=new Set(local.map(e=>e._sha));
+      for(const it of (t.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
+        if(shas.has(it.sha))continue;
+        const g=await gh('/git/blobs/'+it.sha);if(!g.ok)continue;
+        const ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
+        const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync)continue;
+        ev._sha=it.sha;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
+      }
+    }else if(r.status!==404&&r.status!==409)throw new Error('No se pudo leer la nube ('+r.status+')');
+    LAST_SYNC=new Date();
+  }catch(err){SYNC_ERR=(err&&err.message)||'Error de conexión'}
+  SYNCING=false;pintarNube();
+  if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
+  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();}
+}
+async function probarToken(t){
+  const old=getTok();setTok(t);
+  try{const r=await gh('');if(r.ok){const j=await r.json();if(j.permissions&&j.permissions.push===false){setTok(old);return'La clave no tiene permiso de escritura'}return''}
+    setTok(old);return r.status===404?'La clave no tiene acceso al repositorio '+NUBE.repo:'Clave no válida ('+r.status+')';}
+  catch(e){setTok(old);return'Sin conexión a internet'}
+}
+$('btnNubeCfg').onclick=()=>{$('tokIn').value='';$('tokMsg').textContent=getTok()?'Ya hay una clave guardada. Pegue otra para reemplazarla.':'';$('mNube').classList.add('show')};
+$('tokCancel').onclick=()=>$('mNube').classList.remove('show');
+$('tokOk').onclick=async()=>{const t=$('tokIn').value.trim();if(!t){$('tokMsg').textContent='Pegue la clave';return}
+  $('tokMsg').textContent='Probando…';const err=await probarToken(t);
+  if(err){$('tokMsg').innerHTML='<span style="color:#d64545">'+esc(err)+'</span>';return}
+  $('mNube').classList.remove('show');toast('Nube conectada ✓');sincronizar();};
+$('btnSync').onclick=()=>sincronizar();
+$('btnImportar').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.multiple=true;
+  i.onchange=async()=>{let n=0;const local=await idbAll();
+    for(const f of i.files){try{const j=JSON.parse(await f.text());const L=Array.isArray(j)?j:(j.evaluaciones||[j]);
+      for(const e of L){if(!e||!e.id||!e.fechaHora)continue;if(local.some(x=>x.id===e.id))continue;e._sync=false;e._html=false;await idbPut(e);n++}}catch(x){}}
+    toast(n?`${n} evaluación(es) importadas ✓`:'No había evaluaciones nuevas en el archivo',4000);loadHist();if(n)sincronizar();};
+  i.click();};
+$('btnVincular').onclick=()=>{if(!getTok()){toast('Primero configure la nube en este dispositivo');return}
+  const u=APP_BASE+'#vincular='+b64url(getTok());$('vincQR').innerHTML=window.qrSVG(u,230);$('mVinc').classList.add('show')};
+$('btnRespaldo').onclick=async()=>{
+  if(!window.showDirectoryPicker){toast('Abra la app en Chrome o Edge de la computadora para respaldar',4500);return}
+  const bk=(await kvGet('respaldo'))||{};IMP=(await idbAll()).filter(e=>bk[e.id]!==(e._sha||e.id));
+  if(!IMP.length){toast('Todo ya está respaldado en esta PC ✓');return}
+  $('impTxt').textContent=`${IMP.length} evaluación(es) por respaldar.`;$('mImp').classList.add('show');
+};
+window.addEventListener('online',()=>sincronizar(true));
+setInterval(()=>{if(document.visibilityState==='visible')sincronizar(true)},5*60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sincronizar(true)});
 
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
@@ -1895,17 +2002,17 @@ async function guardarEnCarpetas(){
   try{root=await kvGet('carpeta');if(root&&(await root.requestPermission({mode:'readwrite'}))!=='granted')root=null}catch(e){root=null}
   if(!root){try{root=await showDirectoryPicker({id:'evaluaciones',mode:'readwrite'})}catch(e){return}}
   try{await kvSet('carpeta',root)}catch(e){}
-  let n=0;
+  let n=0;const bk=(await kvGet('respaldo'))||{};
   for(const ev of IMP){
     try{
       const dir=await root.getDirectoryHandle(limpio(ev.tienda),{create:true});const base=nombreBase(ev);
       for(const [ext,txt] of [['.json',JSON.stringify(ev)],['.html',docStandalone(ev)]]){const fh=await dir.getFileHandle(base+ext,{create:true});const w=await fh.createWritable();await w.write(txt);await w.close()}
-      ev.exportado=true;await idbPut(ev);n++;
+      bk[ev.id]=ev._sha||ev.id;n++;
     }catch(e){console.error(e)}
   }
-  $('mImp').classList.remove('show');toast(`${n} evaluación(es) guardadas en la carpeta «${root.name}» ✓`,5000);loadHist();
+  await kvSet('respaldo',bk);$('mImp').classList.remove('show');toast(`${n} evaluación(es) guardadas en la carpeta «${root.name}» ✓`,5000);loadHist();
 }
-$('btnExport').onclick=exportar;$('btnImport').onclick=importar;$('impGo').onclick=guardarEnCarpetas;
+$('impGo').onclick=guardarEnCarpetas;
 $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.html',docStandalone(currentDoc),'text/html','Evaluación '+currentDoc.tienda);
 
 // ---------------- Navegación ----------------
@@ -1933,6 +2040,11 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
   renderForm();renderComp();
   $('f-evaluador').value=CFG.evaluador;
   loadDraft();update();updNames();
+  if(location.hash.startsWith('#vincular=')){
+    try{let h=location.hash.slice(10).replace(/-/g,'+').replace(/_/g,'/');while(h.length%4)h+='=';const t=utf8b64(h);
+      history.replaceState(null,'',location.pathname);const err=await probarToken(t);toast(err?('No se pudo vincular: '+err):'Dispositivo vinculado a la nube ✓',4500);}catch(e){}
+  }
+  pintarNube();sincronizar(true);
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   if('serviceWorker' in navigator&&location.protocol==='https:'){
     let rec=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rec)return;rec=true;location.reload()});
