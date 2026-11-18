@@ -73,6 +73,13 @@ textarea.t{min-height:70px;resize:vertical}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:16px;padding:20px;text-align:center;max-width:340px;width:100%}
 .hidden{display:none!important}
+#login{position:fixed;inset:0;z-index:95;background:var(--or);display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top))}
+#login .box{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+#login .lg{font-size:30px;font-weight:800;color:var(--or2);text-transform:lowercase;text-align:center}
+#login a{color:var(--or2);font-size:13px;display:block;text-align:center;margin-top:12px}
+.rolp{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#eef2ff;color:#3949ab;margin-left:4px}
+.chk{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px}
+.steps{font-size:14px;line-height:1.5;padding-left:18px}.steps li{margin-bottom:6px}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 @media(min-width:620px){.kpis{grid-template-columns:repeat(4,1fr)}}
 .kpi{background:#faf8f5;border:1px solid var(--ln);border-radius:12px;padding:10px}
@@ -85,7 +92,7 @@ textarea.t{min-height:70px;resize:vertical}
 .sub2{font-size:14px;margin:14px 0 4px;color:var(--tx)}
 table.rk{width:100%;border-collapse:collapse;font-size:13px}table.rk th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--ln);padding:6px 4px}
 table.rk td{border-bottom:1px solid var(--ln);padding:6px 4px}table.rk td.r,table.rk th.r{text-align:right;font-variant-numeric:tabular-nums}
-nav.tabs button{font-size:14px}
+nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 .lrow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--ln)}
 .lrow:first-child{border-top:0}
 .lrow .i{flex:1;min-width:0}.lrow .i b{display:block;font-size:15px}.lrow .i span{font-size:13px;color:var(--mut);word-break:break-all}
@@ -153,15 +160,16 @@ nav.tabs button{font-size:14px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v6</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v8</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
 <nav class="tabs">
-  <button data-v="form" class="on">Nueva evaluación</button>
-  <button data-v="hist">Historial</button>
-  <button data-v="rep">Reportes</button>
-  <button data-v="aj">⚙️ Ajustes</button>
+  <button data-v="form" class="on">📝<br>Evaluar</button>
+  <button data-v="hist">🗂️<br>Historial</button>
+  <button data-v="rep">📊<br>Reportes</button>
+  <button data-v="comp">✅<br>Compromisos</button>
+  <button data-v="aj">⚙️<br>Ajustes</button>
 </nav>
 
 <main>
@@ -242,10 +250,16 @@ nav.tabs button{font-size:14px}
     </div>
     <div id="r-dash" style="margin-top:12px"></div>
   </div>
+</section>
+
+<!-- ============ COMPROMISOS ============ -->
+<section id="view-comp" class="hidden">
   <div class="card">
-    <h2>Compromisos</h2>
+    <h2>✅ Compromisos</h2>
+    <div class="kpis" id="c-kpis" style="margin-bottom:10px"></div>
     <div class="row2">
-      <div><label class="f">Estado</label><select class="t" id="r-estado"><option value="abiertos">Pendientes y vencidos</option><option value="venc">Solo vencidos</option><option value="ok">Cumplidos</option><option value="">Todos</option></select></div><div></div>
+      <div><label class="f">Tienda</label><select class="t" id="c-tienda"></select></div>
+      <div><label class="f">Estado</label><select class="t" id="r-estado"><option value="abiertos">Pendientes y vencidos</option><option value="venc">Solo vencidos</option><option value="pend">Solo pendientes</option><option value="ok">Cumplidos</option><option value="">Todos</option></select></div>
     </div>
     <div id="r-lista" style="margin-top:10px"></div>
   </div>
@@ -266,30 +280,42 @@ nav.tabs button{font-size:14px}
 <!-- ============ AJUSTES ============ -->
 <section id="view-aj" class="hidden">
   <div class="card">
+    <h2>👤 Sesión</h2>
+    <div id="aj-sesion" style="font-size:15px"></div>
+    <div class="acts"><button class="mini" id="btnLogout">Cerrar sesión</button><button class="mini or hidden" id="btnLogin">Iniciar sesión</button></div>
+  </div>
+  <div class="card" id="cardUsuarios">
+    <h2>👥 Usuarios</h2>
+    <p class="desc">Crea quién puede entrar a la app con usuario y contraseña. Todo lo que hagan llega a tu nube y a tu PC.</p>
+    <div id="aj-admwarn"></div>
+    <div id="aj-usuarios"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewUs">+ Nuevo usuario</button>
+  </div>
+  <div class="card" id="cardNombre">
     <h2>Mi nombre como evaluador</h2>
     <p class="desc">Se guarda en este dispositivo y aparece en cada evaluación que hagas aquí.</p>
     <input class="t" id="aj-evaluador" autocomplete="off">
   </div>
-  <div class="card">
+  <div class="card" id="cardPersonal">
     <h2>Personal evaluado</h2>
     <div class="srch"><span>🔍</span><input id="aj-pq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
     <select class="t" id="aj-pt" style="margin-top:8px"></select>
     <div id="aj-personas" style="margin-top:6px"></div>
     <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewPer">+ Nueva persona</button>
   </div>
-  <div class="card">
+  <div class="card" id="cardTiendas">
     <h2>Tiendas</h2>
     <p class="desc">Las tiendas nuevas aparecen solas en las evaluaciones. Al respaldar en la PC se crea su carpeta.</p>
     <div id="aj-tiendas"></div>
     <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewTi">+ Nueva tienda</button>
   </div>
-  <div class="card">
+  <div class="card" id="cardDirectores">
     <h2>Directores (copia de evaluaciones)</h2>
     <p class="desc">Reciben copia (CC) de cada evaluación que envíes por correo.</p>
     <div id="aj-directores"></div>
     <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewDi">+ Nuevo director</button>
   </div>
-  <div class="card">
+  <div class="card" id="cardNube">
     <h2>Nube y respaldo</h2>
     <div id="nubeEstado2" class="desc" style="font-size:14px;color:#333"></div>
     <div class="acts">
@@ -352,6 +378,23 @@ nav.tabs button{font-size:14px}
   <p style="font-size:13px;color:#888">Elija la carpeta <b>EvaluacionTiendas\datos</b> del escritorio. Se creará una carpeta por tienda.</p>
   <button class="btn" id="impGo" style="width:100%">Elegir carpeta y guardar</button>
   <button class="btn gray" style="width:100%;margin-top:8px" onclick="document.getElementById('mImp').classList.remove('show')">Cancelar</button>
+</div></div>
+<div id="login" class="hidden"><div class="box">
+  <div class="lg">warenhaus</div>
+  <p style="text-align:center;color:#666;font-size:14px;margin:4px 0 14px">Evaluación de Tiendas</p>
+  <label class="f">Usuario</label><input class="t" id="lgU" autocomplete="username" autocapitalize="none">
+  <label class="f">Contraseña</label><input class="t" id="lgP" type="password" autocomplete="current-password">
+  <p id="lgErr" style="color:#d64545;font-size:13px;min-height:18px"></p>
+  <button class="btn" id="lgOk" style="width:100%">Entrar</button>
+  <a href="#" id="lgLocal">Continuar sin cuenta (solo en este dispositivo)</a>
+  <a href="#" id="lgAdmin">Soy administrador: entrar con clave de GitHub</a>
+</div></div>
+<div class="modal" id="mUser"><div class="box wide" style="max-height:92vh;overflow:auto">
+  <h3 style="margin-top:0" id="usTit">Nuevo usuario</h3>
+  <div id="usBody"></div>
+  <p id="usErr" style="color:#d64545;font-size:13px;min-height:16px"></p>
+  <button class="btn" id="usOk" style="width:100%">Siguiente</button>
+  <button class="btn gray" style="width:100%;margin-top:8px" id="usCancel">Cancelar</button>
 </div></div>
 <div class="toast" id="toast"></div>
 
@@ -1653,7 +1696,7 @@ function mergeConf(a,b){const r={};for(const k of ['tiendas','directores','perso
 const confKey=c=>JSON.stringify(['tiendas','directores','personas'].map(k=>(c[k]||[]).map(x=>x.id+':'+(x.upd||0)).sort()));
 async function cargarConf(){try{const c=await kvGet('conf');if(c){CONF=mergeConf(CONF,c.data);CONF_SHA=c.sha||null;CONF_PEND=!!c.pend}}catch(e){}}
 async function guardarConf(pend){if(pend)CONF_PEND=true;try{await kvSet('conf',{data:CONF,sha:CONF_SHA,pend:CONF_PEND})}catch(e){}}
-function getEvaluador(){try{return localStorage.getItem('ev_evaluador')||CFG.evaluador}catch(e){return CFG.evaluador}}
+function getEvaluador(){const s=getSes();try{return localStorage.getItem('ev_evaluador')||(s&&s.nombre)||CFG.evaluador}catch(e){return CFG.evaluador}}
 function setEvaluador(v){try{localStorage.setItem('ev_evaluador',v)}catch(e){}}
 
 let CFG=DEF_CFG, INFO=null;
@@ -1771,7 +1814,7 @@ async function finalizar(){
   const id=`EV-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}-${Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('')}`;
   const ev={id,fechaHora:now.toISOString(),zona:Intl.DateTimeFormat().resolvedOptions().timeZone,...f,
     respuestas:st.r,observaciones:st.o,anexo:st.a,anexoObs:st.ao,firmas:st.firmas,
-    calificacionFinal:c.total,anexoTotal:c.at,ubicacion:ubic,version:2,
+    calificacionFinal:c.total,anexoTotal:c.at,ubicacion:ubic,version:2,evaluadorUsuario:(getSes()||{}).usuario||'admin',
     compromisos:comps.map((x,i)=>({n:i+1,texto:x.texto.trim(),responsable:x.responsable.trim(),fecha:x.fecha,estado:'pendiente'}))};
   const ok=await guardarLocal(ev);
   if(!ok){toast('No se pudo guardar en el celular. Use «Compartir» para no perderla.',5000)}
@@ -1928,14 +1971,15 @@ const BADGE={pend:'<span class="badge b-pend">Pendiente</span>',venc:'<span clas
 function compBotones(ev,x){
   return `<div class="acts"><a class="mini" href="${gcalURL(ev,x)}" target="_blank" rel="noopener">📅 Recordatorio</a>
    <a class="mini" href="${teamsURL(ev,x)}" target="_blank" rel="noopener">👥 Reunión Teams</a>
-   <button class="mini ${x.estado==='cumplido'?'':'ok'}" data-cum="${ev.id}|${x.n}">${x.estado==='cumplido'?'↺ Reabrir':'✓ Cumplido'}</button></div>`;
+   ${ROL()==='director'?'':`<button class="mini ${x.estado==='cumplido'?'':'ok'}" data-cum="${ev.id}|${x.n}">${x.estado==='cumplido'?'↺ Reabrir':'✓ Cumplido'}</button>`}</div>`;
 }
 async function toggleCumplido(key){
+  if(ROL()==='director'){toast('Solo lectura');return}
   const [id,n]=key.split('|');const ev=(await idbAll()).find(e=>e.id===id);if(!ev)return;
   const x=ev.compromisos.find(c=>String(c.n)===n);if(!x)return;
   if(x.estado==='cumplido'){x.estado='pendiente';delete x.cumplidoEn}else{x.estado='cumplido';x.cumplidoEn=new Date().toISOString()}
   ev._sync=false;ev._html=false;await idbPut(ev);setTimeout(sincronizar,300);if(currentDoc&&currentDoc.id===id){currentDoc=ev;renderDocActs()}
-  if(!$('view-rep').classList.contains('hidden'))loadRep();toast(x.estado==='cumplido'?'Compromiso cumplido ✓':'Compromiso reabierto');
+  if(!$('view-comp').classList.contains('hidden'))loadComp();toast(x.estado==='cumplido'?'Compromiso cumplido ✓':'Compromiso reabierto');
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cum]');if(b)toggleCumplido(b.dataset.cum)});
 function renderDocActs(){
@@ -1992,10 +2036,16 @@ function pintarTablero(all){
   $('r-dash').innerHTML=h;
 }
 async function loadRep(){
-  const all=(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
+  const all=visibles(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
   pintarTablero(all);
-  const ft=$('r-tienda').value,fe=$('r-estado').value;
-  const items=all.flatMap(ev=>(ev.compromisos||[]).map(x=>({ev,x,s:estadoComp(x)})))
+}
+async function loadComp(){
+  const all=visibles(await idbAll());
+  const todos=all.flatMap(ev=>(ev.compromisos||[]).map(x=>({ev,x,s:estadoComp(x)})));
+  const ct=(k)=>todos.filter(o=>o.s===k).length;
+  $('c-kpis').innerHTML=`<div class="kpi"><div class="v">${ct('pend')}</div><div class="l">Pendientes</div></div><div class="kpi"><div class="v" style="color:#d64545">${ct('venc')}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="v" style="color:#1f9d55">${ct('ok')}</div><div class="l">Cumplidos</div></div><div class="kpi"><div class="v">${todos.length?Math.round(ct('ok')/todos.length*100)+'%':'—'}</div><div class="l">Cumplimiento</div></div>`;
+  const ft=$('c-tienda').value,fe=$('r-estado').value;
+  const items=todos
     .filter(o=>(!ft||o.ev.tienda===ft)&&(!fe||(fe==='abiertos'?o.s!=='ok':o.s===fe)))
     .sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha));
   $('r-lista').innerHTML=items.map(({ev,x,s})=>`<div class="comp"><div class="top"><b>${esc(ev.tienda)} · ${fmtLocal(x.fecha)}</b>${BADGE[s]}</div>
@@ -2006,7 +2056,7 @@ async function loadRep(){
 // ---------------- Historial ----------------
 let HIST=[];
 async function loadHist(){
-  HIST=(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
+  HIST=visibles(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
   const pend=HIST.filter(e=>!e._sync).length;const bk=(await kvGet('respaldo'))||{};const sinBk=HIST.filter(e=>bk[e.id]!==(e._sha||e.id)).length;
   $('h-info').textContent=HIST.length?`${HIST.length} evaluación(es) · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
   paintHist();
@@ -2023,18 +2073,40 @@ function paintHist(){
 const NUBE={owner:'davidra3012-ctrl',repo:'evaluaciones-datos',branch:'main'};
 function getTok(){try{return localStorage.getItem('ev_token')||''}catch(e){return''}}
 function setTok(t){try{t?localStorage.setItem('ev_token',t):localStorage.removeItem('ev_token')}catch(e){}}
-async function gh(path,opt){opt=opt||{};
-  return fetch('https://api.github.com/repos/'+NUBE.owner+'/'+NUBE.repo+path,Object.assign({},opt,{cache:'no-store',headers:Object.assign({'Authorization':'Bearer '+getTok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.headers||{})}));}
+const APP_REPO='evaluacion-tiendas',USERS_PATH='app-online/usuarios.json';
+// ---- Sesión y roles ----
+function getSes(){try{return JSON.parse(localStorage.getItem('ev_sesion')||'null')}catch(e){return null}}
+function setSes(o){try{o?localStorage.setItem('ev_sesion',JSON.stringify(o)):localStorage.removeItem('ev_sesion')}catch(e){}}
+function ROL(){const s=getSes();if(s&&s.rol)return s.rol;return getTok()?'admin':'local'}
+const esAdmin=()=>ROL()==='admin'||ROL()==='local';
+function repoPropio(){return NUBE.repo}
+let USUARIOS=[],USR_SHA=null;
+const usrActivos=()=>USUARIOS.filter(u=>!u.del);
+function reposLectura(){return[NUBE.repo]}
+function visibles(L){const s=getSes();if(!s)return L;
+  if(s.rol==='evaluador')return L.filter(e=>e.evaluadorUsuario===s.usuario);
+  if(s.rol==='director'&&Array.isArray(s.tiendas)&&s.tiendas.length)return L.filter(e=>s.tiendas.includes(e.tienda));return L}
+function revisarSesion(){const s=getSes();if(!s||!USUARIOS.length)return false;const u=USUARIOS.find(x=>x.usuario===s.usuario);
+  if(!u||u.del){SYNCING=false;toast('Tu acceso fue retirado',4000);setTimeout(()=>cerrarSesion(true),1500);return true}
+  if(u.rol!==s.rol||u.nombre!==s.nombre||JSON.stringify(u.tiendas||[])!==JSON.stringify(s.tiendas||[])){setSes({usuario:u.usuario,nombre:u.nombre,rol:u.rol,tiendas:u.tiendas||[]});aplicarRol()}
+  return false}
+async function cargarUsuarios(){
+  try{const r=await fetch(APP_BASE_REL()+'usuarios.json?nc='+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();USUARIOS=j.usuarios||[];await kvSet('usuarios',USUARIOS);return}}catch(e){}
+  try{USUARIOS=(await kvGet('usuarios'))||[]}catch(e){}
+}
+function APP_BASE_REL(){return location.hostname.endsWith('github.io')?'':(window.USERS_BASE||'')}
+async function gh(path,opt,repo){opt=opt||{};
+  return fetch('https://api.github.com/repos/'+NUBE.owner+'/'+(repo||repoPropio())+path,Object.assign({},opt,{cache:'no-store',headers:Object.assign({'Authorization':'Bearer '+getTok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.headers||{})}));}
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
 function utf8b64(b64){const bin=atob(String(b64).replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
 const jsonLimpio=ev=>JSON.stringify(ev,(k,v)=>k&&k[0]==='_'?undefined:v);
 const rutaNube=(ev,ext)=>`datos/${limpio(ev.tienda)}/${nombreBase(ev)}${ext}`;
 const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
-async function putFile(path,content,sha,msg){
+async function putFile(path,content,sha,msg,repo){
   const body={message:msg,content:b64utf8(content),branch:NUBE.branch};if(sha)body.sha=sha;
-  let r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)});
-  if(r.status===409||r.status===422){const g=await gh('/contents/'+encPath(path)+'?ref='+NUBE.branch);
-    if(g.ok){body.sha=(await g.json()).sha;r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)})}}
+  let r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)},repo);
+  if(r.status===409||r.status===422){const g=await gh('/contents/'+encPath(path)+'?ref='+NUBE.branch,null,repo);
+    if(g.ok){body.sha=(await g.json()).sha;r=await gh('/contents/'+encPath(path),{method:'PUT',body:JSON.stringify(body)},repo)}}
   if(!r.ok)throw new Error('GitHub '+r.status);return (await r.json()).content.sha;
 }
 let SYNCING=false,LAST_SYNC=null,SYNC_ERR='';
@@ -2051,35 +2123,48 @@ async function sincronizar(silencio){
   if(!navigator.onLine){SYNC_ERR='Sin internet: se subirá al volver la conexión';pintarNube();return}
   SYNCING=true;SYNC_ERR='';pintarNube();let sub=0,baj=0;
   try{
+    await cargarUsuarios();if(revisarSesion())return;
     // 1) subir lo pendiente
-    for(const e of (await idbAll()).filter(x=>!x._sync)){
-      e._sha=await putFile(rutaNube(e,'.json'),jsonLimpio(e),e._sha,`Evaluación ${e.tienda} ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}`);
-      if(!e._html){try{await putFile(rutaNube(e,'.html'),docStandalone(e),null,`Documento ${e.tienda} ${fmtFecha(e.fechaHora)}`);e._html=true}catch(x){}}
-      e._sync=true;await idbPut(e);sub++;
+    if(ROL()!=='director')for(const e of (await idbAll()).filter(x=>!x._sync)){
+      const repo=e._repo||repoPropio();
+      e._sha=await putFile(rutaNube(e,'.json'),jsonLimpio(e),e._sha,`Evaluación ${e.tienda} ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}`,repo);
+      if(!e._html){try{await putFile(rutaNube(e,'.html'),docStandalone(e),null,`Documento ${e.tienda} ${fmtFecha(e.fechaHora)}`,repo);e._html=true}catch(x){}}
+      e._repo=repo;e._sync=true;await idbPut(e);sub++;
     }
-    // 2) bajar lo que hay en la nube
-    const r=await gh('/git/trees/'+NUBE.branch+'?recursive=1');
-    if(r.status===401||r.status===403)throw new Error('La clave de la nube no es válida o venció');
-    if(r.ok){
-      const t=await r.json();const local=await idbAll();const shas=new Set(local.map(e=>e._sha));
-      await syncConf((t.tree||[]).find(x=>x.path===CONF_PATH));
-      for(const it of (t.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
+    // 2) bajar de cada repositorio visible
+    const local=await idbAll();const shas=new Set(local.map(e=>e._sha));let leido=false;
+    for(const repo of reposLectura()){
+      const r=await gh('/git/trees/'+NUBE.branch+'?recursive=1',null,repo);
+      if((r.status===401||r.status===403)&&repo===reposLectura()[0])throw new Error('La clave no es válida, venció o fue revocada');
+      if(!r.ok)continue;leido=true;
+      const t=await r.json();const tree=t.tree||[];
+      if(repo===reposLectura()[0])await syncConf(tree.find(x=>x.path===CONF_PATH),repo);
+      for(const it of tree.filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
-        const g=await gh('/git/blobs/'+it.sha);if(!g.ok)continue;
+        const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)continue;
         const ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
         const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync)continue;
-        ev._sha=it.sha;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
+        ev._sha=it.sha;ev._repo=repo;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
       }
-    }else if(r.status!==404&&r.status!==409)throw new Error('No se pudo leer la nube ('+r.status+')');
+    }
+    if(!leido)throw new Error('No se pudo leer la nube');
     LAST_SYNC=new Date();
   }catch(err){SYNC_ERR=(err&&err.message)||'Error de conexión'}
   SYNCING=false;pintarNube();
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
-  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();}
+  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();}
+}
+async function copiarConfAEvaluadores(){
+  const hechos=(await kvGet('confCopias'))||{};const key=confKey(CONF);let cambio=false;
+  for(const u of USUARIOS.filter(u=>u.rol==='evaluador'&&u.repo&&!u.del)){
+    if(hechos[u.repo]===key)continue;
+    try{await putFile(CONF_PATH,JSON.stringify({version:1,copia:true,...CONF},null,1),null,'Copia de configuración',u.repo);hechos[u.repo]=key;cambio=true}catch(e){}
+  }
+  if(cambio)await kvSet('confCopias',hechos);
 }
 async function probarToken(t){
   const old=getTok();setTok(t);
-  try{const r=await gh('');if(r.ok){const j=await r.json();if(j.permissions&&j.permissions.push===false){setTok(old);return'La clave no tiene permiso de escritura'}return''}
+  try{const r=await gh('',null,NUBE.repo);if(r.ok){const j=await r.json();if(j.permissions&&j.permissions.push===false){setTok(old);return'La clave no tiene permiso de escritura'}return''}
     setTok(old);return r.status===404?'La clave no tiene acceso al repositorio '+NUBE.repo:'Clave no válida ('+r.status+')';}
   catch(e){setTok(old);return'Sin conexión a internet'}
 }
@@ -2088,7 +2173,7 @@ $('tokCancel').onclick=()=>$('mNube').classList.remove('show');
 $('tokOk').onclick=async()=>{const t=$('tokIn').value.trim();if(!t){$('tokMsg').textContent='Pegue la clave';return}
   $('tokMsg').textContent='Probando…';const err=await probarToken(t);
   if(err){$('tokMsg').innerHTML='<span style="color:#d64545">'+esc(err)+'</span>';return}
-  $('mNube').classList.remove('show');toast('Nube conectada ✓');sincronizar();};
+  $('mNube').classList.remove('show');const s=getSes();if(s&&s.rol!=='admin')setSes(null);aplicarRol();toast('Nube conectada ✓');sincronizar();if(!$('view-aj').classList.contains('hidden')&&ROL()==='admin')pintarUsuarios();};
 $('btnSync').onclick=()=>sincronizar();
 $('btnImportar').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.multiple=true;
   i.onchange=async()=>{let n=0;const local=await idbAll();
@@ -2109,7 +2194,11 @@ setInterval(()=>{if(document.visibilityState==='visible')sincronizar(true)},5*60
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sincronizar(true)});
 
 const CONF_PATH='config/configuracion.json';
-async function syncConf(item){
+async function syncConf(item,repo){
+  if(ROL()!=='admin'){ // solo lectura: adopta la configuración del administrador
+    if(item&&item.sha!==CONF_SHA){const g=await gh('/git/blobs/'+item.sha,null,repo);if(g.ok){const rem=JSON.parse(utf8b64((await g.json()).content));const antes=confKey(CONF);
+      CONF={tiendas:rem.tiendas||[],directores:rem.directores||[],personas:rem.personas||[]};CONF_SHA=item.sha;CONF_PEND=false;await guardarConf(false);if(antes!==confKey(CONF))refrescarListas();}}
+    return;}
   const antes=confKey(CONF);let remSha=item?item.sha:null;
   if(item&&item.sha!==CONF_SHA){const g=await gh('/git/blobs/'+item.sha);if(g.ok){const rem=JSON.parse(utf8b64((await g.json()).content));CONF=mergeConf(CONF,rem);
       if(confKey(CONF)!==confKey(mergeConf(rem,{}))) CONF_PEND=true;}}
@@ -2125,7 +2214,7 @@ function refrescarListas(){
   const T=tiendasAct(),cur=$('f-tienda').value;
   const opts=T.map(t=>`<option>${esc(t)}</option>`).join('');
   $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+opts+(cur&&!T.includes(cur)?`<option>${esc(cur)}</option>`:'');$('f-tienda').value=cur;
-  for(const id of ['h-tienda','r-tienda']){const v=$(id).value;$(id).innerHTML='<option value="">Todas las tiendas</option>'+opts;$(id).value=v}
+  for(const id of ['h-tienda','r-tienda','c-tienda']){const v=$(id).value;$(id).innerHTML='<option value="">Todas las tiendas</option>'+opts;$(id).value=v}
   const v=$('aj-pt').value;$('aj-pt').innerHTML='<option value="">Todas las tiendas</option>'+opts;$('aj-pt').value=v;
   if(!$('view-aj').classList.contains('hidden'))pintarAjustes();
 }
@@ -2187,6 +2276,111 @@ $('btnPick').onclick=()=>{$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').
 $('pkQ').oninput=pintarPick;$('pkSolo').onchange=pintarPick;
 $('pkNew').onclick=()=>{$('mPick').classList.remove('show');editar('personas',null,{tienda:$('f-tienda').value,nombres:'',apellidos:''},usarPersona)};
 
+// ---------------- Usuarios (claves cifradas con la contraseña) ----------------
+const te=new TextEncoder();
+const b64e=u8=>{let b='';u8.forEach(x=>b+=String.fromCharCode(x));return btoa(b)};
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function claveDe(pass,salt,iter){const k=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function cifrar(texto,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=310000;
+  const k=await claveDe(pass,salt,iter);return{salt:b64e(salt),iv:b64e(iv),iter,ct:b64e(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(texto))))}}
+async function descifrar(o,pass){const k=await claveDe(pass,b64d(o.salt),o.iter);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(o.iv)},k,b64d(o.ct)))}
+async function guardarUsuarios(){
+  const body=JSON.stringify({version:1,actualizado:new Date().toISOString(),usuarios:USUARIOS},null,1);
+  USR_SHA=await putFile(USERS_PATH,body,USR_SHA,'Actualiza usuarios de la app',APP_REPO);await kvSet('usuarios',USUARIOS);
+}
+async function ghApi(url,opt,tok){opt=opt||{};return fetch('https://api.github.com'+url,Object.assign({},opt,{cache:'no-store',headers:{'Authorization':'Bearer '+(tok||getTok()),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}))}
+async function adminPuede(){try{const r=await ghApi('/repos/'+NUBE.owner+'/'+APP_REPO);if(!r.ok)return false;const j=await r.json();return !!(j.permissions&&j.permissions.push)}catch(e){return false}}
+const urlToken=(nombre,desc,perm)=>'https://github.com/settings/personal-access-tokens/new?name='+encodeURIComponent(nombre)+'&description='+encodeURIComponent(desc)+'&expires_in=none&'+perm;
+const ROLES={admin:'Administrador',evaluador:'Evaluador',director:'Director con acceso'};
+async function pintarUsuarios(){
+  const ok=await adminPuede();
+  $('aj-admwarn').innerHTML=ok?'':'<div style="background:#fff4e5;border:1px solid #f5c48a;border-radius:10px;padding:10px;font-size:13px;margin-bottom:8px">Falta activar un permiso de la clave de la nube para guardar usuarios (se hace una sola vez).</div>';
+  $('btnNewUs').disabled=!ok;$('btnNewUs').style.opacity=ok?1:.5;
+  $('aj-usuarios').innerHTML=usrActivos().map(u=>`<div class="lrow"><div class="i"><b>${esc(u.nombre)} <span class="rolp">${ROLES[u.rol]}</span></b><span>usuario: ${esc(u.usuario)}${u.rol==='director'?' · '+(Array.isArray(u.tiendas)&&u.tiendas.length?esc(u.tiendas.join(', ')):'todas las tiendas'):''}</span></div><button class="ico" data-ued="${esc(u.usuario)}">✏️</button><button class="ico" data-udel="${esc(u.usuario)}">🗑️</button></div>`).join('')||'<p class="desc">Aún no hay usuarios.</p>';
+}
+function tiendasCheck(sel){const todas=!Array.isArray(sel)||!sel.length;
+  return `<label class="chk"><input type="checkbox" id="usTodas" ${todas?'checked':''}> <b>Todas las tiendas</b></label><div id="usTList" style="${todas?'display:none':''}">${tiendasAct().map(t=>`<label class="chk"><input type="checkbox" class="usT" value="${esc(t)}" ${!todas&&sel.includes(t)?'checked':''}> ${esc(t)}</label>`).join('')}</div>`}
+function leerTiendas(){return $('usTodas')&&$('usTodas').checked?[]:[...document.querySelectorAll('.usT:checked')].map(x=>x.value)}
+function bindTodas(){const t=$('usTodas');if(t)t.onchange=()=>{$('usTList').style.display=t.checked?'none':''}}
+function formUsuario(u){
+  const nuevo=!u;u=u||{rol:'evaluador',tiendas:[]};
+  $('usTit').textContent=nuevo?'Nuevo usuario':'Editar '+u.nombre;$('usErr').textContent='';$('usOk').textContent='Guardar';$('usOk').disabled=false;
+  $('usBody').innerHTML=`<label class="f">Nombre completo</label><input class="t" id="usN" value="${esc(u.nombre||'')}" autocomplete="off">
+   <label class="f">Usuario (para entrar)</label><input class="t" id="usU" value="${esc(u.usuario||'')}" ${nuevo?'':'disabled'} autocomplete="off" autocapitalize="none" placeholder="ej.: aperez">
+   <label class="f">Tipo de usuario</label><select class="t" id="usR">
+     <option value="evaluador" ${u.rol==='evaluador'?'selected':''}>Evaluador — evalúa y ve solo sus evaluaciones</option>
+     <option value="director" ${u.rol==='director'?'selected':''}>Director con acceso — ve reportes, historial y compromisos</option>
+     <option value="admin" ${u.rol==='admin'?'selected':''}>Administrador — ve y administra todo</option></select>
+   <div id="usTW" style="${u.rol==='director'?'':'display:none'}"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u.tiendas)}</div>
+   <label class="f">${nuevo?'Contraseña (mínimo 6 caracteres)':'Nueva contraseña (vacío = no cambiar)'}</label><input class="t" id="usP" type="text" autocomplete="off">`;
+  bindTodas();$('usR').onchange=()=>$('usTW').style.display=$('usR').value==='director'?'':'none';
+  if(nuevo){$('usN').oninput=()=>{if(!$('usU')._t)$('usU').value=slug($('usN').value).replace(/-/g,'').slice(0,20)};$('usU').oninput=()=>$('usU')._t=1;}
+  $('mUser').classList.add('show');
+  $('usOk').onclick=async()=>{
+    const n=$('usN').value.trim(),un=$('usU').value.trim().toLowerCase(),r=$('usR').value,p=$('usP').value;
+    if(!n||!un){$('usErr').textContent='Complete nombre y usuario';return}
+    if(nuevo&&!/^[a-z0-9.]{3,20}$/.test(un)){$('usErr').textContent='Usuario: letras minúsculas y números (3 a 20)';return}
+    if(nuevo&&USUARIOS.some(x=>x.usuario===un&&!x.del)){$('usErr').textContent='Ese usuario ya existe';return}
+    if((nuevo||p)&&p.length<6){$('usErr').textContent='La contraseña debe tener al menos 6 caracteres';return}
+    $('usOk').disabled=true;$('usErr').textContent='Guardando…';
+    try{
+      let o=nuevo?{usuario:un}:USUARIOS.find(x=>x.usuario===un);
+      Object.assign(o,{nombre:n,rol:r,tiendas:r==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
+      if(p)o.cred=await cifrar(getTok(),p);
+      if(nuevo){USUARIOS=USUARIOS.filter(x=>x.usuario!==un);USUARIOS.push(o)}
+      await guardarUsuarios();
+    }catch(e){$('usOk').disabled=false;$('usErr').textContent='No se pudo guardar: '+e.message;return}
+    if(nuevo&&p){$('usTit').textContent='Usuario creado ✓';$('usErr').textContent='';$('usOk').textContent='Listo';$('usOk').disabled=false;
+      $('usBody').innerHTML=`<p>Comparte con <b>${esc(n)}</b>:</p><div style="background:#faf8f5;border-radius:10px;padding:10px;font-size:15px">Enlace: <b>${esc(APP_BASE)}</b><br>Usuario: <b>${esc(un)}</b><br>Contraseña: <b>${esc(p)}</b></div>
+       <div style="text-align:center;margin-top:8px">${window.qrSVG(APP_BASE,170)}</div><p class="desc">Podrá entrar en aproximadamente 1 minuto.</p>`;
+      $('usOk').onclick=()=>$('mUser').classList.remove('show');}
+    else{$('mUser').classList.remove('show');toast('Usuario guardado ✓')}
+    pintarUsuarios();
+  };
+}
+function nuevoUsuario(){formUsuario(null)}
+function editarUsuario(un){const u=USUARIOS.find(x=>x.usuario===un);if(u)formUsuario(u)}
+async function borrarUsuario(un){const u=USUARIOS.find(x=>x.usuario===un);if(!u)return;
+  if(!confirm(`¿Quitar el acceso a ${u.nombre}?\n\nSus evaluaciones ya hechas se conservan.`))return;
+  u.del=true;u.upd=Date.now();delete u.cred;try{await guardarUsuarios()}catch(e){toast('No se pudo guardar: '+e.message);return}
+  pintarUsuarios();toast('Acceso quitado ✓');}
+$('usCancel').onclick=()=>$('mUser').classList.remove('show');
+$('btnNewUs').onclick=nuevoUsuario;
+document.addEventListener('click',e=>{const a=e.target.closest('[data-ued]'),d=e.target.closest('[data-udel]');if(a)editarUsuario(a.dataset.ued);if(d)borrarUsuario(d.dataset.udel)});
+// ---- Login ----
+function mostrarLogin(v){$('login').classList.toggle('hidden',!v);if(v){$('lgErr').textContent='';setTimeout(()=>$('lgU').focus(),100)}}
+$('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP').value;if(!u||!p){$('lgErr').textContent='Escriba usuario y contraseña';return}
+  $('lgErr').textContent='Entrando…';await cargarUsuarios();const x=USUARIOS.find(o=>o.usuario===u&&!o.del);
+  if(!x||!x.cred){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
+  let t;try{t=await descifrar(x.cred,p)}catch(e){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
+  setTok(t);setSes({usuario:x.usuario,nombre:x.nombre,rol:x.rol,tiendas:x.tiendas||[]});
+  try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local')}catch(e){}
+  $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();toast('Bienvenido/a, '+x.nombre);sincronizar();};
+$('lgP').onkeydown=e=>{if(e.key==='Enter')$('lgOk').click()};
+$('lgLocal').onclick=e=>{e.preventDefault();try{localStorage.setItem('ev_local','1')}catch(x){}mostrarLogin(false);aplicarRol()};
+$('lgAdmin').onclick=e=>{e.preventDefault();mostrarLogin(false);show('aj');$('btnNubeCfg').click()};
+$('btnLogin').onclick=()=>mostrarLogin(true);
+async function cerrarSesion(forzar){const pend=(await idbAll()).filter(e=>!e._sync).length;
+  if(!forzar&&!confirm(pend?`Hay ${pend} evaluación(es) sin subir a la nube que se perderán.\n\n¿Cerrar sesión de todos modos?`:'¿Cerrar sesión en este dispositivo?'))return;
+  setTok('');setSes(null);try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local');localStorage.removeItem('ev_draft')}catch(e){}
+  await new Promise(r=>{const q=indexedDB.deleteDatabase('evaluaciones_warenhaus');q.onsuccess=q.onerror=q.onblocked=()=>r()});location.reload()}
+$('btnLogout').onclick=()=>cerrarSesion(false);
+// ---- Interfaz según el rol ----
+function aplicarRol(){
+  const r=ROL(),s=getSes();
+  const navForm=document.querySelector('nav.tabs button[data-v="form"]');navForm.classList.toggle('hidden',r==='director');
+  const adm=r==='admin'||r==='local';
+  ['cardPersonal','cardTiendas','cardDirectores'].forEach(id=>$(id).classList.toggle('hidden',!adm));
+  $('cardNube').classList.toggle('hidden',!(adm));$('cardUsuarios').classList.toggle('hidden',r!=='admin');
+  $('cardNombre').classList.toggle('hidden',r==='director');
+  $('pkNew').classList.toggle('hidden',!adm);
+  $('aj-sesion').innerHTML=s?`<b>${esc(s.nombre)}</b> <span class="rolp">${ROLES[s.rol]}</span><div class="desc" style="margin:4px 0 0">usuario: ${esc(s.usuario)}${s.rol==='director'?' · '+(s.tiendas&&s.tiendas.length?esc(s.tiendas.join(', ')):'todas las tiendas'):''}</div>`:
+    (r==='admin'?'<b>Administrador</b> <span class="rolp">conectado con clave</span>':'Sin cuenta: las evaluaciones quedan solo en este dispositivo.');
+  $('btnLogout').classList.toggle('hidden',r==='local');$('btnLogin').classList.toggle('hidden',r!=='local');
+  if(r==='director'&&!$('view-form').classList.contains('hidden'))show('rep');
+}
+
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
   const todos=(await idbAll());const pend=todos.filter(e=>!e.exportado);
@@ -2230,12 +2424,13 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 
 // ---------------- Navegación ----------------
 function show(v){
-  ['form','doc','hist','rep','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  ['form','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='doc'&&b.dataset.v==='hist'&&false)));
   $('totalbar').classList.toggle('hidden',v!=='form');
   if(v==='hist')loadHist();
   if(v==='rep')loadRep();
-  if(v==='aj'){pintarAjustes();pintarNube()}
+  if(v==='comp')loadComp();
+  if(v==='aj'){pintarAjustes();pintarNube();aplicarRol();if(ROL()==='admin')pintarUsuarios()}
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
@@ -2249,7 +2444,7 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
 // ---------------- Inicio ----------------
 (async function init(){
   await cargarConf();
-  $('r-tienda').onchange=$('r-estado').onchange=$('r-per').onchange=loadRep;
+  $('r-tienda').onchange=$('r-per').onchange=loadRep;$('c-tienda').onchange=$('r-estado').onchange=loadComp;
   refrescarListas();
   renderForm();renderComp();
   $('f-evaluador').value=getEvaluador();
@@ -2258,6 +2453,9 @@ $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('ce
     try{let h=location.hash.slice(10).replace(/-/g,'+').replace(/_/g,'/');while(h.length%4)h+='=';const t=utf8b64(h);
       history.replaceState(null,'',location.pathname);const err=await probarToken(t);toast(err?('No se pudo vincular: '+err):'Dispositivo vinculado a la nube ✓',4500);}catch(e){}
   }
+  await cargarUsuarios();
+  aplicarRol();
+  if(!getTok()&&!(function(){try{return localStorage.getItem('ev_local')}catch(e){}})())mostrarLogin(true);
   pintarNube();sincronizar(true);
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   if('serviceWorker' in navigator&&location.protocol==='https:'){
