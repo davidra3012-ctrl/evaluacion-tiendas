@@ -165,7 +165,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v11</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub">Evaluación Responsables de Tiendas · <b>v12</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -346,44 +346,25 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <div id="aj-sesion" style="font-size:15px"></div>
     <div class="acts"><button class="mini" id="btnLogout">Cerrar sesión</button><button class="mini or hidden" id="btnLogin">Iniciar sesión</button></div>
   </div>
-  <div class="card" id="cardUsuarios">
-    <h2>👥 Usuarios</h2>
-    <p class="desc">Crea quién puede entrar a la app con usuario y contraseña. Todo lo que hagan llega a tu nube y a tu PC.</p>
-    <div id="aj-admwarn"></div>
-    <div id="aj-usuarios"></div>
-    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewUs">+ Nuevo usuario</button>
-  </div>
   <div class="card" id="cardNombre">
     <h2>Mi nombre como evaluador</h2>
     <p class="desc">Se guarda en este dispositivo y aparece en cada evaluación que hagas aquí.</p>
     <input class="t" id="aj-evaluador" autocomplete="off">
   </div>
-  <div class="card" id="cardColab">
-    <h2>🧑‍💼 Colaboradores de tienda</h2>
-    <p class="desc">Personal que evalúan los responsables de tienda.</p>
-    <div class="srch"><span>🔍</span><input id="aj-cq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
-    <select class="t" id="aj-ct" style="margin-top:8px"></select>
-    <div id="aj-colab" style="margin-top:6px"></div>
-    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewCol">+ Nuevo colaborador</button>
-  </div>
-  <div class="card" id="cardPersonal">
-    <h2>Personal evaluado</h2>
-    <div class="srch"><span>🔍</span><input id="aj-pq" placeholder="Buscar por nombre, apellido o cédula" autocomplete="off"></div>
-    <select class="t" id="aj-pt" style="margin-top:8px"></select>
-    <div id="aj-personas" style="margin-top:6px"></div>
-    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewPer">+ Nueva persona</button>
+  <div class="card" id="cardGente">
+    <h2>👥 Personas y usuarios</h2>
+    <p class="desc" id="gDesc"></p>
+    <div id="gWarn"></div>
+    <div class="srch"><span>🔍</span><input id="gQ" placeholder="Buscar por nombre, apellido, cédula o usuario" autocomplete="off"></div>
+    <div class="row2" style="margin-top:8px"><select class="t" id="gPerfil"></select><select class="t" id="gTienda"></select></div>
+    <div id="gLista" style="margin-top:6px"></div>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewGente">+ Nueva persona</button>
   </div>
   <div class="card" id="cardTiendas">
     <h2>Tiendas</h2>
     <p class="desc">Las tiendas nuevas aparecen solas en las evaluaciones. Al respaldar en la PC se crea su carpeta.</p>
     <div id="aj-tiendas"></div>
     <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewTi">+ Nueva tienda</button>
-  </div>
-  <div class="card" id="cardDirectores">
-    <h2>Directores (copia de evaluaciones)</h2>
-    <p class="desc">Reciben copia (CC) de cada evaluación que envíes por correo.</p>
-    <div id="aj-directores"></div>
-    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewDi">+ Nuevo director</button>
   </div>
   <div class="card" id="cardNube">
     <h2>Nube y respaldo</h2>
@@ -1996,7 +1977,7 @@ function fitDoc(){const pp=document.querySelector('#doc .paper');if(!pp)return;c
 window.addEventListener('resize',fitDoc);
 function fmtLocal(v){if(!v)return'';const d=new Date(v);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
 function correoDe(ev){return ev.correo||correoTienda(ev.tienda)||''}
-const ccDirectores=()=>activos('directores').map(d=>d.correo).filter(Boolean);
+const ccDirectores=()=>[...new Set([...activos('personas').filter(x=>x.perfil==='director').map(d=>d.correo),...activos('directores').map(d=>d.correo)].filter(Boolean))];
 function utcCompact(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}
 function textoCorreo(ev){
   const malos=ALL_ITEMS.filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n} (${i.w}%)${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
@@ -2229,6 +2210,7 @@ async function sincronizar(silencio){
     LAST_SYNC=new Date();
   }catch(err){SYNC_ERR=(err&&err.message)||'Error de conexión'}
   SYNCING=false;pintarNube();
+  if(!SYNC_ERR&&ROL()==='admin'&&!window._migrando){window._migrando=1;try{await migrarPersonas()}catch(e){}window._migrando=0}
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
   if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();}
 }
@@ -2293,25 +2275,20 @@ function refrescarListas(){
   const opts=T.map(t=>`<option>${esc(t)}</option>`).join('');
   $('f-tienda').innerHTML='<option value="">— Seleccione la tienda —</option>'+opts+(cur&&!T.includes(cur)?`<option>${esc(cur)}</option>`:'');$('f-tienda').value=cur;
   for(const id of ['h-tienda','r-tienda','c-tienda']){const v=$(id).value;$(id).innerHTML='<option value="">Todas las tiendas</option>'+opts;$(id).value=v}
-  const v=$('aj-pt').value;$('aj-pt').innerHTML='<option value="">Todas las tiendas</option>'+opts;$('aj-pt').value=v;
   if(window.refrescarColab)refrescarColab();
   if(!$('view-aj').classList.contains('hidden'))pintarAjustes();
 }
 const filaHTML=(tipo,x,tit,sub)=>`<div class="lrow"><div class="i"><b>${esc(tit)}</b><span>${esc(sub)}</span></div><button class="ico" data-ed="${tipo}|${x.id}">✏️</button><button class="ico" data-del="${tipo}|${x.id}">🗑️</button></div>`;
 const nomPer=x=>`${x.apellidos||''} ${x.nombres||''}`.trim();
-function buscarPersonas(q,tienda,col){col=col||'personas';q=String(q||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-  return activos(col).filter(x=>(!tienda||x.tienda===tienda)&&(!q||`${x.nombres} ${x.apellidos} ${x.apellidos} ${x.nombres} ${x.cedula||''}`.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().includes(q)))
+const perfilDe=x=>x.perfil||'responsable';
+function buscarPersonas(q,tienda,perfil){if(perfil==='personas')perfil='responsable';if(perfil==='colaboradores')perfil='colaborador';q=String(q||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  return activos('personas').filter(x=>(!perfil||perfilDe(x)===perfil)&&(!tienda||x.tienda===tienda||(Array.isArray(x.tiendas)&&x.tiendas.includes(tienda)))&&(!q||`${x.nombres} ${x.apellidos} ${x.apellidos} ${x.nombres} ${x.cedula||''} ${(usrDe(x)||{}).usuario||''}`.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().includes(q)))
     .sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'));}
 function pintarAjustes(){
   $('aj-evaluador').value=getEvaluador();
   $('aj-tiendas').innerHTML=activos('tiendas').sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(x=>filaHTML('tiendas',x,x.nombre,x.correo||'sin correo')).join('')||'<p class="desc">No hay tiendas.</p>';
-  $('aj-directores').innerHTML=activos('directores').map(x=>filaHTML('directores',x,x.nombre,x.correo)).join('')||'<p class="desc">Aún no hay directores registrados.</p>';
-  const L=buscarPersonas($('aj-pq').value,$('aj-pt').value);
-  $('aj-personas').innerHTML=(L.slice(0,200).map(x=>filaHTML('personas',x,nomPer(x),[x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>200?`<p class="desc">Mostrando 200 de ${L.length}. Use el buscador.</p>`:'');
   $('btnRespaldo').classList.toggle('hidden',!window.showDirectoryPicker);
-  const MT=misTiendas();const vt=$('aj-ct').value;$('aj-ct').innerHTML=(MT.length>1||ROL()!=='responsable'?'<option value="">Todas las tiendas</option>':'')+MT.map(t=>`<option>${esc(t)}</option>`).join('');$('aj-ct').value=MT.includes(vt)?vt:$('aj-ct').options[0]?$('aj-ct').options[0].value:'';
-  const LC=buscarPersonas($('aj-cq').value,$('aj-ct').value,'colaboradores').filter(x=>MT.includes(x.tienda));
-  $('aj-colab').innerHTML=(LC.slice(0,200).map(x=>filaHTML('colaboradores',x,nomPer(x),[x.tienda,x.seccion,x.cargo,x.cedula].filter(Boolean).join(' · '))).join('')||'<p class="desc">No hay colaboradores con ese filtro.</p>')+(LC.length>200?`<p class="desc">Mostrando 200 de ${LC.length}.</p>`:'');
+  pintarGente();
 }
 const CAMPOS={
   tiendas:[['nombre','Nombre de la tienda','text',1],['correo','Correo de la tienda','email',0]],
@@ -2343,24 +2320,22 @@ async function borrar(tipo,id){const x=CONF[tipo].find(o=>o.id===id);if(!x)retur
   const n=(tipo==='personas'||tipo==='colaboradores')?nomPer(x):x.nombre;
   if(!confirm(`¿Eliminar ${TIT[tipo]} «${n}»?${tipo==='tiendas'?'\n\nLas evaluaciones ya hechas de esta tienda NO se borran.':''}`))return;
   x.del=true;x.upd=Date.now();await guardarConf(true);refrescarListas();pintarAjustes();toast('Eliminado');sincronizar(true);}
-async function crearCarpetaTienda(nombre){try{const root=await kvGet('carpeta');if(root&&(await root.queryPermission({mode:'readwrite'}))==='granted')await root.getDirectoryHandle(limpio(nombre),{create:true})}catch(e){}}
+async function crearCarpetaTienda(nombre){try{let root=await kvGet('carpeta');if(root&&(await root.queryPermission({mode:'readwrite'}))==='granted'){if(root.name==='EvaluacionTiendas')root=await root.getDirectoryHandle('datos',{create:true});await root.getDirectoryHandle(limpio(nombre),{create:true})}}catch(e){}}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-ed]'),d=e.target.closest('[data-del]');
   if(a){const [t,i]=a.dataset.ed.split('|');editar(t,i)}if(d){const [t,i]=d.dataset.del.split('|');borrar(t,i)}});
-$('btnNewTi').onclick=()=>editar('tiendas');$('btnNewDi').onclick=()=>editar('directores');$('btnNewPer').onclick=()=>editar('personas',null,{tienda:$('aj-pt').value});
-$('aj-pq').oninput=pintarAjustes;$('aj-pt').onchange=pintarAjustes;$('aj-cq').oninput=pintarAjustes;$('aj-ct').onchange=pintarAjustes;
-$('btnNewCol').onclick=()=>editar('colaboradores',null,{tienda:$('aj-ct').value||misTiendas()[0]||''});
+$('btnNewTi').onclick=()=>editar('tiendas');
 $('aj-evaluador').onchange=()=>{const v=$('aj-evaluador').value.trim();if(!v)return;setEvaluador(v);$('f-evaluador').value=v;updNames();save();toast('Nombre guardado ✓')};
 // ---- buscador de persona en el formulario ----
 function usarPersona(x){$('f-apellidos').value=x.apellidos||'';$('f-nombres').value=x.nombres||'';$('f-cedula').value=x.cedula||'';if(x.cargo)$('f-cargo').value=x.cargo;
   if(x.tienda){if(![...$('f-tienda').options].some(o=>o.value===x.tienda))refrescarListas();$('f-tienda').value=x.tienda;$('f-correo').value=correoTienda(x.tienda)}
   $('mPick').classList.remove('show');updNames();save();toast('Persona seleccionada: '+nomPer(x));}
-let PICK='personas';
-function pintarPick(){const tf=PICK==='colaboradores'?$('c-f-tienda').value:$('f-tienda').value;const solo=$('pkSolo').checked&&tf;let L=buscarPersonas($('pkQ').value,solo?tf:'',PICK);if(PICK==='colaboradores')L=L.filter(x=>misTiendas().includes(x.tienda));
+let PICK='responsable';
+function pintarPick(){const tf=PICK==='colaborador'?$('c-f-tienda').value:$('f-tienda').value;const solo=$('pkSolo').checked&&tf;let L=buscarPersonas($('pkQ').value,solo?tf:'',PICK);if(PICK==='colaborador')L=L.filter(x=>misTiendas().includes(x.tienda));
   $('pkList').innerHTML=L.slice(0,100).map(x=>`<div class="lrow" data-pk="${x.id}"><div class="i"><b>${esc(nomPer(x))}</b><span>${esc([x.tienda,x.cargo,x.cedula].filter(Boolean).join(' · '))}</span></div><span>›</span></div>`).join('')||'<p class="desc" style="padding:8px 0">No se encontró. Puede registrarla abajo.</p>';
-  $('pkList').querySelectorAll('[data-pk]').forEach(el=>el.onclick=()=>{const x=CONF[PICK].find(o=>o.id===el.dataset.pk);PICK==='colaboradores'?usarColab(x):usarPersona(x)});}
-$('btnPick').onclick=()=>{PICK='personas';$('pkNew').textContent='+ Registrar nueva persona';$('pkNew').classList.toggle('hidden',!esAdmin());$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').value;$('pkSolo').parentNode.style.display=$('f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
+  $('pkList').querySelectorAll('[data-pk]').forEach(el=>el.onclick=()=>{const x=CONF.personas.find(o=>o.id===el.dataset.pk);PICK==='colaborador'?usarColab(x):usarPersona(x)});}
+$('btnPick').onclick=()=>{PICK='responsable';$('pkNew').textContent='+ Registrar nuevo responsable';$('pkNew').classList.toggle('hidden',!esAdmin());$('pkQ').value='';$('pkSolo').checked=!!$('f-tienda').value;$('pkSolo').parentNode.style.display=$('f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
 $('pkQ').oninput=pintarPick;$('pkSolo').onchange=pintarPick;
-$('pkNew').onclick=()=>{$('mPick').classList.remove('show');PICK==='colaboradores'?editar('colaboradores',null,{tienda:$('c-f-tienda').value||misTiendas()[0]||''},usarColab):editar('personas',null,{tienda:$('f-tienda').value,nombres:'',apellidos:''},usarPersona)};
+$('pkNew').onclick=()=>{$('mPick').classList.remove('show');PICK==='colaborador'?abrirPersona(null,{perfil:'colaborador',tienda:$('c-f-tienda').value||misTiendas()[0]||''},usarColab):abrirPersona(null,{perfil:'responsable',tienda:$('f-tienda').value},usarPersona)};
 
 // ---------------- Usuarios (claves cifradas con la contraseña) ----------------
 const te=new TextEncoder();
@@ -2379,12 +2354,7 @@ async function ghApi(url,opt,tok){opt=opt||{};return fetch('https://api.github.c
 async function adminPuede(){try{const r=await ghApi('/repos/'+NUBE.owner+'/'+APP_REPO);if(!r.ok)return false;const j=await r.json();return !!(j.permissions&&j.permissions.push)}catch(e){return false}}
 const urlToken=(nombre,desc,perm)=>'https://github.com/settings/personal-access-tokens/new?name='+encodeURIComponent(nombre)+'&description='+encodeURIComponent(desc)+'&expires_in=none&'+perm;
 const ROLES={admin:'Administrador',evaluador:'Evaluador',director:'Director con acceso',responsable:'Responsable de tienda'};
-async function pintarUsuarios(){
-  const ok=await adminPuede();
-  $('aj-admwarn').innerHTML=ok?'':'<div style="background:#fff4e5;border:1px solid #f5c48a;border-radius:10px;padding:10px;font-size:13px;margin-bottom:8px">Falta activar un permiso de la clave de la nube para guardar usuarios (se hace una sola vez).</div>';
-  $('btnNewUs').disabled=!ok;$('btnNewUs').style.opacity=ok?1:.5;
-  $('aj-usuarios').innerHTML=usrActivos().map(u=>`<div class="lrow"><div class="i"><b>${esc(u.nombre)} <span class="rolp">${ROLES[u.rol]}</span></b><span>usuario: ${esc(u.usuario)}${u.rol==='director'||u.rol==='responsable'?' · '+(Array.isArray(u.tiendas)&&u.tiendas.length?esc(u.tiendas.join(', ')):'todas las tiendas'):''}</span></div><button class="ico" data-ued="${esc(u.usuario)}">✏️</button><button class="ico" data-udel="${esc(u.usuario)}">🗑️</button></div>`).join('')||'<p class="desc">Aún no hay usuarios.</p>';
-}
+function pintarUsuarios(){pintarGente()}
 function tiendasCheck(sel){const todas=!Array.isArray(sel)||!sel.length;
   return `<label class="chk"><input type="checkbox" id="usTodas" ${todas?'checked':''}> <b>Todas las tiendas</b></label><div id="usTList" style="${todas?'display:none':''}">${tiendasAct().map(t=>`<label class="chk"><input type="checkbox" class="usT" value="${esc(t)}" ${!todas&&sel.includes(t)?'checked':''}> ${esc(t)}</label>`).join('')}</div>`}
 function leerTiendas(){return $('usTodas')&&$('usTodas').checked?[]:[...document.querySelectorAll('.usT:checked')].map(x=>x.value)}
@@ -2427,7 +2397,7 @@ function formUsuario(u){
        <div style="text-align:center;margin-top:8px">${window.qrSVG(APP_BASE,170)}</div><p class="desc">Podrá entrar en aproximadamente 1 minuto.</p>`;
       $('usOk').onclick=()=>$('mUser').classList.remove('show');}
     else{$('mUser').classList.remove('show');toast('Usuario guardado ✓')}
-    pintarUsuarios();
+    pintarGente();
   };
 }
 function nuevoUsuario(){formUsuario(null)}
@@ -2435,9 +2405,8 @@ function editarUsuario(un){const u=USUARIOS.find(x=>x.usuario===un);if(u)formUsu
 async function borrarUsuario(un){const u=USUARIOS.find(x=>x.usuario===un);if(!u)return;
   if(!confirm(`¿Quitar el acceso a ${u.nombre}?\n\nSus evaluaciones ya hechas se conservan.`))return;
   u.del=true;u.upd=Date.now();delete u.cred;try{await guardarUsuarios()}catch(e){toast('No se pudo guardar: '+e.message);return}
-  pintarUsuarios();toast('Acceso quitado ✓');}
+  pintarGente();toast('Acceso quitado ✓');}
 $('usCancel').onclick=()=>$('mUser').classList.remove('show');
-$('btnNewUs').onclick=nuevoUsuario;
 document.addEventListener('click',e=>{const a=e.target.closest('[data-ued]'),d=e.target.closest('[data-udel]');if(a)editarUsuario(a.dataset.ued);if(d)borrarUsuario(d.dataset.udel)});
 // ---- Login ----
 function mostrarLogin(v){$('login').classList.toggle('hidden',!v);document.body.classList.toggle('bloq',!!v);if(v){$('lgErr').textContent='';setTimeout(()=>$('lgU').focus(),100)}}
@@ -2461,11 +2430,11 @@ function aplicarRol(){
   const r=ROL(),s=getSes();
   const navForm=document.querySelector('nav.tabs button[data-v="form"]');navForm.classList.toggle('hidden',r==='director');
   document.querySelectorAll('.modoEval').forEach(x=>x.classList.toggle('hidden',r!=='admin'&&r!=='local'));
-  $('cardColab').classList.toggle('hidden',!(r==='admin'||r==='local'||r==='responsable'));
+  $('cardGente').classList.toggle('hidden',!(r==='admin'||r==='local'||r==='responsable'));
   if(r==='responsable'&&!$('view-form').classList.contains('hidden'))show('colab');
   const adm=r==='admin'||r==='local';
-  ['cardPersonal','cardTiendas','cardDirectores'].forEach(id=>$(id).classList.toggle('hidden',!adm));
-  $('cardNube').classList.toggle('hidden',!(adm));$('cardUsuarios').classList.toggle('hidden',r!=='admin');
+  $('cardTiendas').classList.toggle('hidden',!adm);
+  $('cardNube').classList.toggle('hidden',!(adm));
   $('cardNombre').classList.toggle('hidden',r==='director');
   $('pkNew').classList.toggle('hidden',!adm);
   $('aj-sesion').innerHTML=s?`<b>${esc(s.nombre)}</b> <span class="rolp">${ROLES[s.rol]}</span><div class="desc" style="margin:4px 0 0">usuario: ${esc(s.usuario)}${s.rol==='director'||s.rol==='responsable'?' · '+(s.tiendas&&s.tiendas.length?esc(s.tiendas.join(', ')):'todas las tiendas'):''}</div>`:
@@ -2523,7 +2492,7 @@ function renderColab(){
   $('btnAddCompC').onclick=()=>{stC.comp.push({texto:'',responsable:(($('c-f-nombres').value+' '+$('c-f-apellidos').value).trim()),fecha:''});renderCompC();saveC()};
   $('btnLimpiarC').onclick=()=>{if(confirm('¿Borrar todo lo ingresado en este formulario?'))resetC()};
   $('btnFinalizarC').onclick=finalizarC;
-  $('btnPickC').onclick=()=>{PICK='colaboradores';$('pkNew').textContent='+ Registrar nuevo colaborador';$('pkNew').classList.remove('hidden');$('pkQ').value='';$('pkSolo').checked=!!$('c-f-tienda').value;$('pkSolo').parentNode.style.display=$('c-f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
+  $('btnPickC').onclick=()=>{PICK='colaborador';$('pkNew').textContent='+ Registrar nuevo colaborador';$('pkNew').classList.remove('hidden');$('pkQ').value='';$('pkSolo').checked=!!$('c-f-tienda').value;$('pkSolo').parentNode.style.display=$('c-f-tienda').value?'flex':'none';pintarPick();$('mPick').classList.add('show');setTimeout(()=>$('pkQ').focus(),150)};
 }
 function usarColab(x){['apellidos','nombres','cedula','cargo','seccion'].forEach(k=>{if(x[k]!=null&&x[k]!=='')$('c-f-'+k).value=x[k]});if(x.tienda){refrescarColab();$('c-f-tienda').value=x.tienda}
   $('mPick').classList.remove('show');updateC();toast('Colaborador seleccionado: '+nomPer(x))}
@@ -2607,6 +2576,118 @@ function tableroColab(Lc,ft){
   return h;
 }
 
+// ================= PERSONAS Y USUARIOS (un solo lugar) =================
+const PERFILES={responsable:'Responsable de tienda',colaborador:'Colaborador',director:'Director',evaluador:'Evaluador',admin:'Administrador'};
+const normN=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+function usrDe(p){return p?usrActivos().find(u=>u.personaId===p.id):null}
+function pintarGente(){
+  if(!$('gLista'))return;const r=ROL(),resp=r==='responsable';
+  const pv=$('gPerfil').value,tv=$('gTienda').value;
+  $('gPerfil').innerHTML=resp?'<option value="colaborador">Colaboradores</option>':'<option value="">Todos los perfiles</option><option value="responsable">Responsables de tienda</option><option value="colaborador">Colaboradores</option><option value="director">Directores</option><option value="evaluador">Evaluadores</option><option value="admin">Administradores</option>';
+  $('gPerfil').value=resp?'colaborador':pv;$('gPerfil').classList.toggle('hidden',resp);
+  const MT=misTiendas();$('gTienda').innerHTML=(MT.length>1||!resp?'<option value="">Todas las tiendas</option>':'')+MT.map(t=>`<option>${esc(t)}</option>`).join('');$('gTienda').value=MT.includes(tv)?tv:($('gTienda').options[0]||{}).value||'';
+  $('btnNewGente').textContent=resp?'+ Nuevo colaborador':'+ Nueva persona';
+  $('gDesc').textContent=resp?'Registra aquí a los colaboradores de tu tienda para poder evaluarlos.':'Todas las personas en un solo lugar: responsables, colaboradores, directores, evaluadores y administradores. Si alguien necesita entrar a la app, actívale el acceso y ponle usuario y contraseña.';
+  let L=buscarPersonas($('gQ').value,$('gTienda').value,$('gPerfil').value);if(resp)L=L.filter(x=>MT.includes(x.tienda));
+  $('gLista').innerHTML=(L.slice(0,300).map(x=>{const u=usrDe(x);const sub=[perfilDe(x)==='director'?(x.correo||'sin correo'):x.tienda,x.seccion,x.cedula].filter(Boolean).join(' · ');
+    return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>`:''}</b><span>${esc(sub)}</span></div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
+  if(r==='admin')adminPuede().then(ok=>{$('gWarn').innerHTML=ok?'':'<div style="background:#fff4e5;border:1px solid #f5c48a;border-radius:10px;padding:10px;font-size:13px;margin:6px 0">Para dar acceso con usuario y contraseña falta un permiso de la clave de la nube.</div>'});
+}
+$('gQ').oninput=pintarGente;$('gPerfil').onchange=pintarGente;$('gTienda').onchange=pintarGente;
+$('btnNewGente').onclick=()=>abrirPersona(null,{perfil:ROL()==='responsable'?'colaborador':($('gPerfil').value||'responsable'),tienda:$('gTienda').value||(ROL()==='responsable'?misTiendas()[0]:'')});
+document.addEventListener('click',e=>{const a=e.target.closest('[data-pe]'),d=e.target.closest('[data-pd]');if(a)abrirPersona(a.dataset.pe);if(d)borrarPersona(d.dataset.pd)});
+function abrirPersona(id,pre,despues){
+  const resp=ROL()==='responsable',adm=ROL()==='admin';
+  const x=id?CONF.personas.find(o=>o.id===id):Object.assign({perfil:'responsable',cargo:''},pre||{});if(!x)return;
+  if(resp&&(perfilDe(x)!=='colaborador'))return;
+  const u=usrDe(x);const perf=perfilDe(x);
+  $('usTit').textContent=id?'Editar '+(nomPer(x)||x.nombres):(resp?'Nuevo colaborador':'Nueva persona');$('usErr').textContent='';$('usOk').textContent='Guardar';$('usOk').disabled=false;
+  const tiendaSel=lista=>`<select class="t" id="pT"><option value="">— Seleccione la tienda —</option>${lista.map(t=>`<option ${x.tienda===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
+  $('usBody').innerHTML=`${resp?'':`<label class="f">Perfil</label><select class="t" id="pP">${Object.entries(PERFILES).map(([k,v])=>`<option value="${k}" ${perf===k?'selected':''}>${v}</option>`).join('')}</select>`}
+   <div class="row2"><div><label class="f">Nombres *</label><input class="t" id="pN" value="${esc(x.nombres||'')}" autocomplete="off"></div><div><label class="f">Apellidos</label><input class="t" id="pA" value="${esc(x.apellidos||'')}" autocomplete="off"></div></div>
+   <div class="row2"><div><label class="f">Cédula</label><input class="t" id="pC" value="${esc(x.cedula||'')}" inputmode="numeric" autocomplete="off"></div><div><label class="f">Cargo</label><input class="t" id="pG" value="${esc(x.cargo||'')}" autocomplete="off"></div></div>
+   <div id="wT"><label class="f">Tienda *</label>${tiendaSel(resp?misTiendas():tiendasAct())}</div>
+   <div id="wS"><label class="f">Sección o área a cargo</label><input class="t" id="pS" value="${esc(x.seccion||'')}" autocomplete="off"></div>
+   <div id="wM"><label class="f" id="lM">Correo</label><input class="t" id="pM" type="email" value="${esc(x.correo||'')}" autocomplete="off"></div>
+   ${adm?`<div id="wA" style="border-top:1px solid var(--ln);margin-top:12px;padding-top:8px">
+     <label class="chk" style="font-size:15px"><input type="checkbox" id="pAcc" ${u?'checked':''}> <b>Tiene acceso a la app (usuario y contraseña)</b></label>
+     <div id="wU" style="${u?'':'display:none'}">
+       <div class="row2"><div><label class="f">Usuario</label><input class="t" id="pU" value="${esc(u?u.usuario:'')}" ${u?'disabled':''} autocapitalize="none" autocomplete="off"></div>
+       <div><label class="f">${u?'Nueva contraseña (vacío = no cambiar)':'Contraseña (mín. 6)'}</label><input class="t" id="pK" type="text" autocomplete="off"></div></div>
+       <div id="wV"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u&&u.rol==='director'?u.tiendas:(x.tiendas||[]))}</div>
+     </div></div>`:''}`;
+  bindTodas();
+  const CARGOS=['','Responsable de tienda','Vendedor/a','Director','Evaluador','Administrador'];
+  const vis=()=>{const p=resp?'colaborador':$('pP').value;
+    $('wT').style.display=(p==='responsable'||p==='colaborador')?'':'none';$('wS').style.display=p==='colaborador'?'':'none';
+    $('wM').style.display=p==='colaborador'?'none':'';$('lM').textContent=p==='director'?'Correo (recibe copia de las evaluaciones)':'Correo (opcional)';
+    if(CARGOS.includes($('pG').value))$('pG').value={responsable:'Responsable de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador'}[p];
+    if($('wA')){$('wA').style.display=p==='colaborador'?'none':'';$('wV').style.display=p==='director'?'':'none'}};
+  if(!resp)$('pP').onchange=vis;vis();
+  const sugerir=()=>{if($('pU')&&!$('pU').disabled&&!$('pU')._t)$('pU').value=slug(($('pN').value.split(' ')[0]||'')+' '+($('pA').value.split(' ')[0]||'')).replace(/-/g,'').slice(0,20)};
+  $('pN').oninput=sugerir;$('pA').oninput=sugerir;if($('pU'))$('pU').oninput=()=>$('pU')._t=1;
+  if($('pAcc'))$('pAcc').onchange=()=>{$('wU').style.display=$('pAcc').checked?'':'none';sugerir()};
+  $('mUser').classList.add('show');setTimeout(()=>$('pN').focus(),100);
+  $('usOk').onclick=async()=>{
+    const p=resp?'colaborador':$('pP').value;
+    const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:$('pG').value.trim(),
+      tienda:(p==='responsable'||p==='colaborador')?$('pT').value:'',seccion:p==='colaborador'?$('pS').value.trim():'',correo:p==='colaborador'?'':$('pM').value.trim()};
+    const err=m=>{$('usErr').textContent=m};
+    if(!v.nombres)return err('Escriba los nombres');
+    if((p==='responsable'||p==='colaborador')&&!v.tienda)return err('Seleccione la tienda');
+    if(v.correo&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.correo))return err('Correo no válido');
+    if(v.cedula&&activos('personas').some(o=>o.id!==id&&o.cedula===v.cedula))return err('Ya existe una persona con esa cédula');
+    const acc=adm&&p!=='colaborador'&&$('pAcc')&&$('pAcc').checked;let un='',pw='';
+    if(acc){un=($('pU').value||'').trim().toLowerCase();pw=$('pK').value;
+      if(!u){if(!/^[a-z0-9.]{3,20}$/.test(un))return err('Usuario: letras minúsculas y números (3 a 20)');if(USUARIOS.some(o=>o.usuario===un&&!o.del))return err('Ese usuario ya existe');if(pw.length<6)return err('La contraseña debe tener al menos 6 caracteres')}
+      else if(pw&&pw.length<6)return err('La contraseña debe tener al menos 6 caracteres');}
+    if(adm&&u&&!acc&&u.usuario===(getSes()||{}).usuario&&!confirm('Vas a quitar tu propio acceso. ¿Seguro?'))return;
+    $('usOk').disabled=true;err('Guardando…');
+    try{
+      let obj;
+      if(id){obj=CONF.personas.find(o=>o.id===id);Object.assign(obj,v,{upd:Date.now()})}
+      else{obj=Object.assign({id:nid('p')},v,{upd:Date.now()});CONF.personas.push(obj)}
+      if(p==='director')obj.tiendas=acc?leerTiendas():[];
+      await guardarConf(true);
+      if(adm){let cu=false;const cur=usrDe(obj);
+        if(acc){let o=cur;if(!o){o={usuario:un,personaId:obj.id};USUARIOS=USUARIOS.filter(z=>z.usuario!==un);USUARIOS.push(o)}
+          Object.assign(o,{nombre:(obj.nombres+' '+obj.apellidos).trim(),rol:p,tiendas:p==='responsable'?[obj.tienda]:p==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
+          if(pw)o.cred=await cifrar(getTok(),pw);cu=true}
+        else if(cur){cur.del=true;delete cur.cred;cur.upd=Date.now();cu=true}
+        if(cu)await guardarUsuarios();}
+      refrescarListas();pintarGente();sincronizar(true);
+      if(acc&&!u){$('usTit').textContent='Acceso creado ✓';err('');$('usOk').textContent='Listo';$('usOk').disabled=false;
+        $('usBody').innerHTML=`<p>Comparte con <b>${esc(obj.nombres)}</b>:</p><div style="background:#faf8f5;border-radius:10px;padding:10px;font-size:15px">Enlace: <b>${esc(APP_BASE)}</b><br>Usuario: <b>${esc(un)}</b><br>Contraseña: <b>${esc(pw)}</b></div><div style="text-align:center;margin-top:8px">${window.qrSVG(APP_BASE,170)}</div><p class="desc">Podrá entrar en aproximadamente 1 minuto.</p>`;
+        $('usOk').onclick=()=>$('mUser').classList.remove('show');}
+      else{$('mUser').classList.remove('show');toast('Guardado ✓')}
+      if(despues)despues(obj);
+    }catch(e){$('usOk').disabled=false;err('No se pudo guardar: '+e.message)}
+  };
+}
+async function borrarPersona(id){const x=CONF.personas.find(o=>o.id===id);if(!x)return;const u=usrDe(x);
+  if(ROL()==='responsable'&&(perfilDe(x)!=='colaborador'||!misTiendas().includes(x.tienda)))return;
+  if(u&&u.usuario===(getSes()||{}).usuario){toast('No puedes eliminar tu propio usuario');return}
+  if(!confirm(`¿Eliminar a ${nomPer(x)||x.nombres}?${u?'\n\nTambién se quitará su acceso a la app.':''}\n\nSus evaluaciones ya hechas NO se borran.`))return;
+  x.del=true;x.upd=Date.now();await guardarConf(true);
+  if(u&&ROL()==='admin'){u.del=true;delete u.cred;u.upd=Date.now();try{await guardarUsuarios()}catch(e){toast('No se pudo quitar el acceso: '+e.message)}}
+  refrescarListas();pintarGente();toast('Eliminado');sincronizar(true)}
+// ---- Migración: une personal, colaboradores, directores y usuarios en "personas" ----
+async function migrarPersonas(){
+  if(ROL()!=='admin')return;const now=Date.now();let cc=false,cu=false;
+  CONF.personas.forEach(p=>{if(!p.perfil){p.perfil='responsable';p.upd=now;cc=true}});
+  for(const c of activos('colaboradores')){if(!CONF.personas.some(x=>x.id===c.id))CONF.personas.push({...c,perfil:'colaborador',upd:now});c.del=true;c.upd=now;cc=true}
+  for(const d of activos('directores')){if(!CONF.personas.some(x=>x.id===d.id))CONF.personas.push({id:d.id,nombres:d.nombre,apellidos:'',correo:d.correo,perfil:'director',tiendas:[],upd:now});d.del=true;d.upd=now;cc=true}
+  for(const u of usrActivos().filter(u=>!u.personaId||!CONF.personas.some(p=>p.id===u.personaId&&!p.del))){
+    let p=activos('personas').find(x=>normN(x.nombres+' '+x.apellidos)===normN(u.nombre))||activos('personas').find(x=>normN(x.nombres)&&normN(u.nombre).startsWith(normN(x.nombres+' '+x.apellidos)));
+    if(p){if(perfilDe(p)!==u.rol){p.perfil=u.rol;p.upd=now;cc=true}if(u.rol==='responsable'&&!p.tienda&&u.tiendas&&u.tiendas[0]){p.tienda=u.tiendas[0];p.upd=now;cc=true}}
+    else{p={id:nid('p'),nombres:u.nombre,apellidos:'',cedula:'',cargo:PERFILES[u.rol]||'',perfil:u.rol,tienda:u.rol==='responsable'?(u.tiendas||[])[0]||'':'',tiendas:u.rol==='director'?(u.tiendas||[]):[],upd:now};CONF.personas.push(p);cc=true}
+    u.personaId=p.id;u.upd=now;cu=true;
+  }
+  if(cc){await guardarConf(true);refrescarListas()}
+  if(cu){try{await guardarUsuarios()}catch(e){}}
+  if(cc||cu){pintarGente();sincronizar(true)}
+}
+
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
   const todos=(await idbAll());const pend=todos.filter(e=>!e.exportado);
@@ -2634,6 +2715,7 @@ async function guardarEnCarpetas(){
   try{root=await kvGet('carpeta');if(root&&(await root.requestPermission({mode:'readwrite'}))!=='granted')root=null}catch(e){root=null}
   if(!root){try{root=await showDirectoryPicker({id:'evaluaciones',mode:'readwrite'})}catch(e){return}}
   try{await kvSet('carpeta',root)}catch(e){}
+  if(root.name==='EvaluacionTiendas'){try{root=await root.getDirectoryHandle('datos',{create:true})}catch(e){}}
   for(const t of tiendasAct()){try{await root.getDirectoryHandle(limpio(t),{create:true})}catch(e){}}
   let n=0;const bk=(await kvGet('respaldo'))||{};
   for(const ev of IMP){
@@ -2659,7 +2741,7 @@ function show(v){
   if(v==='hist')loadHist();
   if(v==='rep')loadRep();
   if(v==='comp')loadComp();
-  if(v==='aj'){pintarAjustes();pintarNube();aplicarRol();if(ROL()==='admin')pintarUsuarios()}
+  if(v==='aj'){pintarAjustes();pintarNube();aplicarRol()}
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
 let MODO=(function(){try{return localStorage.getItem('ev_modo')||'form'}catch(e){return'form'}})();
