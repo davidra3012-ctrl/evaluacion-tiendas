@@ -152,6 +152,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 .paper .pb{page-break-before:always;break-before:page;margin-top:18px}
 /*ENDPAPER*/
 .offmod{display:none!important}
+.ciega{background:#fff4e5;border:1px solid #f5c48a;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:1.4}.ciega.gris{background:#f3f6fb;border-color:#cfdcef}
 .cjchip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:700;background:#eee;vertical-align:middle}.cjchip.ABIERTA{background:#fff4e0;color:#b26a00}.cjchip.EN_TRANSITO,.cjchip.EN_RECEPCION{background:#e8f0fe;color:#1a56b0}.cjchip.CONCILIADA{background:#e6f4ea;color:#1a7f37}.cjchip.CON_DIFERENCIA{background:#fdecea;color:#c62828}
 .cjrow{cursor:pointer}.paso{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #eee}.paso:last-child{border-bottom:0}.paso .num{flex:none;width:30px;height:30px;border-radius:50%;background:#ccc;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}.paso.hecho .num{background:#1a7f37}.paso.actual .num{background:var(--or)}.paso .cuerpo{flex:1;min-width:0}
 .escaner{font-size:20px!important;border:3px solid var(--or)!important;font-family:monospace}.cjscan{display:grid;grid-template-columns:1fr 74px auto;gap:6px;margin-top:8px}
@@ -197,7 +198,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v16</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v17</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2279,7 +2280,7 @@ async function sincronizar(silencio){
       if((r.status===401||r.status===403)&&repo===reposLectura()[0])throw new Error('La clave no es válida, venció o fue revocada');
       if(!r.ok)continue;leido=true;
       const t=await r.json();const tree=t.tree||[];
-      if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await cargarLlave(tree,repo);await revisarLlave(tree,repo);await cargarMaestro(tree,repo)}
+      if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await cargarLlave(tree,repo);await revisarLlave(tree,repo)}
       for(const it of tree.filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
         const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)continue;
@@ -3169,14 +3170,16 @@ function pintarCaja(){
   const tablaLineas=(Ls)=>`<div style="overflow-x:auto"><table class="rk cjt"><tr><th>Código</th><th class="r">Cant.</th><th>Hora</th><th></th></tr>${Ls.slice().reverse().map(l=>`<tr class="${l.elim?'elim':''}"><td>${esc(l.codigo)}${l.leido!==l.codigo?`<div class="desc">leído: ${esc(l.leido)}</div>`:''}${l.desc?`<div class="desc">${esc(l.desc)}</div>`:''}</td><td class="r">${l.cant}</td><td class="desc">${fmtLocal(l.f).slice(11)}</td><td>${l.elim?`<span class="desc">Eliminada por ${esc(l.elim.por)} · ${esc(l.elim.motivo)}</span>`:`<button class="ico" data-elim="${l.i}" title="Eliminar">🗑️</button>`}</td></tr>`).join('')||'<tr><td colspan="4" class="desc">Todavía no hay lecturas.</td></tr>'}</table></div>`;
   let h=head+avisoLlave();
   if(modo==='despacho'){const T=totales(c.despacho);
-    h+=`<div class="card">${paso(1,'hecho','Imprime la etiqueta y pégala en la caja',`<br><button class="btn sec" id="cjEtq" style="margin-top:6px">🏷️ Imprimir etiqueta</button>`)}
+    h+=`<div class="ciega gris">🔒 Lo que pistolees aquí <b>no lo verá la tienda que recibe</b>. Ella contará la caja por su cuenta y la app comparará las dos listas.</div>
+      <div class="card">${paso(1,'hecho','Imprime la etiqueta y pégala en la caja',`<br><button class="btn sec" id="cjEtq" style="margin-top:6px">🏷️ Imprimir etiqueta</button>`)}
       ${paso(2,T.length?'hecho':'actual','Pistolea cada producto que entra en la caja',escaner+`<div class="contador">Unidades: <b>${T.reduce((s,x)=>s+x.cant,0)}</b> · Productos distintos: <b>${T.length}</b></div>`)}
       ${paso(3,ok('DESPACHO_ABIERTA')?'hecho':'','Foto de la caja abierta, donde se vean los productos',fotoBtn('DESPACHO_ABIERTA'))}
       ${paso(4,ok('DESPACHO_CERRADA')?'hecho':'','Foto de la caja cerrada y sellada, con la etiqueta visible',fotoBtn('DESPACHO_CERRADA'))}
       ${paso(5,'','Cerrar la caja: ya no se podrá modificar',`<br><button class="btn" id="cjCerrar" style="margin-top:6px">Cerrar caja y despachar</button>`)}</div>
       <div class="card"><h2>Lecturas de esta caja</h2>${tablaLineas(c.despacho)}</div>`}
   else if(modo==='recepcion'){const s=ok('RECEPCION_SELLADA'),a=ok('RECEPCION_ABIERTA');const T=totales(c.recepcion);
-    h+=`<div class="card"><p class="desc" style="margin-top:0">Despachada el ${fmtLocal(c.cerradaEn)} por ${esc(c.cerradaPor||'')}</p>
+    h+=`<div class="ciega">🙈 <b>Recepción ciega:</b> aquí <b>no</b> se muestra lo que envió la bodega. Cuenta y pistolea solo lo que realmente llegó. Al cerrar, la app compara las dos listas y te dice si falta o sobra algo.</div>
+      <div class="card"><p class="desc" style="margin-top:0">Despachada el ${fmtLocal(c.cerradaEn)} por ${esc(c.cerradaPor||'')}</p>
       ${paso(1,'hecho','Caja identificada por su etiqueta')}
       ${paso(2,s?'hecho':'actual','Foto de la caja sellada, antes de abrirla',fotoBtn('RECEPCION_SELLADA'))}
       ${paso(3,a?'hecho':(s?'actual':''),'Foto de la caja abierta',s?fotoBtn('RECEPCION_ABIERTA'):'<div class="desc">Disponible después de la foto de la caja sellada.</div>')}
@@ -3282,18 +3285,9 @@ function pintarXls(){
 }
 // ---- Ajustes del módulo ----
 function pintarAjCajas(){if(!$('ajCajas'))return;$('cardCajas').classList.toggle('hidden',!esSuper());
-  $('ajCajas').innerHTML=LLAVE?`<p class="desc">✅ Activo. Los datos de las cajas viajan <b>cifrados (AES-256)</b>: en la nube solo se ven caracteres sin sentido. Las fotos pasan cifradas y se guardan solo en esta PC.</p>
-    <label class="f">Maestro de artículos (opcional, CSV: codigo, ean, descripcion)</label><input type="file" id="cjMaestro" accept=".csv,text/csv" class="t">
-    <p class="desc" style="margin:6px 0 0">${CJ.maestro?`Cargado: ${CJ.maestro.n} artículos.`:'Sin maestro: se registra el código tal como se pistolea.'}</p>
-    <label class="chk"><input type="checkbox" id="cjExigir" ${CJ.exigir?'checked':''}> En despacho, rechazar códigos que no estén en el maestro</label>`:
+  $('ajCajas').innerHTML=LLAVE?`<p class="desc">✅ Activo. Los datos de las cajas viajan <b>cifrados (AES-256)</b>: en la nube solo se ven caracteres sin sentido. Las fotos pasan cifradas y se guardan solo en tu PC.</p>`:
     `<p class="desc">Crea la llave de cifrado para que bodegas y tiendas puedan despachar y recibir cajas.</p><button class="btn" id="cjActivar" style="width:100%">🔒 Activar control de cajas</button>`;
   if($('cjActivar'))$('cjActivar').onclick=()=>activarCajas().catch(e=>toast('No se pudo activar: '+e.message,5000));
-  if($('cjMaestro'))$('cjMaestro').onchange=async()=>{const f=$('cjMaestro').files[0];if(!f)return;const tx=await f.text();const sep=(tx.slice(0,2048).match(/;/g)||[]).length>(tx.slice(0,2048).match(/,/g)||[]).length?';':',';
-    const ls=tx.replace(/^﻿/,'').split(/\r?\n/).filter(x=>x.trim());const hd=ls[0].split(sep).map(x=>x.trim().toLowerCase());const ic=hd.indexOf('codigo'),ie=hd.indexOf('ean'),id=hd.indexOf('descripcion');
-    if(ic<0){toast('El CSV debe tener la columna "codigo"',5000);return}
-    const filas=ls.slice(1).map(l=>l.split(sep)).filter(x=>x[ic]&&x[ic].trim()).map(x=>[x[ic].trim(),ie>=0?(x[ie]||'').trim():'',id>=0?(x[id]||'').trim():'']);
-    await guardarMaestro({filas,exigir:CJ.exigir});toast(`Maestro cargado: ${filas.length} artículos ✓`)};
-  if($('cjExigir'))$('cjExigir').onchange=async()=>{CJ.exigir=$('cjExigir').checked;await guardarMaestro({filas:CJ.maestro?Object.entries(CJ.maestro.d).map(([c,d])=>[c,Object.entries(CJ.maestro.m).filter(([k,v])=>v===c&&k!==c.toUpperCase()).map(([k])=>k).join('|'),d]):[],exigir:CJ.exigir})};
 }
 async function guardarMaestro(o){armarMaestro(o);let sha=null;try{const r=await gh('/contents/'+encPath(MAESTRO_PATH)+'?ref='+NUBE.branch);if(r.ok)sha=(await r.json()).sha}catch(e){}
   await putFile(MAESTRO_PATH,JSON.stringify(await cifrarObj({id:'maestro',...o})),sha,'Maestro de artículos (cifrado)',NUBE.repo);pintarAjCajas()}
