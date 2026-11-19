@@ -152,6 +152,21 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 .paper .pb{page-break-before:always;break-before:page;margin-top:18px}
 /*ENDPAPER*/
 .offmod{display:none!important}
+.cjchip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:700;background:#eee;vertical-align:middle}.cjchip.ABIERTA{background:#fff4e0;color:#b26a00}.cjchip.EN_TRANSITO,.cjchip.EN_RECEPCION{background:#e8f0fe;color:#1a56b0}.cjchip.CONCILIADA{background:#e6f4ea;color:#1a7f37}.cjchip.CON_DIFERENCIA{background:#fdecea;color:#c62828}
+.cjrow{cursor:pointer}.paso{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #eee}.paso:last-child{border-bottom:0}.paso .num{flex:none;width:30px;height:30px;border-radius:50%;background:#ccc;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}.paso.hecho .num{background:#1a7f37}.paso.actual .num{background:var(--or)}.paso .cuerpo{flex:1;min-width:0}
+.escaner{font-size:20px!important;border:3px solid var(--or)!important;font-family:monospace}.cjscan{display:grid;grid-template-columns:1fr 74px auto;gap:6px;margin-top:8px}
+.mensaje{font-size:16px;font-weight:700;min-height:24px;margin:8px 0}.mensaje.ok{color:#1a7f37}.mensaje.error{color:#c62828}.mensaje.aviso{color:#b26a00}.contador{font-size:14px;color:var(--mut)}.contador b{font-size:20px;color:#222}
+.cjfoto{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.cjf{background:#eef8ee;color:#1a7f37;border-radius:8px;padding:4px 8px;font-size:12px}.cjcam{cursor:pointer;display:inline-block}
+.cjres{font-size:18px;font-weight:800;padding:14px;border-radius:12px;text-align:center;margin-bottom:12px}.cjres.CONCILIADA{background:#e6f4ea;color:#1a7f37}.cjres.CON_DIFERENCIA{background:#fdecea;color:#c62828}
+.rk td.FALTANTE{color:#c62828;font-weight:700}.rk td.SOBRANTE{color:#b26a00;font-weight:700}.rk tr.elim td{color:#999;text-decoration:line-through}.rk tr.elim td:last-child{text-decoration:none}
+.kpi .s{font-size:11px;color:var(--mut);margin-top:3px}.kpi.neg .v{color:#d03b3b}.kpi .v{font-variant-numeric:tabular-nums}
+.ejg{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px}.ejg>div{min-width:0}@media(min-width:720px){.ejg{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}}
+.ejc{border:1px solid var(--ln);border-radius:14px;padding:12px 14px;background:#fff}.ejc .sub2{margin-top:0}
+.dona{display:flex;align-items:center;gap:12px}.dona svg{width:118px;flex:0 0 118px}.dona .leg{flex:1;min-width:0;font-size:13px}
+.dona .leg div{display:grid;grid-template-columns:12px minmax(0,1fr) auto 36px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #f1ede7}.dona .leg i{width:12px;height:12px;border-radius:3px}.dona .leg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dona .leg b{font-variant-numeric:tabular-nums}.dona .leg em{font-style:normal;color:var(--mut);text-align:right;font-size:13px}
+.vermas{width:100%;margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border-radius:20px;padding:5px 10px;font-size:13px;border:1px solid var(--ln)}.chip.ok{background:#eef8ee;color:#0a6e0a;border-color:#bfe3bf}.chip.no{background:#fbefef;color:#a52a2a;border-color:#efc9c9}
+.rk td.neg{color:#d03b3b;font-weight:700}
 .homeh{padding:6px 2px 2px}.homeh h2{margin:6px 0 0;font-size:22px}
 .tile{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--ln);border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,.05);font:inherit;color:inherit}
 .tile .ti{font-size:34px;display:block}.tile b{display:block;font-size:19px;margin:4px 0}.tile span:last-child{color:var(--mut);font-size:14px}
@@ -180,8 +195,9 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </style>
 </head>
 <body>
+<div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v14</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v16</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -192,6 +208,9 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <button data-v="rep" data-mod="eval">📊<br>Reportes</button>
   <button data-v="comp" data-mod="eval">✅<br>Compromisos</button>
   <button data-v="pare" data-mod="pare">⏱️<br>Pare técnico</button>
+  <button data-v="ptrep" data-mod="pare">📊<br>Reporte</button>
+  <button data-v="cajas" data-mod="cajas">📦<br>Cajas</button>
+  <button data-v="cjxls" data-mod="cajas">📄<br>Excel</button>
   <button data-v="aj" data-mod="all">⚙️<br>Ajustes</button>
 </nav>
 
@@ -200,7 +219,8 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <section id="view-home" class="hidden">
   <div class="homeh"><h2 id="homeHola">Hola</h2><p class="desc">¿Qué quieres hacer?</p></div>
   <button class="tile" data-ir="eval"><span class="ti">📋</span><b>Evaluación de tiendas</b><span>Evaluar administradores de tienda y vendedores, historial, reportes y compromisos.</span></button>
-  <button class="tile" data-ir="pare" id="tilePare"><span class="ti">⏱️</span><b>Pare técnico</b><span>Metas de venta por corte de cada vendedor, cierre del día y deuda acumulada.</span></button>
+  <button class="tile" data-ir="cajas" id="tileCajas"><span class="ti">📦</span><b>Control de cajas</b><span>Despacho por cajas y recepción ciega, con fotos, conciliación y Excel para Latinium.</span></button>
+  <button class="tile" data-ir="pare" id="tilePare"><span class="ti">⏱️</span><b>Pare técnico</b><span>Metas de venta por corte de cada vendedor, cierre, deuda acumulada y reporte de cumplimiento.</span></button>
 </section>
 <section id="view-pare" class="hidden">
   <div class="card"><h2>⏱️ Pare técnico</h2>
@@ -213,6 +233,16 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <div class="card" id="ptRes"></div>
   <div class="card"><div class="row2"><button class="btn sec" id="ptVerHoja">📄 Hoja para imprimir</button><button class="btn sec" id="ptAvisos">🔔 Avisos al celular</button></div></div>
 </section>
+<section id="view-ptrep" class="hidden">
+  <div class="card"><h2>📊 Reporte del pare técnico</h2>
+    <div class="row2"><div><label class="f">Tienda</label><select class="t" id="ptrTienda"></select></div>
+      <div><label class="f">Período</label><select class="t" id="ptrPer"><option value="hoy">Hoy</option><option value="7" selected>Últimos 7 días</option><option value="mes">Este mes</option><option value="30">Últimos 30 días</option><option value="90">Últimos 3 meses</option></select></div></div>
+    <div id="ptrDash" style="margin-top:12px"></div>
+  </div>
+</section>
+<section id="view-cajas" class="hidden"><div id="cjMain"></div></section>
+<section id="view-caja" class="hidden"><div id="cjCaja"></div></section>
+<section id="view-cjxls" class="hidden"><div id="cjXls"></div></section>
 <section id="view-ptdoc" class="hidden">
   <div class="docbar no-print"><button class="btn sec" id="ptVolver">← Volver</button><button class="btn sec" id="ptShare">📤 Compartir</button><button class="btn" id="ptPrint">🖨️ Imprimir</button></div>
   <div id="ptDoc" style="background:#fff;padding:10px;border-radius:12px;overflow-x:auto"></div>
@@ -398,11 +428,12 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <div id="gLista" style="margin-top:6px"></div>
     <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewGente">+ Nueva persona</button>
   </div>
+  <div class="card hidden" id="cardCajas"><h2>📦 Control de cajas</h2><div id="ajCajas"></div></div>
   <div class="card" id="cardTiendas">
-    <h2>Tiendas</h2>
-    <p class="desc">Las tiendas nuevas aparecen solas en las evaluaciones. Al respaldar en la PC se crea su carpeta.</p>
+    <h2>Tiendas y bodegas</h2>
+    <p class="desc">Las tiendas aparecen en evaluaciones y pare técnico; las bodegas solo en control de cajas. Al respaldar en la PC se crea su carpeta.</p>
     <div id="aj-tiendas"></div>
-    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewTi">+ Nueva tienda</button>
+    <button class="btn sec" style="width:100%;margin-top:8px" id="btnNewTi">+ Nueva tienda o bodega</button>
   </div>
   <div class="card" id="cardNube">
     <h2>Nube y respaldo</h2>
@@ -481,6 +512,15 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <p id="lgErr" style="color:#d64545;font-size:13px;min-height:18px"></p>
   <button class="btn" id="lgOk" style="width:100%">Entrar</button>
   <a href="#" id="lgAdmin" style="margin-top:16px">Acceso administrador</a>
+</div></div>
+<div class="modal" id="mClave" style="z-index:300"><div class="box">
+  <h3 style="margin-top:0" id="ncHola">Hola</h3>
+  <p class="desc">Por seguridad, crea tu propia contraseña. La que te dieron era temporal.</p>
+  <label class="f">Nueva contraseña (mínimo 6)</label><input class="t" id="nc1" type="password" autocomplete="new-password">
+  <label class="f">Repite la nueva contraseña</label><input class="t" id="nc2" type="password" autocomplete="new-password">
+  <p id="ncErr" style="color:#d64545;font-size:13px;min-height:16px"></p>
+  <button class="btn" id="ncOk" style="width:100%">Guardar y entrar</button>
+  <button class="btn sec" id="ncSalir" style="width:100%;margin-top:8px">Salir</button>
 </div></div>
 <div class="modal" id="mUser"><div class="box wide" style="max-height:92vh;overflow:auto">
   <h3 style="margin-top:0" id="usTit">Nuevo usuario</h3>
@@ -1782,7 +1822,7 @@ const nid=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)
 let CONF={tiendas:[],directores:[],personas:[],colaboradores:[]};
 let CONF_SHA=null,CONF_PEND=false;
 const activos=k=>(CONF[k]||[]).filter(x=>!x.del);
-const tiendasAct=()=>activos('tiendas').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
+const tiendasAct=()=>activos('tiendas').filter(t=>t.tipo!=='bodega').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
 function correoTienda(n){const t=activos('tiendas').find(x=>x.nombre===n);return t?t.correo:(CORREOS[n]||'')}
 function mergeConf(a,b){const r={};for(const k of ['tiendas','directores','personas','colaboradores']){const m=new Map();
   for(const x of [...(a[k]||[]),...(b[k]||[])]){const o=m.get(x.id);if(!o||(x.upd||0)>(o.upd||0))m.set(x.id,x)}r[k]=[...m.values()]}return r}
@@ -1928,20 +1968,20 @@ function getUbicacion(){
 const ubicTxt=u=>u&&!u.error?`${u.lat}, ${u.lon} (±${u.precision} m)`:'No disponible'+(u&&u.error?' ('+u.error+')':'');
 const mapsURL=u=>`https://maps.google.com/?q=${u.lat},${u.lon}`;
 // ---------------- Almacenamiento en el dispositivo (IndexedDB) ----------------
-function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('evaluaciones_warenhaus',1);r.onupgradeneeded=()=>{r.result.createObjectStore('ev',{keyPath:'id'});r.result.createObjectStore('kv')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('evaluaciones_warenhaus',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('ev'))d.createObjectStore('ev',{keyPath:'id'});if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv');if(!d.objectStoreNames.contains('fotos'))d.createObjectStore('fotos',{keyPath:'id'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function idbPut(ev){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('ev','readwrite');t.objectStore('ev').put(ev);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error)})}
 async function idbAll(){const d=await idb();return new Promise(res=>{const q=d.transaction('ev').objectStore('ev').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])})}
 async function kvGet(k){const d=await idb();return new Promise(res=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})}
 async function kvSet(k,v){const d=await idb();return new Promise(res=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>res()})}
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const limpio=t=>String(t||'Sin tienda').replace(/[\\/:*?"<>|]/g,'').trim()||'Sin tienda';
-function nombreBase(ev){if(ev.tipo==='pare')return `${ev.fecha}_${DIAS[new Date(ev.fecha+'T12:00').getDay()]}_pare-tecnico`;const d=new Date(ev.fechaHora);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${DIAS[d.getDay()]}_${ev.tipo==='colaborador'?limpio((ev.apellidos+' '+ev.nombres).trim()):limpio(ev.tienda)}_${pad(d.getHours())}h${pad(d.getMinutes())}m${pad(d.getSeconds())}s`}
+function nombreBase(ev){if(ev.tipo==='caja')return ev.id;if(ev.tipo==='pare')return `${ev.fecha}_${DIAS[new Date(ev.fecha+'T12:00').getDay()]}_pare-tecnico`;const d=new Date(ev.fechaHora);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${DIAS[d.getDay()]}_${ev.tipo==='colaborador'?limpio((ev.apellidos+' '+ev.nombres).trim()):limpio(ev.tienda)}_${pad(d.getHours())}h${pad(d.getMinutes())}m${pad(d.getSeconds())}s`}
 function descargar(nombre,contenido,tipo){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([contenido],{type:tipo}));a.download=nombre;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 async function compartirArchivo(nombre,contenido,tipo,titulo){
   try{const f=new File([contenido],nombre,{type:tipo});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:titulo});return true}}catch(e){if(e&&e.name==='AbortError')return false}
   descargar(nombre,contenido,tipo);toast('Archivo descargado: '+nombre,4000);return true;
 }
-function docStandalone(ev){if(ev.tipo==='pare')return ptStandalone(ev);
+function docStandalone(ev){if(ev.tipo==='pare')return ptStandalone(ev);if(ev.tipo==='caja')return cajaHTML(ev);
   const css=document.querySelector('style').textContent;const paper=css.slice(css.indexOf('/*PAPER*/'),css.indexOf('/*ENDPAPER*/'));
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Evaluación ${esc(ev.tienda)} ${fmtFecha(ev.fechaHora)}</title><style>body{margin:0;padding:14px;background:#fff}${paper}@page{size:A4;margin:9mm}@media print{body{padding:0}.paper{min-width:0}}</style></head><body>${docHTML(ev)}</body></html>`;
 }
@@ -2110,13 +2150,14 @@ function pintarTablero(all){
   if(!L.length){$('r-dash').innerHTML=LL.length?tableroColab(Lc,ft):'<p class="desc">No hay evaluaciones en este período.</p>';return}
   const cs=L.flatMap(e=>e.compromisos||[]);const cOk=cs.filter(x=>x.estado==='cumplido').length,cV=cs.filter(x=>estadoComp(x)==='venc').length;
   const gen=prom(L.map(e=>e.calificacionFinal)),anx=prom(L.map(e=>(e.anexoTotal||0)/12*100));
-  let h=`${Lc.length?'<div class="sub2" style="margin-top:0;font-size:16px"><b>👔 Administradores de tienda</b></div>':''}<div class="kpis">
-    <div class="kpi"><div class="v">${pc(gen)}</div><div class="l">Promedio general</div></div>
-    <div class="kpi"><div class="v">${L.length}</div><div class="l">Evaluaciones</div></div>
-    <div class="kpi"><div class="v">${pc(anx)}</div><div class="l">Técnicas de venta (anexo)</div></div>
-    <div class="kpi"><div class="v">${cs.length?pc(cOk/cs.length*100):'—'}</div><div class="l">Compromisos cumplidos${cs.length?` (${cOk}/${cs.length})`:''}${cV?` · <b style="color:#d64545">${cV} vencido${cV>1?'s':''}</b>`:''}</div></div></div>`;
-  if(!ft){const T=[...new Set(L.map(e=>e.tienda))].map(t=>{const E=L.filter(e=>e.tienda===t);return{n:t,v:prom(E.map(e=>e.calificacionFinal)),t:E.length+' evaluación(es)'}}).sort((a,b)=>b.v-a.v);
-    h+=`<div class="sub2"><b>Promedio por tienda</b></div>${barras(T)}`;}
+  const T=[...new Set(L.map(e=>e.tienda))].map(t=>{const E=L.filter(e=>e.tienda===t);return{n:t,v:prom(E.map(e=>e.calificacionFinal)),t:E.length+' eval.'}}).sort((a,b)=>b.v-a.v);
+  const cP=cs.filter(x=>estadoComp(x)==='pend').length;
+  let ej=`<div class="kpis">${kpiHTML(pc(gen),'Promedio general','administradores de tienda')}${kpiHTML(L.length,'Evaluaciones',new Set(L.map(e=>e.tienda)).size+' tienda(s)')}
+    ${kpiHTML(cs.length?pc(cOk/cs.length*100):'—','Compromisos cumplidos',cs.length?`${cOk} de ${cs.length}`:'sin compromisos')}
+    ${Lc.length?kpiHTML(pc(prom(Lc.map(e=>e.calificacionFinal))),'Promedio de vendedores',Lc.length+' evaluaciones'):kpiHTML(pc(anx),'Técnicas de venta','anexo 7.10.1')}</div>
+    <div class="ejg"><div class="ejc"><div class="sub2"><b>Estado de los compromisos</b></div>${donaSVG([{n:'Cumplidos',v:cOk,c:COL.ok,ic:'✓'},{n:'Pendientes',v:cP,c:COL.warn,ic:'⏳'},{n:'Vencidos',v:cV,c:COL.bad,ic:'✗'}],cs.length?pc(cOk/cs.length*100):'—','cumplidos')}</div>
+    <div class="ejc"><div class="sub2"><b>${ft?'Resultado por área':'Ranking de tiendas'}</b></div>${ft?barras(SECCIONES.map(s=>{const max=s.items.reduce((x,i)=>x+i[2],0);return{n:s.titulo.charAt(0)+s.titulo.slice(1).toLowerCase(),v:prom(L.map(e=>s.items.reduce((x,i)=>x+(e.respuestas[i[0]]==='SI'?i[2]:0),0)/max*100))}}).sort((a,b)=>b.v-a.v)):barras(T)}</div></div>`;
+  let h='';
   const M={};L.forEach(e=>{const d=new Date(e.fechaHora),k=d.getFullYear()+'-'+pad(d.getMonth()+1);(M[k]=M[k]||[]).push(e.calificacionFinal)});
   const P=Object.keys(M).sort().map(k=>({n:k,v:prom(M[k]),c:M[k].length}));
   h+=`<div class="sub2"><b>Evolución del promedio por mes</b></div>${P.length>1?lineaSVG(P):'<p class="desc">Se mostrará cuando haya evaluaciones de al menos 2 meses distintos.</p>'}`;
@@ -2129,7 +2170,7 @@ function pintarTablero(all){
   const PR={};L.forEach(e=>{const k=(e.nombres+' '+e.apellidos).trim()+'|'+e.tienda;(PR[k]=PR[k]||[]).push(e)});
   const R=Object.entries(PR).map(([k,E])=>{const [n,t]=k.split('|');return{n,t,c:E.length,v:prom(E.map(e=>e.calificacionFinal)),u:E.map(e=>e.fechaHora).sort().pop()}}).sort((a,b)=>b.v-a.v);
   h+=`<div class="sub2"><b>Resultados por responsable evaluado</b></div><table class="rk"><tr><th>Persona</th><th>Tienda</th><th class="r">Eval.</th><th class="r">Prom.</th></tr>${R.map(x=>`<tr title="Última: ${fmtFecha(x.u)}"><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td class="r">${x.c}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table>`;
-  $('r-dash').innerHTML=h+tableroColab(Lc,ft);
+  $('r-dash').innerHTML=ej+verMas('rDet',h+tableroColab(Lc,ft));
 }
 async function loadRep(){
   const all=visibles(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
@@ -2179,7 +2220,7 @@ function repoPropio(){return NUBE.repo}
 let USUARIOS=[],USR_SHA=null;
 const usrActivos=()=>USUARIOS.filter(u=>!u.del);
 function reposLectura(){return[NUBE.repo]}
-function visibles(L){L=L.filter(e=>e.tipo!=='pare');const s=getSes();if(!s)return L;
+function visibles(L){L=L.filter(e=>e.tipo!=='pare'&&e.tipo!=='caja');const s=getSes();if(!s)return L;if(s.rol==='bodega')return[];
   if(s.rol==='evaluador')return L.filter(e=>e.evaluadorUsuario===s.usuario);
   if(s.rol==='responsable')return L.filter(e=>e.tipo==='colaborador'&&(s.tiendas||[]).includes(e.tienda));
   if(s.rol==='director'&&Array.isArray(s.tiendas)&&s.tiendas.length)return L.filter(e=>s.tiendas.includes(e.tienda));return L}
@@ -2197,7 +2238,7 @@ async function gh(path,opt,repo){opt=opt||{};
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
 function utf8b64(b64){const bin=atob(String(b64).replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
 const jsonLimpio=ev=>JSON.stringify(ev,(k,v)=>k&&k[0]==='_'?undefined:v);
-const rutaNube=(ev,ext)=>`datos/${limpio(ev.tienda)}/${ev.tipo==='colaborador'?'colaboradores/':ev.tipo==='pare'?'pare-tecnico/':''}${nombreBase(ev)}${ext}`;
+const rutaNube=(ev,ext)=>ev.tipo==='caja'?`datos/cajas/${ev.id}${ext}`:`datos/${limpio(ev.tienda)}/${ev.tipo==='colaborador'?'colaboradores/':ev.tipo==='pare'?'pare-tecnico/':''}${nombreBase(ev)}${ext}`;
 const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
 async function putFile(path,content,sha,msg,repo){
   const body={message:msg,content:b64utf8(content),branch:NUBE.branch};if(sha)body.sha=sha;
@@ -2222,8 +2263,11 @@ async function sincronizar(silencio){
   try{
     await cargarUsuarios();if(revisarSesion())return;
     // 1) subir lo pendiente
+    if(!LLAVE)try{const c=await kvGet('llaveCajas');if(c)LLAVE=await llaveImport(b64d(c))}catch(x){}
     if(ROL()!=='director')for(const e of (await idbAll()).filter(x=>!x._sync)){
       const repo=e._repo||repoPropio();
+      if(e.tipo==='caja'){if(!LLAVE)continue;try{const rm=await leerRemoto(rutaNube(e,'.json'),repo);if(rm&&rm.obj.enc){const o=unirCaja(e,await descifrarObj(rm.obj));Object.keys(o).forEach(k=>{if(k[0]!=='_')e[k]=o[k]});e._sha=rm.sha}}catch(x){}
+        e._sha=await putFile(rutaNube(e,'.json'),JSON.stringify(await cifrarObj(JSON.parse(jsonLimpio(e)))),e._sha,`Caja ${e.id}`,repo);e._html=true;e._repo=repo;e._sync=true;await idbPut(e);sub++;continue}
       e._sha=await putFile(rutaNube(e,'.json'),jsonLimpio(e),e._sha,(e.tipo==='pare'?`Pare técnico ${e.tienda} ${e.fecha}`:`Evaluación ${e.tienda} ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}`),repo);
       if(!e._html){try{await putFile(rutaNube(e,'.html'),docStandalone(e),null,`Documento ${e.tienda} ${fmtFecha(e.fechaHora)}`,repo);e._html=true}catch(x){}}
       e._repo=repo;e._sync=true;await idbPut(e);sub++;
@@ -2235,22 +2279,25 @@ async function sincronizar(silencio){
       if((r.status===401||r.status===403)&&repo===reposLectura()[0])throw new Error('La clave no es válida, venció o fue revocada');
       if(!r.ok)continue;leido=true;
       const t=await r.json();const tree=t.tree||[];
-      if(repo===reposLectura()[0])await syncConf(tree.find(x=>x.path===CONF_PATH),repo);
+      if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await cargarLlave(tree,repo);await revisarLlave(tree,repo);await cargarMaestro(tree,repo)}
       for(const it of tree.filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
         const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)continue;
-        const ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
+        let ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
+        if(ev.enc){if(!LLAVE)continue;try{ev=await descifrarObj(ev)}catch(x){continue}}
         const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync)continue;
         ev._sha=it.sha;ev._repo=repo;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
       }
     }
     if(!leido)throw new Error('No se pudo leer la nube');
+    try{const nf=await subirFotos();if(nf)sub+=0}catch(x){console.warn('fotos',x)}
     LAST_SYNC=new Date();
   }catch(err){SYNC_ERR=(err&&err.message)||'Error de conexión'}
   SYNCING=false;pintarNube();
+  if(!SYNC_ERR)respaldoAuto();
   if(!SYNC_ERR&&ROL()==='admin'&&!window._migrando){window._migrando=1;try{await migrarPersonas()}catch(e){}window._migrando=0}
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
-  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
+  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
 }
 async function copiarConfAEvaluadores(){
   const hechos=(await kvGet('confCopias'))||{};const key=confKey(CONF);let cambio=false;
@@ -2324,21 +2371,21 @@ function buscarPersonas(q,tienda,perfil){if(perfil==='personas')perfil='responsa
     .sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'));}
 function pintarAjustes(){
   $('aj-evaluador').value=getEvaluador();
-  $('aj-tiendas').innerHTML=activos('tiendas').sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(x=>filaHTML('tiendas',x,x.nombre,x.correo||'sin correo')).join('')||'<p class="desc">No hay tiendas.</p>';
+  $('aj-tiendas').innerHTML=activos('tiendas').sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(x=>filaHTML('tiendas',x,x.nombre+(x.tipo==='bodega'?' · bodega':''),x.correo||'sin correo')).join('')||'<p class="desc">No hay tiendas.</p>';
   $('btnRespaldo').classList.toggle('hidden',!window.showDirectoryPicker);
-  pintarGente();
+  pintarGente();pintarAjCajas();
 }
 const CAMPOS={
-  tiendas:[['nombre','Nombre de la tienda','text',1],['correo','Correo de la tienda','email',0]],
+  tiendas:[['nombre','Nombre','text',1],['tipo','Tipo','lugar',0],['correo','Correo','email',0]],
   directores:[['nombre','Nombre','text',1],['correo','Correo','email',1]],
   personas:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['tienda','Tienda','tienda',0]],
   colaboradores:[['nombres','Nombres','text',1],['apellidos','Apellidos','text',1],['cedula','Cédula','tel',0],['cargo','Cargo','text',0],['seccion','Sección o área a cargo','text',0],['tienda','Tienda','tienda',1]]};
-const TIT={tiendas:'tienda',directores:'director',personas:'persona',colaboradores:'colaborador'};
+const TIT={tiendas:'tienda o bodega',directores:'director',personas:'persona',colaboradores:'colaborador'};
 const misTiendas=()=>{const s=getSes();return ROL()==='responsable'&&s&&Array.isArray(s.tiendas)?s.tiendas:tiendasAct()};
 function editar(tipo,id,pre,despues){
   const x=id?CONF[tipo].find(o=>o.id===id):Object.assign({cargo:tipo==='personas'?'Administrador de tienda':tipo==='colaboradores'?'Vendedor/a':''},pre||{});
   $('edTit').textContent=(id?'Editar ':'Nuevo/a ')+TIT[tipo];$('edErr').textContent='';
-  $('edBody').innerHTML=CAMPOS[tipo].map(([k,l,t])=>`<label class="f">${l}</label>`+(t==='tienda'?`<select class="t" data-k="${k}"><option value="">— Sin tienda —</option>${(tipo==='colaboradores'?misTiendas():tiendasAct()).map(n=>`<option ${x[k]===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:`<input class="t" data-k="${k}" type="${t==='tel'?'text':t}" ${t==='tel'?'inputmode="numeric"':''} value="${esc(x[k]||'')}" autocomplete="off">`)).join('');
+  $('edBody').innerHTML=CAMPOS[tipo].map(([k,l,t])=>`<label class="f">${l}</label>`+(t==='lugar'?`<select class="t" data-k="${k}"><option value="tienda">Tienda</option><option value="bodega" ${x[k]==='bodega'?'selected':''}>Bodega</option></select>`:t==='tienda'?`<select class="t" data-k="${k}"><option value="">— Sin tienda —</option>${(tipo==='colaboradores'?misTiendas():tiendasAct()).map(n=>`<option ${x[k]===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:`<input class="t" data-k="${k}" type="${t==='tel'?'text':t}" ${t==='tel'?'inputmode="numeric"':''} value="${esc(x[k]||'')}" autocomplete="off">`)).join('');
   $('mEdit').classList.add('show');setTimeout(()=>{const f=$('edBody').querySelector('input');f&&f.focus()},100);
   $('edOk').onclick=async()=>{
     const v={};$('edBody').querySelectorAll('[data-k]').forEach(i=>v[i.dataset.k]=i.value.trim());
@@ -2385,13 +2432,14 @@ async function cifrar(texto,pass){const salt=crypto.getRandomValues(new Uint8Arr
   const k=await claveDe(pass,salt,iter);return{salt:b64e(salt),iv:b64e(iv),iter,ct:b64e(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(texto))))}}
 async function descifrar(o,pass){const k=await claveDe(pass,b64d(o.salt),o.iter);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(o.iv)},k,b64d(o.ct)))}
 async function guardarUsuarios(){
+  try{const r=await leerUsuariosNube();if(r){USR_SHA=r.sha;for(const x of (r.data.usuarios||[])){const i=USUARIOS.findIndex(o=>o.usuario===x.usuario);if(i<0)USUARIOS.push(x);else if((x.upd||0)>(USUARIOS[i].upd||0))USUARIOS[i]=x}}}catch(e){}
   const body=JSON.stringify({version:1,actualizado:new Date().toISOString(),usuarios:USUARIOS},null,1);
   USR_SHA=await putFile(USERS_PATH,body,USR_SHA,'Actualiza usuarios de la app',APP_REPO);await kvSet('usuarios',USUARIOS);
 }
 async function ghApi(url,opt,tok){opt=opt||{};return fetch('https://api.github.com'+url,Object.assign({},opt,{cache:'no-store',headers:{'Authorization':'Bearer '+(tok||getTok()),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}))}
 async function adminPuede(){try{const r=await ghApi('/repos/'+NUBE.owner+'/'+APP_REPO);if(!r.ok)return false;const j=await r.json();return !!(j.permissions&&j.permissions.push)}catch(e){return false}}
 const urlToken=(nombre,desc,perm)=>'https://github.com/settings/personal-access-tokens/new?name='+encodeURIComponent(nombre)+'&description='+encodeURIComponent(desc)+'&expires_in=none&'+perm;
-const ROLES={admin:'Administrador general',evaluador:'Evaluador',director:'Director con acceso',responsable:'Administrador de tienda'};
+const ROLES={bodega:'Operador de bodega',admin:'Administrador general',evaluador:'Evaluador',director:'Director con acceso',responsable:'Administrador de tienda'};
 function pintarUsuarios(){pintarGente()}
 function tiendasCheck(sel){const todas=!Array.isArray(sel)||!sel.length;
   return `<label class="chk"><input type="checkbox" id="usTodas" ${todas?'checked':''}> <b>Todas las tiendas</b></label><div id="usTList" style="${todas?'display:none':''}">${tiendasAct().map(t=>`<label class="chk"><input type="checkbox" class="usT" value="${esc(t)}" ${!todas&&sel.includes(t)?'checked':''}> ${esc(t)}</label>`).join('')}</div>`}
@@ -2432,7 +2480,7 @@ function formUsuario(u){
     }catch(e){$('usOk').disabled=false;$('usErr').textContent='No se pudo guardar: '+e.message;return}
     if(nuevo&&p){$('usTit').textContent='Usuario creado ✓';$('usErr').textContent='';$('usOk').textContent='Listo';$('usOk').disabled=false;
       $('usBody').innerHTML=`<p>Comparte con <b>${esc(n)}</b>:</p><div style="background:#faf8f5;border-radius:10px;padding:10px;font-size:15px">Enlace: <b>${esc(APP_BASE)}</b><br>Usuario: <b>${esc(un)}</b><br>Contraseña: <b>${esc(p)}</b></div>
-       <div style="text-align:center;margin-top:8px">${window.qrSVG(APP_BASE,170)}</div><p class="desc">Podrá entrar en aproximadamente 1 minuto.</p>`;
+       <div style="text-align:center;margin-top:8px">${window.qrSVG(APP_BASE,170)}</div><p class="desc">Podrá entrar en aproximadamente 1 minuto. La primera vez, la app le pedirá crear su propia contraseña.</p>`;
       $('usOk').onclick=()=>$('mUser').classList.remove('show');}
     else{$('mUser').classList.remove('show');toast('Usuario guardado ✓')}
     pintarGente();
@@ -2452,14 +2500,15 @@ $('lgOk').onclick=async()=>{const u=$('lgU').value.trim().toLowerCase(),p=$('lgP
   $('lgErr').textContent='Entrando…';await cargarUsuarios();const x=USUARIOS.find(o=>o.usuario===u&&!o.del);
   if(!x||!x.cred){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
   let t;try{t=await descifrar(x.cred,p)}catch(e){$('lgErr').textContent='Usuario o contraseña incorrectos';return}
+  if(x.cambiar){setTok(t);$('lgErr').textContent='';const okc=await pedirNuevaClave(x,t,p);if(!okc){setTok('');$('lgP').value='';$('lgErr').textContent='Debes crear tu contraseña para entrar';return}}
   setTok(t);setSes({usuario:x.usuario,nombre:x.nombre,rol:x.rol,tiendas:x.tiendas||[]});
   try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local')}catch(e){}
   $('lgP').value='';mostrarLogin(false);aplicarRol();$('f-evaluador').value=getEvaluador();updNames();$('c-f-evaluador').value=getEvaluador();refrescarColab();show('home');toast('Bienvenido/a, '+x.nombre);sincronizar();};
 $('lgP').onkeydown=e=>{if(e.key==='Enter')$('lgOk').click()};
 $('lgAdmin').onclick=e=>{e.preventDefault();$('login').classList.add('soloFondo');$('tokIn').value='';$('tokMsg').textContent='';$('mNube').classList.add('show')};
 $('btnLogin').onclick=()=>mostrarLogin(true);
-async function cerrarSesion(forzar){const pend=(await idbAll()).filter(e=>!e._sync).length;
-  if(!forzar&&!confirm(pend?`Hay ${pend} evaluación(es) sin subir a la nube que se perderán.\n\n¿Cerrar sesión de todos modos?`:'¿Cerrar sesión en este dispositivo?'))return;
+async function cerrarSesion(forzar){let pend=(await idbAll()).filter(e=>!e._sync).length;try{pend+=(await fotosTodas()).filter(f=>!f.subida).length}catch(e){}
+  if(!forzar&&!confirm(pend?`Hay ${pend} registro(s) o foto(s) sin subir a la nube que se perderán.\n\n¿Cerrar sesión de todos modos?`:'¿Cerrar sesión en este dispositivo?'))return;
   setTok('');setSes(null);try{localStorage.removeItem('ev_evaluador');localStorage.removeItem('ev_local');localStorage.removeItem('ev_draft')}catch(e){}
   await new Promise(r=>{const q=indexedDB.deleteDatabase('evaluaciones_warenhaus');q.onsuccess=q.onerror=q.onblocked=()=>r()});location.reload()}
 $('btnLogout').onclick=()=>cerrarSesion(false);
@@ -2615,20 +2664,20 @@ function tableroColab(Lc,ft){
 }
 
 // ================= PERSONAS Y USUARIOS (un solo lugar) =================
-const PERFILES={responsable:'Administrador de tienda',colaborador:'Vendedor',director:'Director',evaluador:'Evaluador',admin:'Administrador general'};
+const PERFILES={responsable:'Administrador de tienda',bodega:'Operador de bodega',colaborador:'Vendedor',director:'Director',evaluador:'Evaluador',admin:'Administrador general'};
 const normN=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 function usrDe(p){return p?usrActivos().find(u=>u.personaId===p.id):null}
 function pintarGente(){
   if(!$('gLista'))return;const r=ROL(),resp=r==='responsable';
   const pv=$('gPerfil').value,tv=$('gTienda').value;
-  $('gPerfil').innerHTML=resp?'<option value="colaborador">Vendedores</option>':'<option value="">Todos los perfiles</option><option value="responsable">Administradores de tienda</option><option value="colaborador">Vendedores</option><option value="director">Directores</option><option value="evaluador">Evaluadores</option><option value="admin">Administradores generales</option>';
+  $('gPerfil').innerHTML=resp?'<option value="colaborador">Vendedores</option>':'<option value="">Todos los perfiles</option><option value="responsable">Administradores de tienda</option><option value="bodega">Operadores de bodega</option><option value="colaborador">Vendedores</option><option value="director">Directores</option><option value="evaluador">Evaluadores</option><option value="admin">Administradores generales</option>';
   $('gPerfil').value=resp?'colaborador':pv;$('gPerfil').classList.toggle('hidden',resp);
   const MT=misTiendas();$('gTienda').innerHTML=(MT.length>1||!resp?'<option value="">Todas las tiendas</option>':'')+MT.map(t=>`<option>${esc(t)}</option>`).join('');$('gTienda').value=MT.includes(tv)?tv:($('gTienda').options[0]||{}).value||'';
   $('btnNewGente').textContent=resp?'+ Nuevo colaborador':'+ Nueva persona';
   $('gDesc').textContent=resp?'Registra aquí a los colaboradores de tu tienda para poder evaluarlos.':'Todas las personas en un solo lugar: responsables, colaboradores, directores, evaluadores y administradores. Si alguien necesita entrar a la app, actívale el acceso y ponle usuario y contraseña.';
   let L=buscarPersonas($('gQ').value,$('gTienda').value,$('gPerfil').value);if(resp)L=L.filter(x=>MT.includes(x.tienda));
   $('gLista').innerHTML=(L.slice(0,300).map(x=>{const u=usrDe(x);const sub=[perfilDe(x)==='director'?(x.correo||'sin correo'):x.tienda,x.seccion,x.cedula].filter(Boolean).join(' · ');
-    return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>`:''}</b><span>${esc(sub)}</span></div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
+    return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>${u.cambiar?' <span class="rolp" style="background:#fff4e5;color:#b4540a">clave temporal</span>':''}`:''}</b><span>${esc(sub)}</span></div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
   if(r==='admin')adminPuede().then(ok=>{$('gWarn').innerHTML=ok?'':'<div style="background:#fff4e5;border:1px solid #f5c48a;border-radius:10px;padding:10px;font-size:13px;margin:6px 0">Para dar acceso con usuario y contraseña falta un permiso de la clave de la nube.</div>'});
 }
 $('gQ').oninput=pintarGente;$('gPerfil').onchange=pintarGente;$('gTienda').onchange=pintarGente;
@@ -2644,19 +2693,19 @@ function abrirPersona(id,pre,despues){
   $('usBody').innerHTML=`${resp?'':`<label class="f">Perfil</label><select class="t" id="pP">${Object.entries(PERFILES).map(([k,v])=>`<option value="${k}" ${perf===k?'selected':''}>${v}</option>`).join('')}</select>`}
    <div class="row2"><div><label class="f">Nombres *</label><input class="t" id="pN" value="${esc(x.nombres||'')}" autocomplete="off"></div><div><label class="f">Apellidos</label><input class="t" id="pA" value="${esc(x.apellidos||'')}" autocomplete="off"></div></div>
    <label class="f">Cédula</label><input class="t" id="pC" value="${esc(x.cedula||'')}" inputmode="numeric" autocomplete="off">
-   <div id="wT"><label class="f">Tienda *</label>${tiendaSel(resp?misTiendas():tiendasAct())}</div>
+   <div id="wT"><label class="f" id="lT">Tienda *</label>${tiendaSel(resp?misTiendas():lugaresAct())}</div>
    <div id="wS"><label class="f">Sección o área a cargo</label><input class="t" id="pS" value="${esc(x.seccion||'')}" autocomplete="off"></div>
    <div id="wM"><label class="f" id="lM">Correo</label><input class="t" id="pM" type="email" value="${esc(x.correo||'')}" autocomplete="off"></div>
    ${adm?`<div id="wA" style="border-top:1px solid var(--ln);margin-top:12px;padding-top:8px">
      <label class="chk" style="font-size:15px"><input type="checkbox" id="pAcc" ${u?'checked':''}> <b>Tiene acceso a la app (usuario y contraseña)</b></label>
      <div id="wU" style="${u?'':'display:none'}">
        <div class="row2"><div><label class="f">Usuario</label><input class="t" id="pU" value="${esc(u?u.usuario:'')}" ${u?'disabled':''} autocapitalize="none" autocomplete="off"></div>
-       <div><label class="f">${u?'Nueva contraseña (vacío = no cambiar)':'Contraseña (mín. 6)'}</label><input class="t" id="pK" type="text" autocomplete="off"></div></div>
+       <div><label class="f">${u?'Nueva clave temporal (vacío = no cambiar)':'Clave temporal (mín. 6)'}</label><input class="t" id="pK" type="text" autocomplete="off"></div></div>
        <div id="wV"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u&&u.rol==='director'?u.tiendas:(x.tiendas||[]))}</div>
      </div></div>`:''}`;
   bindTodas();
   const vis=()=>{const p=resp?'colaborador':$('pP').value;
-    $('wT').style.display=(p==='responsable'||p==='colaborador')?'':'none';$('wS').style.display=p==='colaborador'?'':'none';
+    $('wT').style.display=(p==='responsable'||p==='colaborador'||p==='bodega')?'':'none';$('lT').textContent=p==='bodega'?'Bodega o tienda donde trabaja *':'Tienda *';$('wS').style.display=p==='colaborador'?'':'none';
     $('wM').style.display=p==='colaborador'?'none':'';$('lM').textContent=p==='director'?'Correo (recibe copia de las evaluaciones)':'Correo (opcional)';
     if($('wA')){$('wA').style.display=p==='colaborador'?'none':'';$('wV').style.display=p==='director'?'':'none'}};
   if(!resp)$('pP').onchange=vis;vis();
@@ -2666,11 +2715,11 @@ function abrirPersona(id,pre,despues){
   $('mUser').classList.add('show');setTimeout(()=>$('pN').focus(),100);
   $('usOk').onclick=async()=>{
     const p=resp?'colaborador':$('pP').value;
-    const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:{responsable:'Administrador de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador general'}[p],
-      tienda:(p==='responsable'||p==='colaborador')?$('pT').value:'',seccion:p==='colaborador'?$('pS').value.trim():'',correo:p==='colaborador'?'':$('pM').value.trim()};
+    const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:{bodega:'Operador de bodega',responsable:'Administrador de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador general'}[p],
+      tienda:(p==='responsable'||p==='colaborador'||p==='bodega')?$('pT').value:'',seccion:p==='colaborador'?$('pS').value.trim():'',correo:p==='colaborador'?'':$('pM').value.trim()};
     const err=m=>{$('usErr').textContent=m};
     if(!v.nombres)return err('Escriba los nombres');
-    if((p==='responsable'||p==='colaborador')&&!v.tienda)return err('Seleccione la tienda');
+    if((p==='responsable'||p==='colaborador'||p==='bodega')&&!v.tienda)return err('Seleccione la tienda o bodega');if(p==='bodega'&&!($('pAcc')&&$('pAcc').checked)&&adm&&!u)return err('El operador de bodega necesita acceso: marca "Tiene acceso a la app"');
     if(v.correo&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.correo))return err('Correo no válido');
     if(v.cedula&&activos('personas').some(o=>o.id!==id&&o.cedula===v.cedula))return err('Ya existe una persona con esa cédula');
     const acc=adm&&p!=='colaborador'&&$('pAcc')&&$('pAcc').checked;let un='',pw='';
@@ -2687,8 +2736,8 @@ function abrirPersona(id,pre,despues){
       await guardarConf(true);
       if(adm){let cu=false;const cur=usrDe(obj);
         if(acc){let o=cur;if(!o){o={usuario:un,personaId:obj.id};USUARIOS=USUARIOS.filter(z=>z.usuario!==un);USUARIOS.push(o)}
-          Object.assign(o,{nombre:(obj.nombres+' '+obj.apellidos).trim(),rol:p,tiendas:p==='responsable'?[obj.tienda]:p==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
-          if(pw)o.cred=await cifrar(getTok(),pw);cu=true}
+          Object.assign(o,{nombre:(obj.nombres+' '+obj.apellidos).trim(),rol:p,tiendas:(p==='responsable'||p==='bodega')?[obj.tienda]:p==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
+          if(pw){o.cred=await cifrar(getTok(),pw);o.cambiar=true}cu=true}
         else if(cur){cur.del=true;delete cur.cred;cur.upd=Date.now();cu=true}
         if(cu)await guardarUsuarios();}
       refrescarListas();pintarGente();sincronizar(true);
@@ -2873,6 +2922,393 @@ function ptVigilar(){if(PT_VIG)return;PT_VIG=setInterval(async()=>{
   try{if(window.Notification&&Notification.permission==='granted'){const r=await navigator.serviceWorker.getRegistration();r?r.showNotification('Warenhaus · Pare técnico',{body:H[1],icon:'icon-192.png'}):new Notification('Warenhaus · Pare técnico',{body:H[1]})}}catch(e){}
 },20000)}
 
+// ================= GRÁFICOS EJECUTIVOS =================
+const COL={ok:'#0ca30c',warn:'#fab219',bad:'#d03b3b',vacio:'#ece7e0'};
+function donaSVG(parts,centro,sub){
+  const T=parts.reduce((a,p)=>a+p.v,0),rr=52,C=2*Math.PI*rr,act=parts.filter(p=>p.v>0),gap=act.length>1?2.5:0;let off=0;
+  const segs=T?act.map(p=>{const len=p.v/T*C;const s=`<circle cx="80" cy="80" r="${rr}" fill="none" stroke="${p.c}" stroke-width="22" stroke-dasharray="${Math.max(len-gap,0.5)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 80 80)"><title>${esc(p.n)}: ${p.v} (${Math.round(p.v/T*100)}%)</title></circle>`;off+=len;return s}).join(''):'';
+  return `<div class="dona"><svg viewBox="0 0 160 160" role="img" aria-label="${esc(parts.map(p=>p.n+' '+p.v).join(', '))}"><circle cx="80" cy="80" r="${rr}" fill="none" stroke="${COL.vacio}" stroke-width="22"/>${segs}
+    <text x="80" y="80" text-anchor="middle" font-size="26" font-weight="800" fill="#222">${centro}</text><text x="80" y="100" text-anchor="middle" font-size="11" fill="#6b665f">${esc(sub||'')}</text></svg>
+    <div class="leg">${parts.map(p=>`<div><i style="background:${p.c}"></i><span>${p.ic||''} ${esc(p.n)}</span><b>${p.v}</b><em>${T?Math.round(p.v/T*100)+'%':'—'}</em></div>`).join('')}</div></div>`}
+function kpiHTML(v,l,s,cls){return `<div class="kpi ${cls||''}"><div class="v">${v}</div><div class="l">${l}</div>${s?`<div class="s">${s}</div>`:''}</div>`}
+function verMas(id,html){return `<button class="btn sec vermas" data-vermas="${id}">Ver más detalle ▾</button><div id="${id}" class="hidden">${html}</div>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-vermas]');if(!b)return;const d=$(b.dataset.vermas);const o=d.classList.toggle('hidden');b.textContent=o?'Ver más detalle ▾':'Ocultar detalle ▴'});
+
+// ================= REPORTE DEL PARE TÉCNICO =================
+const ptrFechas=per=>{const H=hoyISO();if(per==='hoy')return[H,H];const d=new Date();if(per==='mes')return[H.slice(0,8)+'01',H];d.setDate(d.getDate()-(+per-1));return[d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),H]};
+function ptrDias(a,b){const L=[];const d=new Date(a+'T12:00');while(true){const k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());if(k>b)break;L.push(k);d.setDate(d.getDate()+1)}return L}
+async function loadPtRep(){
+  await ptCargarTodo();const T=ptTiendas();
+  const tv=$('ptrTienda').value;$('ptrTienda').innerHTML=(T.length>1?'<option value="">Todas las tiendas</option>':'')+T.map(t=>`<option>${esc(t)}</option>`).join('');$('ptrTienda').value=T.includes(tv)?tv:$('ptrTienda').options[0].value;
+  const ft=$('ptrTienda').value,per=$('ptrPer').value,[a,b]=ptrFechas(per),dias=ptrDias(a,b),TT=ft?[ft]:T;
+  const R=PT.all.filter(r=>TT.includes(r.tienda)&&r.fecha>=a&&r.fecha<=b);
+  const VD=[];R.forEach(r=>(r.vend||[]).forEach(v=>{if(ptMetaFinal(v)==null)return;const o=ptObjTotal(v),c=ptCierre(v,'v');VD.push({t:r.tienda,f:r.fecha,n:v.nombre,pid:v.pid,o,c:c||0,ok:c!=null&&c>=o,r,v})}));
+  const ejec=t=>new Set(VD.filter(x=>x.t===t).map(x=>x.f));
+  const hoyEj=TT.filter(t=>VD.some(x=>x.t===t&&x.f===hoyISO()));
+  const ok=VD.filter(x=>x.ok).length,sO=VD.reduce((s,x)=>s+x.o,0),sC=VD.reduce((s,x)=>s+x.c,0);
+  // deuda actual: último día registrado de cada vendedor
+  const ult={};PT.all.filter(r=>TT.includes(r.tienda)).sort((x,y)=>x.fecha.localeCompare(y.fecha)).forEach(r=>(r.vend||[]).forEach(v=>{if(ptMetaFinal(v)!=null)ult[r.tienda+'|'+v.pid]={t:r.tienda,n:v.nombre,d:ptDif(v),f:r.fecha}}));
+  const deudas=Object.values(ult).filter(x=>x.d!=null&&x.d<0).sort((x,y)=>x.d-y.d);const deudaT=deudas.reduce((s,x)=>s-x.d,0);
+  const pEj=TT.length&&dias.length?TT.reduce((s,t)=>s+ejec(t).size,0)/(TT.length*dias.length)*100:0;
+  let h=`<div class="kpis">${per==='hoy'?kpiHTML(`${hoyEj.length}/${TT.length}`,'Tiendas con pare técnico hoy',TT.length?pc(hoyEj.length/TT.length*100):''):kpiHTML(pc(pEj),'Ejecución del pare técnico',`días con registro · hoy ${hoyEj.length} de ${TT.length} tiendas`)}
+    ${kpiHTML(VD.length?pc(ok/VD.length*100):'—','Metas cumplidas',VD.length?`${ok} de ${VD.length} cierres de vendedor`:'sin registros')}
+    ${kpiHTML(sO?pc(sC/sO*100):'—','Venta vs. meta final',sO?`${ptMon(sC)} de ${ptMon(sO)}`:'')}
+    ${kpiHTML(deudaT?ptMon(deudaT):'$0','Deuda acumulada hoy',deudas.length?`${deudas.length} vendedor(es) con deuda`:'nadie debe',deudaT?'neg':'')}</div>`;
+  if(!VD.length){$('ptrDash').innerHTML=h+`<p class="desc" style="margin-top:12px">No hay pare técnico registrado en este período${ft?' para '+esc(ft):''}.</p>`+(per==='hoy'&&!ft?ptrChips(TT,hoyEj):'');return}
+  h+=`<div class="ejg"><div class="ejc"><div class="sub2"><b>¿Cumplieron su meta final?</b></div>${donaSVG([{n:'Cumplió',v:ok,c:COL.ok,ic:'✓'},{n:'No cumplió',v:VD.length-ok,c:COL.bad,ic:'✗'}],VD.length?pc(ok/VD.length*100):'—','cumplimiento')}</div>`;
+  const porT=TT.map(t=>{const X=VD.filter(x=>x.t===t),o=X.reduce((s,x)=>s+x.o,0),c=X.reduce((s,x)=>s+x.c,0);return{n:t,X,o,c,v:o?c/o*100:null,dias:ejec(t).size,vend:new Set(X.map(x=>x.pid)).size,ok:X.filter(x=>x.ok).length,deuda:deudas.filter(d=>d.t===t).reduce((s,d)=>s-d.d,0)}});
+  const conD=porT.filter(x=>x.v!=null).sort((x,y)=>y.v-x.v),sinD=porT.filter(x=>x.v==null);
+  if(!ft)h+=`<div class="ejc"><div class="sub2"><b>Venta vs. meta por tienda</b></div>${barras(conD.map(x=>({n:x.n,v:x.v,t:x.dias+' día(s)'})))}${sinD.length?`<p class="desc" style="margin:6px 0 0">Sin registro: ${sinD.map(x=>esc(x.n)).join(', ')}</p>`:''}</div>`;
+  else{const PV={};VD.forEach(x=>{(PV[x.pid]=PV[x.pid]||{n:x.n,o:0,c:0}).o+=x.o;PV[x.pid].c+=x.c});h+=`<div class="ejc"><div class="sub2"><b>Venta vs. meta por vendedor</b></div>${barras(Object.values(PV).map(x=>({n:x.n,v:x.o?x.c/x.o*100:0})).sort((x,y)=>y.v-x.v))}</div>`}
+  h+=`</div>`;
+  if(per==='hoy'&&!ft)h+=ptrChips(TT,hoyEj);
+  // ---- detalle ----
+  let d=`<div class="sub2"><b>Resumen por tienda</b></div><div style="overflow-x:auto"><table class="rk"><tr><th>Tienda</th><th class="r">Días</th><th class="r">Vend.</th><th class="r">Meta</th><th class="r">Venta</th><th class="r">%</th><th class="r">Deuda</th></tr>
+    ${[...conD,...sinD].map(x=>`<tr><td>${esc(x.n)}</td><td class="r">${x.dias}/${dias.length}</td><td class="r">${x.vend}</td><td class="r">${x.o?ptMon(x.o):'—'}</td><td class="r">${x.c?ptMon(x.c):'—'}</td><td class="r"><b>${x.v==null?'—':pc(x.v)}</b></td><td class="r ${x.deuda?'neg':''}">${x.deuda?ptMon(x.deuda):'—'}</td></tr>`).join('')}</table></div>`;
+  const PV={};VD.forEach(x=>{const k=x.t+'|'+x.pid;(PV[k]=PV[k]||{n:x.n,t:x.t,o:0,c:0,d:0,ok:0}).o+=x.o;PV[k].c+=x.c;PV[k].d++;PV[k].ok+=x.ok?1:0});
+  const RV=Object.values(PV).map(x=>({...x,v:x.o?x.c/x.o*100:0})).sort((x,y)=>y.v-x.v);
+  d+=`<div class="sub2"><b>Ranking de vendedores</b></div><div style="overflow-x:auto"><table class="rk"><tr><th>Vendedor</th>${ft?'':'<th>Tienda</th>'}<th class="r">Cumplió</th><th class="r">Venta</th><th class="r">%</th></tr>${RV.map(x=>`<tr><td>${esc(x.n)}</td>${ft?'':`<td>${esc(x.t)}</td>`}<td class="r">${x.ok}/${x.d}</td><td class="r">${ptMon(x.c)}</td><td class="r"><b>${pc(x.v)}</b></td></tr>`).join('')}</table></div>`;
+  const PC={};VD.forEach(x=>{const C=ptCortes(x.r.cfg);C.forEach(([,fin],j)=>{const p=x.v.per[j]||{};if(!p.meta||p.meta.v==null||!p.real||p.real.v==null)return;const k=ptHH(fin);(PC[k]=PC[k]||{n:'Corte de las '+k+(j===C.length-1?' (cierre)':''),s:0,ok:0}).s++;if(p.real.v>=p.meta.v)PC[k].ok++})});
+  const LC=Object.keys(PC).sort().map(k=>({n:PC[k].n,v:PC[k].ok/PC[k].s*100,t:PC[k].ok+' de '+PC[k].s}));
+  if(LC.length)d+=`<div class="sub2"><b>Metas cumplidas en cada corte</b></div>${barras(LC)}`;
+  if(deudas.length)d+=`<div class="sub2"><b>Vendedores con deuda</b></div><table class="rk"><tr><th>Vendedor</th>${ft?'':'<th>Tienda</th>'}<th class="r">Último día</th><th class="r">Deuda</th></tr>${deudas.map(x=>`<tr><td>${esc(x.n)}</td>${ft?'':`<td>${esc(x.t)}</td>`}<td class="r">${fmtFecha(x.f+'T12:00')}</td><td class="r neg">${ptMon(-x.d)}</td></tr>`).join('')}</table>`;
+  $('ptrDash').innerHTML=h+verMas('ptrDet',d);
+}
+function ptrChips(TT,hoyEj){return `<div class="sub2"><b>¿Quién lo hizo hoy?</b></div><div class="chips">${TT.map(t=>hoyEj.includes(t)?`<span class="chip ok">✓ ${esc(t)}</span>`:`<span class="chip no">✗ ${esc(t)}</span>`).join('')}</div>`}
+$('ptrTienda').onchange=loadPtRep;$('ptrPer').onchange=loadPtRep;
+
+// ================= CAMBIO DE CONTRASEÑA OBLIGATORIO =================
+async function leerUsuariosNube(){const g=await gh('/contents/'+encPath(USERS_PATH)+'?ref='+NUBE.branch,null,APP_REPO);if(!g.ok)return null;const j=await g.json();return{sha:j.sha,data:JSON.parse(utf8b64(j.content))}}
+function pedirNuevaClave(x,t,vieja){return new Promise(res=>{
+  $('ncErr').textContent='';$('nc1').value='';$('nc2').value='';$('ncOk').disabled=false;$('ncHola').textContent='Hola, '+x.nombre.split(' ')[0];$('mClave').classList.add('show');setTimeout(()=>$('nc1').focus(),100);
+  $('ncOk').onclick=async()=>{const a=$('nc1').value,b=$('nc2').value,er=m=>$('ncErr').textContent=m;
+    if(a.length<6)return er('La contraseña debe tener al menos 6 caracteres');if(a!==b)return er('Las dos contraseñas no coinciden');if(a===vieja)return er('Debe ser diferente a la contraseña que te dieron');
+    $('ncOk').disabled=true;er('Guardando…');
+    try{const cred=await cifrar(t,a);const r=await leerUsuariosNube();if(!r)throw new Error('sin conexión');
+      const u=r.data.usuarios.find(o=>o.usuario===x.usuario);if(!u)throw new Error('usuario no encontrado');u.cred=cred;delete u.cambiar;u.upd=Date.now();r.data.actualizado=new Date().toISOString();
+      USR_SHA=await putFile(USERS_PATH,JSON.stringify(r.data,null,1),r.sha,'Cambio de contraseña de '+x.usuario,APP_REPO);USUARIOS=r.data.usuarios;await kvSet('usuarios',USUARIOS);
+      $('mClave').classList.remove('show');toast('Contraseña creada ✓ Úsala desde ahora',4000);res(true)}
+    catch(e){$('ncOk').disabled=false;er('No se pudo guardar ('+e.message+'). Revisa tu internet e inténtalo otra vez.')}};
+  $('ncSalir').onclick=()=>{$('mClave').classList.remove('show');res(false)};
+})}
+
+// ---------------- Respaldo automático en la PC ----------------
+function esPC(){return !!window.showDirectoryPicker&&!/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)}
+async function pendientesRespaldo(){const bk=(await kvGet('respaldo'))||{};return (await idbAll()).filter(e=>e._sync&&bk[e.id]!==(e._sha||e.id))}
+async function pintarAvisoRespaldo(){const b=$('bRespaldo');if(!b||window._sinAviso)return;
+  if(!esPC()||ROL()!=='admin'){b.classList.add('hidden');return}
+  let root=null,perm='';try{root=await kvGet('carpeta');if(root)perm=await root.queryPermission({mode:'readwrite'})}catch(e){}
+  const P=await pendientesRespaldo();
+  if(!root){b.innerHTML='<span class="x" style="float:right;padding:0 4px 0 10px;font-size:18px">×</span>💾 <b>Configura tu carpeta de respaldo:</b> toca aquí y elige la carpeta <b>EvaluacionTiendas</b> del escritorio';b.classList.remove('hidden');return}
+  if(perm!=='granted'&&P.length){b.innerHTML=`<span class="x" style="float:right;padding:0 4px 0 10px;font-size:18px">×</span>💾 Hay <b>${P.length}</b> archivo(s) nuevos. Toca aquí para guardarlos en tu PC`;b.classList.remove('hidden');return}
+  b.classList.add('hidden')}
+async function respaldoAuto(){if(!esPC()||ROL()!=='admin')return;try{const root=await kvGet('carpeta');if(!root||(await root.queryPermission({mode:'readwrite'}))!=='granted'){pintarAvisoRespaldo();return}
+  IMP=await pendientesRespaldo();if(IMP.length)await guardarEnCarpetas(true);else{if(LLAVE){let r=root;if(r.name==='EvaluacionTiendas')r=await r.getDirectoryHandle('datos',{create:true});const nf=await respaldarFotos(r);if(nf)toast(`📷 ${nf} foto(s) de cajas guardadas en tu PC ✓`,5000)}pintarAvisoRespaldo()}}catch(e){console.warn(e)}}
+$('bRespaldo').onclick=async e=>{if(e.target.closest('.x')){$('bRespaldo').classList.add('hidden');window._sinAviso=1;return}IMP=await pendientesRespaldo();await guardarEnCarpetas(false)};
+
+// ================= CONTROL DE CAJAS (despacho y recepción ciega) =================
+const ETAPAS={DESPACHO_ABIERTA:'Caja abierta con productos',DESPACHO_CERRADA:'Caja cerrada y sellada',RECEPCION_SELLADA:'Caja sellada al llegar',RECEPCION_ABIERTA:'Caja abierta al recibir'};
+const ESTADOS_CJ={ABIERTA:'Armándose',EN_TRANSITO:'En tránsito',EN_RECEPCION:'En recepción',CONCILIADA:'Conciliada',CON_DIFERENCIA:'Con diferencias'};
+const ORD_CJ={ABIERTA:0,EN_TRANSITO:1,EN_RECEPCION:2,CONCILIADA:3,CON_DIFERENCIA:3};
+const CERRADOS=['CONCILIADA','CON_DIFERENCIA'];
+// Formato estándar del Excel para Latinium (se ajusta cuando TI entregue la plantilla real)
+const LATINIUM_COLUMNAS=[['CODIGO','codigo'],['CANTIDAD','cantidad']];
+const LATINIUM_MAX=100;
+const FOTOS_RAMA='fotos-transito',LLAVE_PATH='cajas/llave.json',MAESTRO_PATH='cajas/maestro.json',RESP_FOTOS_PATH='cajas/fotos_respaldadas.json';
+const CJ={all:[],act:null,maestro:null,exigir:false,ver:'',filtro:''};
+const lugaresAct=()=>activos('tiendas').map(t=>t.nombre).sort((a,b)=>a.localeCompare(b,'es'));
+const esBodegaN=n=>(activos('tiendas').find(t=>t.nombre===n)||{}).tipo==='bodega';
+function miLugar(){const s=getSes(),r=ROL();return (r==='responsable'||r==='bodega')&&s&&Array.isArray(s.tiendas)?s.tiendas[0]||'':''}
+const esSuper=()=>ROL()==='admin'||ROL()==='local';
+const usrNom=()=>{const s=getSes();return s?s.nombre:(getEvaluador()||'Administrador')};
+const ahoraISO=()=>new Date().toISOString();
+const b64big=u8=>{let b='';for(let i=0;i<u8.length;i+=0x8000)b+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(b)};
+// ---- llave de cifrado (AES-256). Nunca se sube en claro: va envuelta con la clave de la nube ----
+let LLAVE=null;
+async function llaveImport(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt'])}
+async function envolver(raw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const k=await claveDe(getTok(),salt,100000);
+  return {version:1,nota:'Llave cifrada. Solo la app con sesión iniciada puede usarla.',salt:b64e(salt),iv:b64e(iv),ct:b64e(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,raw)))}}
+async function desenvolver(o){const k=await claveDe(getTok(),b64d(o.salt),100000);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(o.iv)},k,b64d(o.ct)))}
+async function cargarLlave(tree,repo){
+  if(LLAVE)return LLAVE;
+  try{const c=await kvGet('llaveCajas');if(c){LLAVE=await llaveImport(b64d(c));return LLAVE}}catch(e){}
+  const it=tree&&tree.find(x=>x.path===LLAVE_PATH);if(!it)return null;
+  try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return null;const raw=await desenvolver(JSON.parse(utf8b64((await g.json()).content)));LLAVE=await llaveImport(raw);await kvSet('llaveCajas',b64e(raw));return LLAVE}catch(e){return null}}
+async function activarCajas(){
+  if(!esSuper()){toast('Solo el administrador general puede activarlo');return}
+  const ex=await gh('/contents/'+encPath(LLAVE_PATH)+'?ref='+NUBE.branch);
+  if(ex.ok){const j=await ex.json();const raw=await desenvolver(JSON.parse(utf8b64(j.content)));LLAVE=await llaveImport(raw);await kvSet('llaveCajas',b64e(raw));toast('Control de cajas ya estaba activo ✓');pintarAjCajas();return}
+  const raw=crypto.getRandomValues(new Uint8Array(32));await putFile(LLAVE_PATH,JSON.stringify(await envolver(raw),null,1),null,'Activa control de cajas',NUBE.repo);
+  LLAVE=await llaveImport(raw);await kvSet('llaveCajas',b64e(raw));toast('Control de cajas activado ✓ Los datos de cajas viajan cifrados',4500);pintarAjCajas()}
+async function cifrarObj(o){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},LLAVE,te.encode(JSON.stringify(o))));return{enc:1,id:o.id,iv:b64e(iv),ct:b64big(ct)}}
+async function descifrarObj(w){const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(w.iv)},LLAVE,b64d(w.ct));return JSON.parse(new TextDecoder().decode(pt))}
+async function cifrarBytes(u8){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},LLAVE,u8));const o=new Uint8Array(12+ct.length);o.set(iv);o.set(ct,12);return o}
+async function descifrarBytes(u8){return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u8.subarray(0,12)},LLAVE,u8.subarray(12)))}
+// ---- unir cambios hechos en dos celulares sobre la misma caja ----
+function unirLineas(a,b){const m=new Map();[...(a||[]),...(b||[])].forEach(l=>{const o=m.get(l.i);if(!o||(l.elim&&!o.elim))m.set(l.i,l)});return[...m.values()].sort((x,y)=>x.f.localeCompare(y.f))}
+function unirCaja(a,b){const base=ORD_CJ[a.estado]>=ORD_CJ[b.estado]?a:b,o=Object.assign({},b,base);
+  o.despacho=unirLineas(a.despacho,b.despacho);o.recepcion=unirLineas(a.recepcion,b.recepcion);o.fotos={};
+  Object.keys(ETAPAS).forEach(k=>{const m=new Map();[...((a.fotos||{})[k]||[]),...((b.fotos||{})[k]||[])].forEach(f=>m.set(f.id,f));o.fotos[k]=[...m.values()]});
+  const ev=new Map();[...(a.eventos||[]),...(b.eventos||[])].forEach(e=>ev.set(e.f+e.acc+e.usr+(e.det||''),e));o.eventos=[...ev.values()].sort((x,y)=>x.f.localeCompare(y.f));
+  o.lote=a.lote||b.lote;return o}
+async function leerRemoto(path,repo){const g=await gh('/contents/'+encPath(path)+'?ref='+NUBE.branch,null,repo);if(!g.ok)return null;const j=await g.json();return{sha:j.sha,obj:JSON.parse(utf8b64(j.content))}}
+// ---- fotos: base local separada, nunca se muestran en la app ----
+async function fotosTodas(){const d=await idb();return new Promise(res=>{const q=d.transaction('fotos').objectStore('fotos').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])})}
+async function fotoPut(f){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('fotos','readwrite');t.objectStore('fotos').put(f);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
+async function fotoDel(id){const d=await idb();return new Promise(res=>{const t=d.transaction('fotos','readwrite');t.objectStore('fotos').delete(id);t.oncomplete=()=>res();t.onerror=()=>res()})}
+async function comprimir(file){let img;try{img=await createImageBitmap(file,{imageOrientation:'from-image'})}catch(e){img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(file)})}
+  const M=1280,sc=Math.min(1,M/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',0.7));return new Uint8Array(await bl.arrayBuffer())}
+async function ramaFotos(crear){const r=await gh('/git/ref/heads/'+FOTOS_RAMA);if(r.ok)return true;if(!crear)return false;
+  const m=await gh('/git/ref/heads/'+NUBE.branch);if(!m.ok)return false;const sha=(await m.json()).object.sha;
+  const c=await gh('/git/refs',{method:'POST',body:JSON.stringify({ref:'refs/heads/'+FOTOS_RAMA,sha})});return c.ok||c.status===422}
+const rutaFoto=f=>`fotos/${f.caja}/${f.etapa}_${f.id}.bin`;
+async function subirFotos(){
+  if(!LLAVE)return 0;let L=await fotosTodas();if(!L.length)return 0;let n=0;
+  // ¿cuáles ya respaldó la PC? -> se borran del celular. ¿cuáles se perdieron en el camino? -> se vuelven a subir
+  let hechas=[];try{const r=await leerRemoto(RESP_FOTOS_PATH);if(r)hechas=r.obj.ids||[]}catch(e){}
+  let enRama=null;const t=await gh('/git/trees/'+FOTOS_RAMA+'?recursive=1');if(t.ok)enRama=new Set(((await t.json()).tree||[]).map(x=>x.path));else if(t.status===404)enRama=new Set();
+  for(const f of L){if(hechas.includes(f.id)){await fotoDel(f.id);continue}
+    if(Date.now()-new Date(f.f).getTime()>45*864e5){await fotoDel(f.id);continue}
+    if(f.subida&&enRama&&!enRama.has(rutaFoto(f))){f.subida=false;await fotoPut(f)}}
+  L=(await fotosTodas()).filter(f=>!f.subida);if(!L.length)return 0;
+  if(!(await ramaFotos(true)))return 0;
+  for(const f of L){const enc=await cifrarBytes(new Uint8Array(f.data));
+    const r=await gh('/contents/'+encPath(rutaFoto(f)),{method:'PUT',body:JSON.stringify({message:'Foto en tránsito',content:b64big(enc),branch:FOTOS_RAMA})});
+    if(r.ok||r.status===422){f.subida=true;await fotoPut(f);n++}}
+  return n}
+// En la PC: baja las fotos, las guarda en la carpeta de cada tienda y las borra de la nube
+async function respaldarFotos(root){
+  if(!LLAVE||!esSuper())return 0;const t=await gh('/git/trees/'+FOTOS_RAMA+'?recursive=1');if(!t.ok)return 0;
+  const items=((await t.json()).tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith('fotos/')&&x.path.endsWith('.bin'));if(!items.length){await gh('/git/refs/heads/'+FOTOS_RAMA,{method:'DELETE'});return 0}
+  const cajas=(await idbAll()).filter(e=>e.tipo==='caja');const ids=[];let n=0;
+  for(const it of items){try{
+    const [,cj,arch]=it.path.split('/');const etapa=arch.split('_').slice(0,2).join('_'),id=arch.slice(etapa.length+1,-4);
+    const c=cajas.find(x=>x.id===cj);const lugar=c?(etapa.startsWith('DESPACHO')?c.origen:c.destino):'Sin tienda';
+    const g=await gh('/git/blobs/'+it.sha);if(!g.ok)continue;const raw=b64d((await g.json()).content.replace(/\s/g,''));const jpg=await descifrarBytes(raw);
+    const meta=c&&(c.fotos[etapa]||[]).find(f=>f.id===id);const fe=meta?(d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`)(new Date(meta.f)):'';
+    let dir=await root.getDirectoryHandle(limpio(lugar),{create:true});dir=await dir.getDirectoryHandle('cajas',{create:true});dir=await dir.getDirectoryHandle('fotos',{create:true});dir=await dir.getDirectoryHandle(cj,{create:true});
+    const fh=await dir.getFileHandle(`${etapa}_${fe||id}.jpg`,{create:true});const w=await fh.createWritable();await w.write(jpg);await w.close();ids.push(id);n++}catch(e){console.warn('foto',it.path,e)}}
+  if(ids.length){let prev=[],sha=null;try{const r=await leerRemoto(RESP_FOTOS_PATH);if(r){prev=r.obj.ids||[];sha=r.sha}}catch(e){}
+    await putFile(RESP_FOTOS_PATH,JSON.stringify({ids:[...prev,...ids].slice(-20000)}),sha,'Fotos respaldadas en la PC',NUBE.repo);
+    if(n===items.length)await gh('/git/refs/heads/'+FOTOS_RAMA,{method:'DELETE'});}
+  return n}
+// ---- maestro de artículos (opcional, cifrado) ----
+async function cargarMaestro(tree,repo){const it=tree&&tree.find(x=>x.path===MAESTRO_PATH);if(!it||!LLAVE)return;if(CJ.maestro&&CJ.maestroSha===it.sha)return;
+  try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const o=await descifrarObj(JSON.parse(utf8b64((await g.json()).content)));armarMaestro(o);CJ.maestroSha=it.sha}catch(e){}}
+function armarMaestro(o){const m={},d={};(o.filas||[]).forEach(([c,e,ds])=>{d[c]=ds||'';m[String(c).toUpperCase()]=c;String(e||'').split(/[|,]/).forEach(x=>{x=x.trim();if(x)m[x.toUpperCase()]=c})});CJ.maestro={m,d,n:(o.filas||[]).length};CJ.exigir=!!o.exigir}
+function resolver(leido){if(!CJ.maestro)return{codigo:leido,desc:'',ok:null};const c=CJ.maestro.m[leido.toUpperCase()];return c?{codigo:c,desc:CJ.maestro.d[c]||'',ok:true}:{codigo:leido,desc:'',ok:false}}
+// ---- Code 128 (B) ----
+const C128=['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
+function c128mod(t){const v=[104];for(const ch of t){const o=ch.charCodeAt(0);if(o<32||o>126)throw new Error('carácter no válido');v.push(o-32)}let k=v[0];for(let i=1;i<v.length;i++)k+=i*v[i];v.push(k%103,106);return v.flatMap(x=>[...C128[x]].map(Number))}
+function c128svg(t,alto){alto=alto||70;const a=c128mod(t),m=2,mg=10,W=a.reduce((s,x)=>s+x,0)*m+2*mg;let x=mg,r='';a.forEach((w,i)=>{if(i%2===0)r+=`<rect x="${x}" y="0" width="${w*m}" height="${alto}"/>`;x+=w*m});
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${alto+16}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><g fill="#000">${r}</g><text x="${W/2}" y="${alto+14}" font-family="monospace" font-size="14" text-anchor="middle">${esc(t)}</text></svg>`}
+// ---- datos ----
+async function cjCargar(){CJ.all=(await idbAll()).filter(e=>e.tipo==='caja')}
+function cjVisibles(){const L=miLugar();if(esSuper())return CJ.all;if(!L)return[];return CJ.all.filter(c=>c.origen===L||c.destino===L)}
+function evento(c,acc,det){(c.eventos=c.eventos||[]).push({f:ahoraISO(),usr:usrNom(),acc,det:det||''})}
+let CJ_SYNC=null;
+async function guardarCaja(c){c.upd=Date.now();c._sync=false;c._html=true;await idbPut(c);const i=CJ.all.findIndex(x=>x.id===c.id);i<0?CJ.all.push(c):CJ.all[i]=c;
+  clearTimeout(CJ_SYNC);CJ_SYNC=setTimeout(()=>sincronizar(true),2500)}
+const activas=L=>(L||[]).filter(l=>!l.elim);
+function totales(L){const m={};activas(L).forEach(l=>{(m[l.codigo]=m[l.codigo]||{codigo:l.codigo,desc:l.desc||'',cant:0}).cant+=l.cant});return Object.values(m).sort((a,b)=>a.codigo.localeCompare(b.codigo))}
+function conciliar(c){const e=Object.fromEntries(totales(c.despacho).map(x=>[x.codigo,x])),r=Object.fromEntries(totales(c.recepcion).map(x=>[x.codigo,x]));
+  return [...new Set([...Object.keys(e),...Object.keys(r)])].sort().map(k=>{const en=(e[k]||{}).cant||0,re=(r[k]||{}).cant||0,d=re-en;return{codigo:k,desc:(e[k]||r[k]).desc,enviado:en,recibido:re,dif:d,estado:d===0?'OK':d>0?'SOBRANTE':'FALTANTE'}})}
+function nuevoNumero(){const d=new Date(),b=`CJ-${String(d.getFullYear()).slice(2)}${pad(d.getMonth()+1)}${pad(d.getDate())}-`;let n;do{n=b+String(Math.floor(1000+Math.random()*9000))}while(CJ.all.some(c=>c.id===n));return n}
+const chipCJ=e=>`<span class="cjchip ${e}">${ESTADOS_CJ[e]||e}</span>`;
+// ---- pantallas ----
+async function abrirCajas(){await cjCargar();pintarCajas()}
+function avisoLlave(){return LLAVE?'':`<div class="ptbanner" style="margin-top:0">🔒 ${esSuper()?'Activa el control de cajas en <b>Ajustes › 📦 Control de cajas</b> para crear la llave de cifrado.':'Esperando la llave de cifrado. Conéctate a internet; si sigue así, avisa al administrador general.'}</div>`}
+function filaCaja(c){const L=miLugar();return `<div class="lrow cjrow" data-cj="${esc(c.id)}"><div class="i"><b>${esc(c.id)} ${chipCJ(c.estado)}</b><span>${esc(c.origen)} → ${esc(c.destino)} · ${fmtLocal(c.recFin||c.cerradaEn||c.creadaEn)}${c.lote?' · Excel '+esc(c.lote):''}</span></div><span style="color:var(--mut)">›</span></div>`}
+function lista(t,L){return `<div class="card"><h2>${t}</h2>${L.length?L.map(filaCaja).join(''):'<p class="desc" style="margin:0">Ninguna.</p>'}</div>`}
+function pintarCajas(){
+  const L=miLugar(),V=cjVisibles().slice().sort((a,b)=>(b.upd||0)-(a.upd||0));let h=avisoLlave();
+  if(esSuper()){
+    const lug=lugaresAct(),fe=CJ.filtro;
+    const F=V.filter(c=>!fe||c.estado===fe||(fe==='abiertas'&&!CERRADOS.includes(c.estado)));
+    const k=e=>V.filter(c=>c.estado===e).length;
+    h+=`<div class="card"><h2>📦 Todas las cajas</h2><div class="kpis">${kpiHTML(k('ABIERTA'),'Armándose')}${kpiHTML(k('EN_TRANSITO')+k('EN_RECEPCION'),'En camino o recibiéndose')}${kpiHTML(k('CONCILIADA'),'Conciliadas')}${kpiHTML(k('CON_DIFERENCIA'),'Con diferencias','',k('CON_DIFERENCIA')?'neg':'')}</div>
+      <div class="row2" style="margin-top:10px"><select class="t" id="cjFiltro"><option value="">Todas</option><option value="abiertas">Sin cerrar</option>${Object.entries(ESTADOS_CJ).map(([a,b])=>`<option value="${a}">${b}</option>`).join('')}</select><button class="btn sec" id="cjElim">🗑️ Líneas eliminadas</button></div>
+      <div style="margin-top:8px">${F.slice(0,200).map(filaCaja).join('')||'<p class="desc">No hay cajas.</p>'}</div></div>`;
+    $('cjMain').innerHTML=h;$('cjFiltro').value=fe;$('cjFiltro').onchange=()=>{CJ.filtro=$('cjFiltro').value;pintarCajas()};$('cjElim').onclick=pintarEliminadas;return}
+  if(!L){$('cjMain').innerHTML='<div class="card"><p class="desc">Tu usuario no tiene una tienda o bodega asignada.</p></div>';return}
+  h+=`<div class="ejg" style="margin-top:0"><div class="card" style="margin:0"><h2>📤 Despachar: nueva caja</h2><label class="f">Destino</label><select class="t" id="cjDest"><option value="">— Seleccione —</option>${lugaresAct().filter(x=>x!==L).map(x=>`<option>${esc(x)}</option>`).join('')}</select>
+      <button class="btn" style="width:100%;margin-top:10px" id="cjNueva" ${LLAVE?'':'disabled'}>Crear caja y asignar número</button></div>
+    <div class="card" style="margin:0"><h2>📥 Recibir una caja</h2><label class="f">Pistolea o escribe la etiqueta de la caja</label><input class="t escaner" id="cjBuscar" placeholder="CJ-000000-0000" autocomplete="off" autocapitalize="characters"><div id="cjBMsg" class="mensaje"></div></div></div>`;
+  h+=lista('🧰 Cajas en armado',V.filter(c=>c.origen===L&&c.estado==='ABIERTA'))+lista('🚚 Por recibir en '+esc(L),V.filter(c=>c.destino===L&&(c.estado==='EN_TRANSITO'||c.estado==='EN_RECEPCION')))
+    +lista('📤 Enviadas',V.filter(c=>c.origen===L&&c.estado!=='ABIERTA').slice(0,40))+lista('📥 Recibidas',V.filter(c=>c.destino===L&&CERRADOS.includes(c.estado)).slice(0,40));
+  $('cjMain').innerHTML=h;
+  $('cjNueva').onclick=async()=>{const d=$('cjDest').value;if(!d){toast('Seleccione el destino');return}
+    const c={id:nuevoNumero(),tipo:'caja',origen:L,destino:d,estado:'ABIERTA',creadaPor:usrNom(),creadaEn:ahoraISO(),despacho:[],recepcion:[],fotos:{},eventos:[],fechaHora:ahoraISO()};
+    Object.keys(ETAPAS).forEach(k=>c.fotos[k]=[]);evento(c,'CAJA_CREADA',`${L} → ${d}`);await guardarCaja(c);abrirCaja(c.id);setTimeout(()=>imprimirEtiqueta(c),300)};
+  $('cjBuscar').onkeydown=async e=>{if(e.key!=='Enter')return;const n=$('cjBuscar').value.trim().toUpperCase();$('cjBuscar').value='';if(!n)return;
+    let c=CJ.all.find(x=>x.id===n);if(!c){$('cjBMsg').textContent='Buscando en la nube…';$('cjBMsg').className='mensaje';await sincronizar(true);await cjCargar();c=CJ.all.find(x=>x.id===n)}
+    const m=(t,k)=>{$('cjBMsg').textContent=t;$('cjBMsg').className='mensaje '+k;pitido(false)};
+    if(!c)return m('✖ No existe la caja '+n,'error');if(c.destino!==L)return m(`✖ La caja ${n} no está dirigida a ${L}`,'error');if(c.estado==='ABIERTA')return m('✖ Esa caja todavía no se cerró en origen','error');
+    abrirCaja(c.id)};
+  setTimeout(()=>$('cjBuscar')&&$('cjBuscar').focus(),50);
+}
+document.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('[data-cj]');if(r&&r.closest('#view-cajas,#view-cjxls'))abrirCaja(r.dataset.cj)});
+function pintarEliminadas(){const F=[];CJ.all.forEach(c=>['despacho','recepcion'].forEach(t=>(c[t]||[]).filter(l=>l.elim).forEach(l=>F.push({c,t,l}))));F.sort((a,b)=>b.l.elim.en.localeCompare(a.l.elim.en));
+  $('cjMain').innerHTML=`<div class="card"><button class="btn sec" id="cjVolverL">← Volver</button><h2 style="margin-top:12px">🗑️ Líneas eliminadas</h2><div style="overflow-x:auto"><table class="rk"><tr><th>Caja</th><th>Tipo</th><th>Código</th><th class="r">Cant.</th><th>Leída por</th><th>Eliminada por</th><th>Motivo</th></tr>
+  ${F.map(({c,t,l})=>`<tr><td><a href="#" data-cjv="${esc(c.id)}">${esc(c.id)}</a></td><td>${t}</td><td>${esc(l.codigo)}</td><td class="r">${l.cant}</td><td>${esc(l.usr)}</td><td>${esc(l.elim.por)}<br><span class="desc">${fmtLocal(l.elim.en)}</span></td><td>${esc(l.elim.motivo)}</td></tr>`).join('')||'<tr><td colspan="7">No hay líneas eliminadas.</td></tr>'}</table></div></div>`;
+  $('cjVolverL').onclick=pintarCajas;document.querySelectorAll('[data-cjv]').forEach(a=>a.onclick=e=>{e.preventDefault();abrirCaja(a.dataset.cjv)})}
+// ---- una caja ----
+function abrirCaja(id){CJ.act=id;show('caja')}
+function cjActual(){return CJ.all.find(c=>c.id===CJ.act)}
+function pintarCaja(){
+  const c=cjActual();if(!c){show('cajas');return}const L=miLugar(),orig=L===c.origen,dest=L===c.destino;
+  let modo='detalle';if(!esSuper()&&orig&&c.estado==='ABIERTA')modo='despacho';else if(!esSuper()&&dest&&(c.estado==='EN_TRANSITO'||c.estado==='EN_RECEPCION'))modo='recepcion';
+  if(!esSuper()&&!orig&&!dest){$('cjCaja').innerHTML='<div class="card"><p>Sin permiso para ver esta caja.</p></div>';return}
+  if(modo==='recepcion'&&c.estado==='EN_TRANSITO'){c.estado='EN_RECEPCION';c.recibidaPor=usrNom();c.recInicio=ahoraISO();evento(c,'RECEPCION_INICIADA',L);guardarCaja(c)}
+  const head=`<div class="card"><button class="btn sec" id="cjVolver">← Cajas</button><h2 style="margin:12px 0 4px">📦 ${esc(c.id)} ${chipCJ(c.estado)}</h2><p class="desc" style="margin:0">${esc(c.origen)} → <b>${esc(c.destino)}</b> · creada por ${esc(c.creadaPor)} el ${fmtLocal(c.creadaEn)}</p></div>`;
+  const ok=et=>(c.fotos[et]||[]).length>0;
+  const fotoBtn=et=>`<div class="cjfoto">${(c.fotos[et]||[]).map(f=>`<span class="cjf">📷 ${fmtLocal(f.f).slice(11)} · ${esc(f.usr)}</span>`).join('')}<label class="btn sec cjcam">📸 ${ok(et)?'Otra foto':'Tomar foto'}<input type="file" accept="image/*" capture="environment" data-foto="${et}" hidden></label></div><p class="desc" style="margin:4px 0 0">Las fotos van directo a la PC de respaldo; no se ven en la app.</p>`;
+  const paso=(n,est,tit,body)=>`<div class="paso ${est}"><div class="num">${n}</div><div class="cuerpo"><b>${tit}</b>${body||''}</div></div>`;
+  const escaner=`<div class="cjscan"><input id="cjCod" class="t escaner" placeholder="Pistolea el código del producto" autocomplete="off" inputmode="text"><input id="cjCant" class="t" type="number" min="1" max="999" value="1" title="Cantidad">${'BarcodeDetector' in window?'<button class="btn sec" id="cjCamara" title="Leer con la cámara">📷</button>':''}</div><div id="cjMsg" class="mensaje"></div>`;
+  const tablaLineas=(Ls)=>`<div style="overflow-x:auto"><table class="rk cjt"><tr><th>Código</th><th class="r">Cant.</th><th>Hora</th><th></th></tr>${Ls.slice().reverse().map(l=>`<tr class="${l.elim?'elim':''}"><td>${esc(l.codigo)}${l.leido!==l.codigo?`<div class="desc">leído: ${esc(l.leido)}</div>`:''}${l.desc?`<div class="desc">${esc(l.desc)}</div>`:''}</td><td class="r">${l.cant}</td><td class="desc">${fmtLocal(l.f).slice(11)}</td><td>${l.elim?`<span class="desc">Eliminada por ${esc(l.elim.por)} · ${esc(l.elim.motivo)}</span>`:`<button class="ico" data-elim="${l.i}" title="Eliminar">🗑️</button>`}</td></tr>`).join('')||'<tr><td colspan="4" class="desc">Todavía no hay lecturas.</td></tr>'}</table></div>`;
+  let h=head+avisoLlave();
+  if(modo==='despacho'){const T=totales(c.despacho);
+    h+=`<div class="card">${paso(1,'hecho','Imprime la etiqueta y pégala en la caja',`<br><button class="btn sec" id="cjEtq" style="margin-top:6px">🏷️ Imprimir etiqueta</button>`)}
+      ${paso(2,T.length?'hecho':'actual','Pistolea cada producto que entra en la caja',escaner+`<div class="contador">Unidades: <b>${T.reduce((s,x)=>s+x.cant,0)}</b> · Productos distintos: <b>${T.length}</b></div>`)}
+      ${paso(3,ok('DESPACHO_ABIERTA')?'hecho':'','Foto de la caja abierta, donde se vean los productos',fotoBtn('DESPACHO_ABIERTA'))}
+      ${paso(4,ok('DESPACHO_CERRADA')?'hecho':'','Foto de la caja cerrada y sellada, con la etiqueta visible',fotoBtn('DESPACHO_CERRADA'))}
+      ${paso(5,'','Cerrar la caja: ya no se podrá modificar',`<br><button class="btn" id="cjCerrar" style="margin-top:6px">Cerrar caja y despachar</button>`)}</div>
+      <div class="card"><h2>Lecturas de esta caja</h2>${tablaLineas(c.despacho)}</div>`}
+  else if(modo==='recepcion'){const s=ok('RECEPCION_SELLADA'),a=ok('RECEPCION_ABIERTA');const T=totales(c.recepcion);
+    h+=`<div class="card"><p class="desc" style="margin-top:0">Despachada el ${fmtLocal(c.cerradaEn)} por ${esc(c.cerradaPor||'')}</p>
+      ${paso(1,'hecho','Caja identificada por su etiqueta')}
+      ${paso(2,s?'hecho':'actual','Foto de la caja sellada, antes de abrirla',fotoBtn('RECEPCION_SELLADA'))}
+      ${paso(3,a?'hecho':(s?'actual':''),'Foto de la caja abierta',s?fotoBtn('RECEPCION_ABIERTA'):'<div class="desc">Disponible después de la foto de la caja sellada.</div>')}
+      ${paso(4,s&&a?'actual':'','Pistolea cada producto. La app no muestra lo que se envió: cuenta lo que realmente llegó.',s&&a?escaner+`<div class="contador">Unidades contadas: <b>${T.reduce((x,y)=>x+y.cant,0)}</b></div>`:'<div class="desc">Se habilita al tener las dos fotos.</div>')}
+      ${paso(5,'','Cerrar la recepción y ver la conciliación',`<br><button class="btn" id="cjCerrarR" style="margin-top:6px" ${s&&a?'':'disabled'}>Cerrar recepción y conciliar</button>`)}</div>
+      ${s&&a?`<div class="card"><h2>Mi conteo</h2>${tablaLineas(c.recepcion)}</div>`:''}`}
+  else{const cerr=CERRADOS.includes(c.estado);
+    if(cerr){const K=conciliar(c);h+=`<div class="cjres ${c.estado}">${c.estado==='CONCILIADA'?'✓ CAJA CONCILIADA: llegó todo lo enviado':'⚠️ CAJA RECIBIDA CON DIFERENCIAS'}</div>
+      <div class="card"><h2>Conciliación</h2><div style="overflow-x:auto"><table class="rk"><tr><th>Código</th><th class="r">Enviado</th><th class="r">Recibido</th><th class="r">Dif.</th><th>Estado</th></tr>${K.map(k=>`<tr><td>${esc(k.codigo)}${k.desc?`<div class="desc">${esc(k.desc)}</div>`:''}</td><td class="r">${k.enviado}</td><td class="r">${k.recibido}</td><td class="r ${k.estado}">${k.dif>0?'+':''}${k.dif}</td><td class="${k.estado}">${k.estado}</td></tr>`).join('')}</table></div>
+      <p class="desc">Recibida por ${esc(c.recibidaPor||'')} · ${fmtLocal(c.recInicio)} a ${fmtLocal(c.recFin)}</p><button class="btn sec" id="cjMailR" style="width:100%">✉️ Enviar conciliación por correo</button></div>`}
+    else if(esSuper()||orig){h+=`<div class="card"><h2>Contenido despachado</h2><table class="rk"><tr><th>Código</th><th class="r">Cantidad</th></tr>${totales(c.despacho).map(t=>`<tr><td>${esc(t.codigo)}${t.desc?`<div class="desc">${esc(t.desc)}</div>`:''}</td><td class="r">${t.cant}</td></tr>`).join('')}</table>
+      ${c.estado!=='ABIERTA'?`<div class="row2" style="margin-top:10px"><button class="btn sec" id="cjMailD">✉️ Avisar al destino</button><button class="btn sec" id="cjMailO">✉️ Respaldo al origen</button></div><button class="btn sec" id="cjEtq" style="width:100%;margin-top:8px">🏷️ Reimprimir etiqueta</button>`:''}</div>`}
+    h+=`<div class="card"><h2>Fotos</h2>${Object.entries(ETAPAS).map(([k,n])=>`<div class="lrow"><div class="i"><b>${n}</b><span>${(c.fotos[k]||[]).length?(c.fotos[k]||[]).map(f=>fmtLocal(f.f)+' · '+esc(f.usr)).join('<br>'):'—'}</span></div></div>`).join('')}<p class="desc">Las fotos se guardan solo en la PC del administrador (carpeta de cada tienda › cajas › fotos).</p></div>`;
+    if(esSuper()||orig||cerr)h+=`<div class="card"><h2>Lecturas de despacho</h2>${tablaLineas(c.despacho).replace(/<button class="ico" data-elim="[^"]*" title="Eliminar">🗑️<\/button>/g,'')}</div>`;
+    if((c.recepcion||[]).length&&(esSuper()||cerr))h+=`<div class="card"><h2>Lecturas de recepción</h2>${tablaLineas(c.recepcion).replace(/<button class="ico" data-elim="[^"]*" title="Eliminar">🗑️<\/button>/g,'')}</div>`;
+    h+=`<div class="card"><h2>Historial</h2><table class="rk"><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr>${(c.eventos||[]).map(e=>`<tr><td class="desc">${fmtLocal(e.f)}</td><td>${esc(e.usr)}</td><td>${esc(e.acc.replace(/_/g,' ').toLowerCase())}${e.det?`<div class="desc">${esc(e.det)}</div>`:''}</td></tr>`).join('')}</table></div>`}
+  $('cjCaja').innerHTML=h;
+  $('cjVolver').onclick=()=>show('cajas');
+  if($('cjEtq'))$('cjEtq').onclick=()=>imprimirEtiqueta(c);
+  document.querySelectorAll('#cjCaja [data-foto]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;const et=i.dataset.foto;
+    if(et==='RECEPCION_ABIERTA'&&!ok('RECEPCION_SELLADA')){toast('Primero la foto de la caja sellada');return}
+    toast('Guardando foto…');try{const data=await comprimir(f);const id=nid('f');
+      await fotoPut({id,caja:c.id,etapa:et,f:ahoraISO(),usr:usrNom(),data:data.buffer,subida:false});c.fotos[et]=c.fotos[et]||[];c.fotos[et].push({id,f:ahoraISO(),usr:usrNom()});evento(c,'FOTO_'+et,Math.round(data.length/1024)+' KB');
+      await guardarCaja(c);toast('Foto guardada ✓ '+ETAPAS[et]);pintarCaja()}catch(e){toast('No se pudo procesar la foto')}});
+  const tipo=modo==='despacho'?'despacho':'recepcion';
+  if($('cjCod')){const inp=$('cjCod'),msg=(t,k)=>{$('cjMsg').textContent=t;$('cjMsg').className='mensaje '+k};
+    inp.onkeydown=async e=>{if(e.key!=='Enter')return;e.preventDefault();const leido=inp.value.trim();inp.value='';if(!leido)return;
+      const cant=parseInt($('cjCant').value||'1',10);if(!(cant>=1&&cant<=999)){msg('✖ Cantidad inválida','error');pitido(false);return}
+      if(leido.toUpperCase()===c.id){msg('✖ Ese es el código de la caja, no de un producto','error');pitido(false);return}
+      if(/^CJ-/i.test(leido)){msg('✖ Eso parece el código de otra caja ('+leido+')','error');pitido(false);return}
+      const r=resolver(leido);if(r.ok===false&&tipo==='despacho'&&CJ.exigir){msg(`✖ El código ${leido} no existe en el maestro de artículos`,'error');pitido(false);return}
+      c[tipo].push({i:nid('l'),codigo:r.codigo,leido,desc:r.desc,cant,usr:usrNom(),f:ahoraISO()});await guardarCaja(c);
+      $('cjCant').value=1;pintarCaja();const m2=$('cjMsg');m2.textContent='✔ '+r.codigo+(r.desc?' · '+r.desc:'')+(cant>1?' × '+cant:'')+(r.ok===false?' — no está en el maestro; se registró igual':'');m2.className='mensaje '+(r.ok===false?'aviso':'ok');pitido(true);$('cjCod').focus()};
+    setTimeout(()=>inp.focus(),60);
+    if($('cjCamara'))$('cjCamara').onclick=()=>leerCamara(v=>{inp.value=v;inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))})}
+  document.querySelectorAll('#cjCaja [data-elim]').forEach(b=>b.onclick=async()=>{const l=c[tipo].find(x=>x.i===b.dataset.elim);if(!l)return;
+    const mot=prompt(`Motivo para eliminar ${l.codigo} × ${l.cant} (queda registrado):`);if(!mot||mot.trim().length<3){toast('Debe escribir el motivo');return}
+    l.elim={por:usrNom(),en:ahoraISO(),motivo:mot.trim()};evento(c,'LINEA_ELIMINADA_'+tipo.toUpperCase(),`${l.codigo} × ${l.cant}. Motivo: ${mot.trim()}`);await guardarCaja(c);pintarCaja()});
+  if($('cjCerrar'))$('cjCerrar').onclick=async()=>{const err=[];if(!totales(c.despacho).length)err.push('La caja no tiene productos');if(!ok('DESPACHO_ABIERTA'))err.push('Falta la foto de la caja abierta');if(!ok('DESPACHO_CERRADA'))err.push('Falta la foto de la caja cerrada');
+    if(err.length){toast(err.join(' · '),5000);return}if(!confirm(`¿Cerrar la caja ${c.id}? Ya no se podrá modificar.`))return;
+    c.estado='EN_TRANSITO';c.cerradaPor=usrNom();c.cerradaEn=ahoraISO();evento(c,'CAJA_CERRADA','Despachada a '+c.destino);await guardarCaja(c);toast('Caja cerrada y en tránsito ✓',4000);pintarCaja()};
+  if($('cjCerrarR'))$('cjCerrarR').onclick=async()=>{if(!confirm('¿Terminaste de contar todo? Al cerrar ya no podrás agregar productos.'))return;
+    const K=conciliar(c);c.estado=K.every(k=>k.dif===0)?'CONCILIADA':'CON_DIFERENCIA';c.recFin=ahoraISO();evento(c,'RECEPCION_CERRADA',c.estado+(K.some(k=>k.dif)?': '+K.filter(k=>k.dif).map(k=>k.codigo+' '+(k.dif>0?'+':'')+k.dif).join('; '):''));await guardarCaja(c);pintarCaja();window.scrollTo(0,0)};
+  if($('cjMailD'))$('cjMailD').onclick=()=>mailCaja(c,'destino');if($('cjMailO'))$('cjMailO').onclick=()=>mailCaja(c,'origen');if($('cjMailR'))$('cjMailR').onclick=()=>mailCaja(c,'conciliacion');
+}
+function mailCaja(c,tipo){const ct=n=>correoTienda(n)||'';let to,asunto,cuerpo;const cc=ccDirectores();
+  if(tipo==='destino'){to=ct(c.destino);asunto=`Caja ${c.id} en camino desde ${c.origen}`;cuerpo=`La caja ${c.id} fue despachada desde ${c.origen} hacia ${c.destino} el ${fmtLocal(c.cerradaEn)}.\n\nAl recibirla: pistolee la etiqueta, tome la foto de la caja sellada, luego abierta, y pistolee cada producto. La app indicará las diferencias al cerrar.`}
+  else if(tipo==='origen'){to=ct(c.origen);const T=totales(c.despacho);asunto=`Despacho ${c.id} ${c.origen} → ${c.destino}`;cuerpo=`Se cerró la caja ${c.id}.\nOrigen: ${c.origen}\nDestino: ${c.destino}\nCerrada por: ${c.cerradaPor} el ${fmtLocal(c.cerradaEn)}\nProductos distintos: ${T.length} · Unidades: ${T.reduce((s,x)=>s+x.cant,0)}\n\n`+T.map(t=>`${t.codigo}  x${t.cant}`).join('\n')}
+  else{to=[ct(c.origen),ct(c.destino)].filter(Boolean).join(',');const K=conciliar(c);asunto=`Recepción ${c.id} ${c.destino}: ${c.estado==='CONCILIADA'?'CONCILIADA':'CON DIFERENCIAS'}`;
+    cuerpo=`Recepción de la caja ${c.id}: ${c.estado==='CONCILIADA'?'CONCILIADA SIN DIFERENCIAS':'RECIBIDA CON DIFERENCIAS'}\nOrigen: ${c.origen} (cerrada por ${c.cerradaPor} el ${fmtLocal(c.cerradaEn)})\nDestino: ${c.destino} (recibida por ${c.recibidaPor})\n\nCódigo | Enviado | Recibido | Dif.\n`+K.map(k=>`${k.codigo} | ${k.enviado} | ${k.recibido} | ${k.dif>0?'+':''}${k.dif} ${k.estado}`).join('\n')}
+  if(cuerpo.length>1700)cuerpo=cuerpo.slice(0,1700)+'\n… (detalle completo en la app)';
+  location.href=`mailto:${encodeURIComponent(to||'').replace(/%40/g,'@').replace(/%2C/g,',')}?subject=${encodeURIComponent('[Control de cajas] '+asunto)}${tipo!=='destino'&&cc.length?'&cc='+cc.join(','):''}&body=${encodeURIComponent(cuerpo)}`}
+function imprimirEtiqueta(c){const w=window.open('','_blank');if(!w){toast('Permita las ventanas emergentes para imprimir');return}
+  w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Etiqueta ${esc(c.id)}</title><style>@page{size:60mm 30mm;margin:0}body{margin:0;font-family:Arial,sans-serif}.etq{width:60mm;height:30mm;padding:1.5mm 2mm;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between}.sup{display:flex;justify-content:space-between;font-size:8pt;font-weight:bold}.cb svg{width:100%;height:20mm;display:block}.np{margin:12px;font-family:Arial}@media print{.np{display:none}}</style></head><body>
+    <div class="np"><button onclick="print()" style="font-size:16px;padding:8px 14px">Imprimir</button> Tamaño de etiqueta: 60 × 30 mm</div><div class="etq"><div class="sup"><span>${esc(c.origen)}</span><span>→ ${esc(c.destino)}</span></div><div class="cb">${c128svg(c.id)}</div></div><script>setTimeout(function(){print()},400)<\/script></body></html>`);w.document.close()}
+let AUD=null;function pitido(okk){try{AUD=AUD||new (window.AudioContext||window.webkitAudioContext)();const o=AUD.createOscillator(),g=AUD.createGain();o.frequency.value=okk?1200:220;o.connect(g);g.connect(AUD.destination);g.gain.value=.15;o.start();o.stop(AUD.currentTime+(okk?.08:.4))}catch(e){}}
+async function leerCamara(cb){let st,stop=false;try{st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}catch(e){toast('No se pudo abrir la cámara');return}
+  const det=new BarcodeDetector();$('usTit').textContent='Apunta al código de barras';$('usErr').textContent='';$('usOk').textContent='Cancelar';$('usBody').innerHTML='<video id="cjVid" playsinline style="width:100%;border-radius:10px"></video>';$('mUser').classList.add('show');
+  const v=$('cjVid');v.srcObject=st;await v.play();const fin=()=>{stop=true;st.getTracks().forEach(t=>t.stop());$('mUser').classList.remove('show')};$('usOk').onclick=fin;
+  const loop=async()=>{if(stop)return;try{const r=await det.detect(v);if(r.length){fin();cb(r[0].rawValue);return}}catch(e){}requestAnimationFrame(loop)};loop()}
+// ---- Excel para Latinium (XLSX propio, sin librerías) ----
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC_T[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipear(files){const enc=new TextEncoder(),parts=[],cen=[];let off=0;const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  for(const f of files){const nm=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),nm,data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cen.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+data.length}
+  const cs=cen.reduce((s,x)=>s+x.length,0),e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  const all=[...parts,...cen,new Uint8Array(e.buffer)],out=new Uint8Array(all.reduce((s,x)=>s+x.length,0));let p=0;all.forEach(x=>{out.set(x,p);p+=x.length});return out}
+const xmlEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function colL(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}
+function xlsx(nombreHoja,filas){
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${filas.map((f,r)=>`<row r="${r+1}">${f.map((v,c)=>{const ref=colL(c)+(r+1);return typeof v==='number'&&isFinite(v)?`<c r="${ref}"><v>${v}</v></c>`:`<c r="${ref}" t="inlineStr"><is><t>${xmlEsc(v==null?'':v)}</t></is></c>`}).join('')}</row>`).join('')}</sheetData></worksheet>`;
+  return zipear([
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xmlEsc(nombreHoja)}" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
+    {name:'xl/worksheets/sheet1.xml',data:sheet}])}
+function armarLote(cajas,origen,destino,lote){
+  const m={};cajas.forEach(c=>totales(c.despacho).forEach(t=>{(m[t.codigo]=m[t.codigo]||{codigo:t.codigo,descripcion:t.desc,cantidad:0,origen,destino}).cantidad+=t.cant}));
+  const filas=Object.values(m).sort((a,b)=>a.codigo.localeCompare(b.codigo)),partes=[];for(let i=0;i<filas.length;i+=LATINIUM_MAX)partes.push(filas.slice(i,i+LATINIUM_MAX));
+  const base=`${lote}_${limpio(origen).replace(/\s/g,'')}_a_${limpio(destino).replace(/\s/g,'')}`;
+  const files=partes.map((p,i)=>({name:`${base}_parte${i+1}de${partes.length}.xlsx`,data:xlsx('Transferencia',[LATINIUM_COLUMNAS.map(c=>c[0]),...p.map(f=>LATINIUM_COLUMNAS.map(([,k])=>f[k]))])}));
+  files.push({name:`${base}_RESUMEN_POR_CAJA_no_importar.xlsx`,data:xlsx('Cajas',[['CAJA','ESTADO','CERRADA_EN','CODIGO','DESCRIPCION','CANTIDAD'],...cajas.flatMap(c=>totales(c.despacho).map(t=>[c.id,ESTADOS_CJ[c.estado],fmtLocal(c.cerradaEn),t.codigo,t.desc,t.cant]))])});
+  return{base,files,filas:filas.length,partes:partes.length}}
+function descargarLote(L){const z=zipear(L.files);descargar(L.base+'.zip',z,'application/zip')}
+function pintarXls(){
+  const L=miLugar(),orig=esSuper()?null:L;if(!esSuper()&&!L){$('cjXls').innerHTML='';return}
+  const C=CJ.all.filter(c=>c.estado!=='ABIERTA'&&(!orig||c.origen===orig));
+  const pend={};C.filter(c=>!c.lote).forEach(c=>{const k=c.origen+'|'+c.destino;(pend[k]=pend[k]||[]).push(c)});
+  const lotes={};C.filter(c=>c.lote).forEach(c=>{(lotes[c.lote]=lotes[c.lote]||[]).push(c)});
+  $('cjXls').innerHTML=`<div class="card"><h2>📄 Excel para Latinium</h2><p class="desc">Junta las cajas cerradas que aún no se cargaron, suma por código y genera archivos de máximo <b>${LATINIUM_MAX} filas</b> cada uno, más un resumen por caja que no se importa. Formato estándar: columnas <b>${LATINIUM_COLUMNAS.map(c=>c[0]).join(', ')}</b> (se ajustará a la plantilla real de Latinium).</p>
+    ${Object.keys(pend).length?`<table class="rk"><tr><th>${esSuper()?'Origen → ':''}Destino</th><th class="r">Cajas</th><th></th></tr>${Object.entries(pend).map(([k,cs])=>{const [o,d]=k.split('|');return `<tr><td>${esSuper()?esc(o)+' → ':''}${esc(d)}</td><td class="r">${cs.length}</td><td class="r"><button class="btn" data-lote="${esc(k)}">Generar</button></td></tr>`}).join('')}</table>`:'<p class="desc">No hay cajas cerradas pendientes de cargar.</p>'}</div>
+    <div class="card"><h2>Lotes generados</h2>${Object.keys(lotes).length?`<table class="rk"><tr><th>Lote</th><th>Destino</th><th class="r">Cajas</th><th></th></tr>${Object.entries(lotes).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,40).map(([k,cs])=>`<tr><td>${esc(k)}<div class="desc">${fmtLocal(cs[0].loteEn)}</div></td><td>${esc(cs[0].destino)}</td><td class="r">${cs.length}</td><td class="r"><button class="btn sec" data-redl="${esc(k)}">Descargar</button></td></tr>`).join('')}</table>`:'<p class="desc">Todavía no hay lotes.</p>'}</div>`;
+  document.querySelectorAll('[data-lote]').forEach(b=>b.onclick=async()=>{const cs=pend[b.dataset.lote],[o,d]=b.dataset.lote.split('|');const dd=new Date(),lote=`LT${String(dd.getFullYear()).slice(2)}${pad(dd.getMonth()+1)}${pad(dd.getDate())}${pad(dd.getHours())}${pad(dd.getMinutes())}${pad(dd.getSeconds())}`;
+    const R=armarLote(cs,o,d,lote);for(const c of cs){c.lote=lote;c.loteEn=ahoraISO();c.lotePor=usrNom();evento(c,'EXCEL_LATINIUM','Incluida en '+lote);await guardarCaja(c)}
+    descargarLote(R);toast(`Lote ${lote}: ${R.filas} código(s) en ${R.partes} archivo(s) ✓`,5000);pintarXls()});
+  document.querySelectorAll('[data-redl]').forEach(b=>b.onclick=()=>{const cs=lotes[b.dataset.redl];descargarLote(armarLote(cs,cs[0].origen,cs[0].destino,b.dataset.redl))});
+}
+// ---- Ajustes del módulo ----
+function pintarAjCajas(){if(!$('ajCajas'))return;$('cardCajas').classList.toggle('hidden',!esSuper());
+  $('ajCajas').innerHTML=LLAVE?`<p class="desc">✅ Activo. Los datos de las cajas viajan <b>cifrados (AES-256)</b>: en la nube solo se ven caracteres sin sentido. Las fotos pasan cifradas y se guardan solo en esta PC.</p>
+    <label class="f">Maestro de artículos (opcional, CSV: codigo, ean, descripcion)</label><input type="file" id="cjMaestro" accept=".csv,text/csv" class="t">
+    <p class="desc" style="margin:6px 0 0">${CJ.maestro?`Cargado: ${CJ.maestro.n} artículos.`:'Sin maestro: se registra el código tal como se pistolea.'}</p>
+    <label class="chk"><input type="checkbox" id="cjExigir" ${CJ.exigir?'checked':''}> En despacho, rechazar códigos que no estén en el maestro</label>`:
+    `<p class="desc">Crea la llave de cifrado para que bodegas y tiendas puedan despachar y recibir cajas.</p><button class="btn" id="cjActivar" style="width:100%">🔒 Activar control de cajas</button>`;
+  if($('cjActivar'))$('cjActivar').onclick=()=>activarCajas().catch(e=>toast('No se pudo activar: '+e.message,5000));
+  if($('cjMaestro'))$('cjMaestro').onchange=async()=>{const f=$('cjMaestro').files[0];if(!f)return;const tx=await f.text();const sep=(tx.slice(0,2048).match(/;/g)||[]).length>(tx.slice(0,2048).match(/,/g)||[]).length?';':',';
+    const ls=tx.replace(/^﻿/,'').split(/\r?\n/).filter(x=>x.trim());const hd=ls[0].split(sep).map(x=>x.trim().toLowerCase());const ic=hd.indexOf('codigo'),ie=hd.indexOf('ean'),id=hd.indexOf('descripcion');
+    if(ic<0){toast('El CSV debe tener la columna "codigo"',5000);return}
+    const filas=ls.slice(1).map(l=>l.split(sep)).filter(x=>x[ic]&&x[ic].trim()).map(x=>[x[ic].trim(),ie>=0?(x[ie]||'').trim():'',id>=0?(x[id]||'').trim():'']);
+    await guardarMaestro({filas,exigir:CJ.exigir});toast(`Maestro cargado: ${filas.length} artículos ✓`)};
+  if($('cjExigir'))$('cjExigir').onchange=async()=>{CJ.exigir=$('cjExigir').checked;await guardarMaestro({filas:CJ.maestro?Object.entries(CJ.maestro.d).map(([c,d])=>[c,Object.entries(CJ.maestro.m).filter(([k,v])=>v===c&&k!==c.toUpperCase()).map(([k])=>k).join('|'),d]):[],exigir:CJ.exigir})};
+}
+async function guardarMaestro(o){armarMaestro(o);let sha=null;try{const r=await gh('/contents/'+encPath(MAESTRO_PATH)+'?ref='+NUBE.branch);if(r.ok)sha=(await r.json()).sha}catch(e){}
+  await putFile(MAESTRO_PATH,JSON.stringify(await cifrarObj({id:'maestro',...o})),sha,'Maestro de artículos (cifrado)',NUBE.repo);pintarAjCajas()}
+// ---- respaldo legible de cada caja en la PC ----
+function cajaHTML(c){const K=CERRADOS.includes(c.estado)?conciliar(c):null;const tb=(h,r)=>`<table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(f=>`<tr>${f.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</table>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Caja ${esc(c.id)}</title><style>body{font-family:Arial,sans-serif;margin:14px;font-size:13px}table{border-collapse:collapse;width:100%;margin:6px 0 14px}th{background:#F28C28;color:#fff;text-align:left;padding:5px}td{border-bottom:1px solid #ddd;padding:5px}.FALTANTE{color:#c62828;font-weight:700}.SOBRANTE{color:#b26a00;font-weight:700}</style></head><body>
+  <h2>Caja ${esc(c.id)} · ${ESTADOS_CJ[c.estado]}</h2><p>${esc(c.origen)} → <b>${esc(c.destino)}</b><br>Creada por ${esc(c.creadaPor)} el ${fmtLocal(c.creadaEn)}${c.cerradaEn?`<br>Cerrada por ${esc(c.cerradaPor)} el ${fmtLocal(c.cerradaEn)}`:''}${c.recFin?`<br>Recibida por ${esc(c.recibidaPor)} el ${fmtLocal(c.recFin)}`:''}${c.lote?`<br>Excel Latinium: ${esc(c.lote)}`:''}</p>
+  ${K?'<h3>Conciliación</h3>'+tb(['Código','Descripción','Enviado','Recibido','Dif.','Estado'],K.map(k=>[esc(k.codigo),esc(k.desc||''),k.enviado,k.recibido,(k.dif>0?'+':'')+k.dif,`<span class="${k.estado}">${k.estado}</span>`])):''}
+  <h3>Lecturas de despacho</h3>${tb(['Código','Cant.','Usuario','Fecha','Eliminada'],(c.despacho||[]).map(l=>[esc(l.codigo),l.cant,esc(l.usr),fmtLocal(l.f),l.elim?esc(l.elim.por+': '+l.elim.motivo):'']))}
+  ${(c.recepcion||[]).length?'<h3>Lecturas de recepción</h3>'+tb(['Código','Cant.','Usuario','Fecha','Eliminada'],c.recepcion.map(l=>[esc(l.codigo),l.cant,esc(l.usr),fmtLocal(l.f),l.elim?esc(l.elim.por+': '+l.elim.motivo):''])):''}
+  <h3>Historial</h3>${tb(['Fecha','Usuario','Acción','Detalle'],(c.eventos||[]).map(e=>[fmtLocal(e.f),esc(e.usr),esc(e.acc),esc(e.det||'')]))}<p style="color:#888">Fotos: carpeta cajas/fotos/${esc(c.id)}</p></body></html>`}
+
+async function revisarLlave(tree,repo){if(!esSuper()||!LLAVE||window._llaveOk)return;const it=tree.find(x=>x.path===LLAVE_PATH);if(!it)return;
+  try{const g=await gh('/git/blobs/'+it.sha,null,repo);await desenvolver(JSON.parse(utf8b64((await g.json()).content)));window._llaveOk=1}
+  catch(e){try{const raw=b64d(await kvGet('llaveCajas'));await putFile(LLAVE_PATH,JSON.stringify(await envolver(raw),null,1),it.sha,'Llave de cajas re-envuelta con la clave actual',NUBE.repo);window._llaveOk=1}catch(x){}}}
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
   const todos=(await idbAll());const pend=todos.filter(e=>!e.exportado);
@@ -2895,22 +3331,27 @@ async function importar(){
   $('impTxt').textContent=`${IMP.length} evaluación(es) listas: ${ts}.`;
   $('mImp').classList.add('show');
 }
-async function guardarEnCarpetas(){
+async function guardarEnCarpetas(auto){
   let root=null;
-  try{root=await kvGet('carpeta');if(root&&(await root.requestPermission({mode:'readwrite'}))!=='granted')root=null}catch(e){root=null}
-  if(!root){try{root=await showDirectoryPicker({id:'evaluaciones',mode:'readwrite'})}catch(e){return}}
+  try{root=await kvGet('carpeta');if(root&&(await (auto?root.queryPermission({mode:'readwrite'}):root.requestPermission({mode:'readwrite'})))!=='granted')root=null}catch(e){root=null}
+  if(!root){if(auto)return;try{root=await showDirectoryPicker({id:'evaluaciones',mode:'readwrite',startIn:'desktop'})}catch(e){return}}
   try{await kvSet('carpeta',root)}catch(e){}
   if(root.name==='EvaluacionTiendas'){try{root=await root.getDirectoryHandle('datos',{create:true})}catch(e){}}
   for(const t of tiendasAct()){try{await root.getDirectoryHandle(limpio(t),{create:true})}catch(e){}}
   let n=0;const bk=(await kvGet('respaldo'))||{};
   for(const ev of IMP){
     try{
+      if(ev.tipo==='caja'){for(const [lug,sub] of [[ev.origen,'enviadas'],[ev.destino,'recibidas']]){let d=await root.getDirectoryHandle(limpio(lug),{create:true});d=await d.getDirectoryHandle('cajas',{create:true});d=await d.getDirectoryHandle(sub,{create:true});
+          for(const [ext,txt] of [['.json',jsonLimpio(ev)],['.html',cajaHTML(ev)]]){const fh=await d.getFileHandle(ev.id+ext,{create:true});const w=await fh.createWritable();await w.write(txt);await w.close()}}
+        bk[ev.id]=ev._sha||ev.id;n++;continue}
       let dir=await root.getDirectoryHandle(limpio(ev.tienda),{create:true});if(ev.tipo==='colaborador'||ev.tipo==='pare')dir=await dir.getDirectoryHandle(ev.tipo==='pare'?'pare-tecnico':'colaboradores',{create:true});const base=nombreBase(ev);
-      for(const [ext,txt] of [['.json',JSON.stringify(ev)],['.html',docStandalone(ev)]]){const fh=await dir.getFileHandle(base+ext,{create:true});const w=await fh.createWritable();await w.write(txt);await w.close()}
+      const esc1=async(ext,txt)=>{const fh=await dir.getFileHandle(base+ext,{create:true});const w=await fh.createWritable();await w.write(txt);await w.close()};
+      await esc1('.json',JSON.stringify(ev));try{await esc1('.html',docStandalone(ev))}catch(x){console.warn('Documento no generado',ev.id,x)}
       bk[ev.id]=ev._sha||ev.id;n++;
     }catch(e){console.error(e)}
   }
-  await kvSet('respaldo',bk);$('mImp').classList.remove('show');toast(`${n} evaluación(es) guardadas en la carpeta «${root.name}» ✓`,5000);loadHist();
+  await kvSet('respaldo',bk);let nf=0;try{nf=await respaldarFotos(root)}catch(e){console.warn(e)}if(nf)toast(`📷 ${nf} foto(s) de cajas guardadas en tu PC ✓`,5000);
+  $('mImp').classList.remove('show');if(n||!auto)toast(`💾 ${n} archivo(s) respaldados en tu PC (${root.name}) ✓`,5000);pintarAvisoRespaldo();if(!$('view-hist').classList.contains('hidden'))loadHist();
 }
 $('impGo').onclick=guardarEnCarpetas;
 $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.html',docStandalone(currentDoc),'text/html','Evaluación '+currentDoc.tienda);
@@ -2918,13 +3359,13 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 // ---------------- Navegación ----------------
 let MODULO='eval';
 function show(v){
-  if(v==='pare'||v==='ptdoc')MODULO='pare';else if(['form','colab','doc','hist','rep','comp'].includes(v))MODULO='eval';
+  if(v==='pare'||v==='ptdoc'||v==='ptrep')MODULO='pare';else if(v==='cajas'||v==='caja'||v==='cjxls')MODULO='cajas';else if(['form','colab','doc','hist','rep','comp'].includes(v))MODULO='eval';
   if(v==='home')MODULO='home';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('offmod',!(b.dataset.mod==='all'||b.dataset.mod===MODULO)));
-  $('hdrSub').textContent=MODULO==='pare'?'Pare técnico':MODULO==='home'?'Inicio':'Evaluación de tiendas';
-  if(v==='home'){const s=getSes();$('homeHola').textContent='Hola'+(s?', '+s.nombre.split(' ')[0]:'')+' 👋';$('tilePare').classList.toggle('hidden',ROL()==='evaluador')}
+  $('hdrSub').textContent=MODULO==='cajas'?'Control de cajas':MODULO==='pare'?'Pare técnico':MODULO==='home'?'Inicio':'Evaluación de tiendas';
+  if(v==='home'){const s=getSes();$('homeHola').textContent='Hola'+(s?', '+s.nombre.split(' ')[0]:'')+' 👋';$('tilePare').classList.toggle('hidden',ROL()==='evaluador'||ROL()==='bodega');$('tileCajas').classList.toggle('hidden',!['admin','local','responsable','bodega'].includes(ROL()));document.querySelector('[data-ir="eval"]').classList.toggle('hidden',ROL()==='bodega')}
   if(v==='form'&&(ROL()==='responsable'||((ROL()==='admin'||ROL()==='local')&&MODO==='colab')))v='colab';
-  ['home','pare','ptdoc','form','colab','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  ['home','pare','ptrep','ptdoc','cajas','caja','cjxls','form','colab','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='colab'&&b.dataset.v==='form')));
   $('totalbar').classList.toggle('hidden',v!=='form');$('totalbarC').classList.toggle('hidden',v!=='colab');
   document.querySelectorAll('[data-modo]').forEach(b=>b.classList.toggle('on',b.dataset.modo===v));
@@ -2934,12 +3375,16 @@ function show(v){
   if(v==='comp')loadComp();
   if(v==='aj'){pintarAjustes();pintarNube();aplicarRol()}
   if(v==='pare')abrirPare();
+  if(v==='ptrep')loadPtRep();
+  if(v==='cajas')abrirCajas();
+  if(v==='caja')pintarCaja();
+  if(v==='cjxls')cjCargar().then(pintarXls);
   window.scrollTo(0,0);
   if(v==='form')setTimeout(()=>document.querySelectorAll('canvas[data-sig]').forEach(c=>c._resize&&c._resize()),30);
 }
 let MODO=(function(){try{return localStorage.getItem('ev_modo')||'form'}catch(e){return'form'}})();
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
-document.querySelectorAll('[data-ir]').forEach(b=>b.onclick=()=>{if(b.dataset.ir==='pare')show('pare');else show(ROL()==='director'?'rep':'form')});
+document.querySelectorAll('[data-ir]').forEach(b=>b.onclick=()=>{if(b.dataset.ir==='cajas')show('cajas');else if(b.dataset.ir==='pare')show(ROL()==='director'?'ptrep':'pare');else show(ROL()==='director'?'rep':'form')});
 document.querySelectorAll('[data-modo]').forEach(b=>b.onclick=()=>{MODO=b.dataset.modo;try{localStorage.setItem('ev_modo',MODO)}catch(e){}show(MODO)});
 $('btnFinalizar').onclick=finalizar;
 $('btnPrint').onclick=()=>window.print();
