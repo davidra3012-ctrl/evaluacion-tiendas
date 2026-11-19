@@ -1,13 +1,13 @@
 {
  "version": 1,
- "actualizado": "2026-11-19T01:10:57.910Z",
+ "actualizado": "2026-11-19T01:10:59.805Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
    "nombre": "DAVIDRODRIGUEZ",
    "rol": "admin",
    "tiendas": [],
-   "upd": 1795050657910,
+   "upd": 1795050659805,
    "cred": {
     "salt": "Lw0uz/b8H1rBtSV/K+sMnQ==",
     "iv": "RcnS1wjnSzophjvn",
@@ -23,7 +23,7 @@
    "tiendas": [
     "Scala"
    ],
-   "upd": 1795050657910,
+   "upd": 1795050659805,
    "cred": {
     "salt": "8do+zDkJHmB7AlK6WPB88Q==",
     "iv": "7tXXad8ZXsjeRGU3",
