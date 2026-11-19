@@ -152,6 +152,8 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 .paper .pb{page-break-before:always;break-before:page;margin-top:18px}
 /*ENDPAPER*/
 .offmod{display:none!important}
+.camw{position:relative;border-radius:12px;overflow:hidden;background:#000}.camw video{width:100%;display:block;max-height:60vh;object-fit:cover}.camguia{position:absolute;left:6%;right:6%;top:30%;bottom:30%;border:3px solid var(--or);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}.camguia:after{content:'';position:absolute;left:4%;right:4%;top:50%;border-top:2px solid #e53935}
+.btn.grande{width:100%;padding:18px;font-size:18px}
 .btn.danger{background:#fff;color:#c62828;border:2px solid #e8b4b4}.comoC{border:2px dashed var(--or)}
 .ciega{background:#f3fbe6;border:1px solid #c5e59a;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:1.4}.ciega.gris{background:#f3f6fb;border-color:#cfdcef}
 .cjchip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:700;background:#eee;vertical-align:middle}.cjchip.ABIERTA{background:#fff4e0;color:#b26a00}.cjchip.EN_TRANSITO,.cjchip.EN_RECEPCION{background:#e8f0fe;color:#1a56b0}.cjchip.CONCILIADA{background:#e6f4ea;color:#1a7f37}.cjchip.CON_DIFERENCIA{background:#fdecea;color:#c62828}
@@ -199,7 +201,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v18</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v19</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -524,6 +526,12 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <p id="ncErr" style="color:#d64545;font-size:13px;min-height:16px"></p>
   <button class="btn" id="ncOk" style="width:100%">Guardar y entrar</button>
   <button class="btn sec" id="ncSalir" style="width:100%;margin-top:8px">Salir</button>
+</div></div>
+<div class="modal" id="mCam" style="z-index:310"><div class="box wide" style="padding:14px">
+  <h3 style="margin:0 0 8px" id="camTit">Escanear</h3>
+  <div class="camw"><video id="camVid" playsinline muted autoplay></video><div class="camguia"></div></div>
+  <p class="desc" id="camMsg" style="margin:8px 0"></p>
+  <button class="btn sec" id="camCerrar" style="width:100%">Cancelar</button>
 </div></div>
 <div class="modal" id="mUser"><div class="box wide" style="max-height:92vh;overflow:auto">
   <h3 style="margin-top:0" id="usTit">Nuevo usuario</h3>
@@ -3145,21 +3153,31 @@ function pintarCajas(){
   if(!L){$('cjMain').innerHTML='<div class="card"><p class="desc">Tu usuario no tiene una tienda o bodega asignada.</p></div>';return}
   h+=`<div class="ejg" style="margin-top:0"><div class="card" style="margin:0"><h2>📤 Despachar: nueva caja</h2><label class="f">Destino</label><select class="t" id="cjDest"><option value="">— Seleccione —</option>${lugaresAct().filter(x=>x!==L).map(x=>`<option>${esc(x)}</option>`).join('')}</select>
       <button class="btn" style="width:100%;margin-top:10px" id="cjNueva" ${LLAVE?'':'disabled'}>Crear caja y asignar número</button></div>
-    <div class="card" style="margin:0"><h2>📥 Recibir una caja</h2><label class="f">Pistolea o escribe la etiqueta de la caja</label><input class="t escaner" id="cjBuscar" placeholder="CJ-000000-0000" autocomplete="off" autocapitalize="characters"><div id="cjBMsg" class="mensaje"></div></div></div>`;
+    <div class="card" style="margin:0"><h2>📥 Recibir una caja</h2><p class="desc" style="margin-top:0">Pistolea la <b>etiqueta pegada en la caja</b>: la app abre esa caja sola.</p>
+      <button class="btn grande" id="cjCamEtq">📷 Escanear etiqueta con la cámara</button>
+      <label class="f">o con la pistola (también puedes escribir el número si la etiqueta está dañada)</label><input class="t escaner" id="cjBuscar" placeholder="CJ-000000-0000" autocomplete="off" autocapitalize="characters"><div id="cjBMsg" class="mensaje"></div></div></div>`;
   h+=lista('🧰 Cajas en armado',V.filter(c=>c.origen===L&&c.estado==='ABIERTA'))+lista('🚚 Por recibir en '+esc(L),V.filter(c=>c.destino===L&&(c.estado==='EN_TRANSITO'||c.estado==='EN_RECEPCION')))
     +lista('📤 Enviadas',V.filter(c=>c.origen===L&&c.estado!=='ABIERTA').slice(0,40))+lista('📥 Recibidas',V.filter(c=>c.destino===L&&CERRADOS.includes(c.estado)).slice(0,40));
   $('cjMain').innerHTML=h;bindComo();
   $('cjNueva').onclick=async()=>{const d=$('cjDest').value;if(!d){toast('Seleccione el destino');return}
     const c={id:nuevoNumero(),tipo:'caja',origen:L,destino:d,estado:'ABIERTA',creadaPor:usrNom(),creadaEn:ahoraISO(),despacho:[],recepcion:[],fotos:{},eventos:[],fechaHora:ahoraISO()};
     Object.keys(ETAPAS).forEach(k=>c.fotos[k]=[]);evento(c,'CAJA_CREADA',`${L} → ${d}`);await guardarCaja(c);abrirCaja(c.id);setTimeout(()=>imprimirEtiqueta(c),300)};
-  $('cjBuscar').onkeydown=async e=>{if(e.key!=='Enter')return;const n=$('cjBuscar').value.trim().toUpperCase();$('cjBuscar').value='';if(!n)return;
-    let c=CJ.all.find(x=>x.id===n);if(!c){$('cjBMsg').textContent='Buscando en la nube…';$('cjBMsg').className='mensaje';await sincronizar(true);await cjCargar();c=CJ.all.find(x=>x.id===n)}
-    const m=(t,k)=>{$('cjBMsg').textContent=t;$('cjBMsg').className='mensaje '+k;pitido(false)};
-    if(!c)return m('✖ No existe la caja '+n,'error');if(c.destino!==L)return m(`✖ La caja ${n} no está dirigida a ${L}`,'error');if(c.estado==='ABIERTA')return m('✖ Esa caja todavía no se cerró en origen','error');
-    abrirCaja(c.id)};
+  $('cjBuscar').onkeydown=async e=>{if(e.key!=='Enter')return;const n=$('cjBuscar').value.trim().toUpperCase();$('cjBuscar').value='';if(n)recibirEtiqueta(n)};
+  $('cjCamEtq').onclick=()=>escanearCamara('Escanea la etiqueta de la caja',v=>recibirEtiqueta(v.toUpperCase()));
   setTimeout(()=>$('cjBuscar')&&$('cjBuscar').focus(),50);
 }
+async function recibirEtiqueta(n){const L=miLugar();n=String(n).trim().toUpperCase();if(!$('cjBMsg'))return;
+    let c=CJ.all.find(x=>x.id===n);if(!c){$('cjBMsg').textContent='Buscando en la nube…';$('cjBMsg').className='mensaje';await sincronizar(true);await cjCargar();c=CJ.all.find(x=>x.id===n)}
+    const m=(t,k)=>{$('cjBMsg').textContent=t;$('cjBMsg').className='mensaje '+k;pitido(false)};
+    if(!/^CJ-/.test(n))return m('✖ Eso no es una etiqueta de caja ('+n+')','error');
+    if(!c)return m('✖ No existe la caja '+n,'error');if(c.destino!==L)return m(`✖ La caja ${n} no está dirigida a ${L}`,'error');if(c.estado==='ABIERTA')return m('✖ Esa caja todavía no se cerró en origen','error');
+    if(CERRADOS.includes(c.estado)){m(`Esa caja ya fue recibida el ${fmtLocal(c.recFin)}. Se abre su detalle.`,'aviso')}
+    pitido(true);abrirCaja(c.id)}
 document.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('[data-cj]');if(r&&r.closest('#view-cajas,#view-cjxls'))abrirCaja(r.dataset.cj)});
+let PIST={b:'',t:0};
+document.addEventListener('keydown',e=>{if($('view-cajas').classList.contains('hidden'))return;const tg=e.target;if(tg&&/INPUT|TEXTAREA|SELECT/.test(tg.tagName))return;
+  const ahora=Date.now();if(ahora-PIST.t>120)PIST.b='';PIST.t=ahora;
+  if(e.key==='Enter'){const v=PIST.b.trim();PIST.b='';if(/^CJ-/i.test(v)&&$('cjBMsg')){e.preventDefault();recibirEtiqueta(v)}}else if(e.key.length===1)PIST.b+=e.key});
 function bindComo(){if($('cjComo'))$('cjComo').onchange=()=>{CJ.como=$('cjComo').value;try{sessionStorage.setItem('cj_como',CJ.como)}catch(e){}pintarCajas()}}
 try{CJ.como=sessionStorage.getItem('cj_como')||''}catch(e){}
 function pintarEliminadas(){const F=[];CJ.all.forEach(c=>['despacho','recepcion'].forEach(t=>(c[t]||[]).filter(l=>l.elim).forEach(l=>F.push({c,t,l}))));F.sort((a,b)=>b.l.elim.en.localeCompare(a.l.elim.en));
@@ -3178,12 +3196,12 @@ function pintarCaja(){
   const ok=et=>(c.fotos[et]||[]).length>0;
   const fotoBtn=et=>`<div class="cjfoto">${(c.fotos[et]||[]).map(f=>`<span class="cjf">📷 ${fmtLocal(f.f).slice(11)} · ${esc(f.usr)}</span>`).join('')}<label class="btn sec cjcam">📸 ${ok(et)?'Otra foto':'Tomar foto'}<input type="file" accept="image/*" capture="environment" data-foto="${et}" hidden></label></div><p class="desc" style="margin:4px 0 0">Las fotos van directo a la PC de respaldo; no se ven en la app.</p>`;
   const paso=(n,est,tit,body)=>`<div class="paso ${est}"><div class="num">${n}</div><div class="cuerpo"><b>${tit}</b>${body||''}</div></div>`;
-  const escaner=`<div class="cjscan"><input id="cjCod" class="t escaner" placeholder="Pistolea el código del producto" autocomplete="off" inputmode="text"><input id="cjCant" class="t" type="number" min="1" max="999" value="1" title="Cantidad">${'BarcodeDetector' in window?'<button class="btn sec" id="cjCamara" title="Leer con la cámara">📷</button>':''}</div><div id="cjMsg" class="mensaje"></div>`;
+  const escaner=`<div class="cjscan"><input id="cjCod" class="t escaner" placeholder="Pistolea el código del producto" autocomplete="off" inputmode="text"><input id="cjCant" class="t" type="number" min="1" max="999" value="1" title="Cantidad"><button class="btn sec" id="cjCamara" title="Leer con la cámara">📷</button></div><div id="cjMsg" class="mensaje"></div>`;
   const tablaLineas=(Ls)=>`<div style="overflow-x:auto"><table class="rk cjt"><tr><th>Código</th><th class="r">Cant.</th><th>Hora</th><th></th></tr>${Ls.slice().reverse().map(l=>`<tr class="${l.elim?'elim':''}"><td>${esc(l.codigo)}${l.leido!==l.codigo?`<div class="desc">leído: ${esc(l.leido)}</div>`:''}${l.desc?`<div class="desc">${esc(l.desc)}</div>`:''}</td><td class="r">${l.cant}</td><td class="desc">${fmtLocal(l.f).slice(11)}</td><td>${l.elim?`<span class="desc">Eliminada por ${esc(l.elim.por)} · ${esc(l.elim.motivo)}</span>`:`<button class="ico" data-elim="${l.i}" title="Eliminar">🗑️</button>`}</td></tr>`).join('')||'<tr><td colspan="4" class="desc">Todavía no hay lecturas.</td></tr>'}</table></div>`;
   let h=head+avisoLlave();
   if(modo==='despacho'){const T=totales(c.despacho);
     h+=`<div class="ciega gris">🔒 Lo que pistolees aquí <b>no lo verá la tienda que recibe</b>. Ella contará la caja por su cuenta y la app comparará las dos listas.</div>
-      <div class="card">${paso(1,'hecho','Imprime la etiqueta y pégala en la caja',`<br><button class="btn sec" id="cjEtq" style="margin-top:6px">🏷️ Imprimir etiqueta</button>`)}
+      <div class="card">${paso(1,c.etiquetaOk?'hecho':'actual','Imprime la etiqueta, pégala en la caja y pistoléala para confirmar',`<br><div class="row2" style="margin-top:6px"><button class="btn sec" id="cjEtq">🏷️ Imprimir etiqueta</button><button class="btn sec" id="cjCamConf">📷 Escanear etiqueta</button></div><div class="desc" style="margin-top:6px">${c.etiquetaOk?'✅ Etiqueta confirmada en la caja':'Pistolea la etiqueta ya pegada (en el campo de productos o con la cámara).'}</div>`)}
       ${paso(2,T.length?'hecho':'actual','Pistolea cada producto que entra en la caja',escaner+`<div class="contador">Unidades: <b>${T.reduce((s,x)=>s+x.cant,0)}</b> · Productos distintos: <b>${T.length}</b></div>`)}
       ${paso(3,ok('DESPACHO_ABIERTA')?'hecho':'','Foto de la caja abierta, donde se vean los productos',fotoBtn('DESPACHO_ABIERTA'))}
       ${paso(4,ok('DESPACHO_CERRADA')?'hecho':'','Foto de la caja cerrada y sellada, con la etiqueta visible',fotoBtn('DESPACHO_CERRADA'))}
@@ -3201,7 +3219,7 @@ function pintarCaja(){
   else{const cerr=CERRADOS.includes(c.estado);
     if(cerr){const K=conciliar(c);h+=`<div class="cjres ${c.estado}">${c.estado==='CONCILIADA'?'✓ CAJA CONCILIADA: llegó todo lo enviado':'⚠️ CAJA RECIBIDA CON DIFERENCIAS'}</div>
       <div class="card"><h2>Conciliación</h2><div style="overflow-x:auto"><table class="rk"><tr><th>Código</th><th class="r">Enviado</th><th class="r">Recibido</th><th class="r">Dif.</th><th>Estado</th></tr>${K.map(k=>`<tr><td>${esc(k.codigo)}${k.desc?`<div class="desc">${esc(k.desc)}</div>`:''}</td><td class="r">${k.enviado}</td><td class="r">${k.recibido}</td><td class="r ${k.estado}">${k.dif>0?'+':''}${k.dif}</td><td class="${k.estado}">${k.estado}</td></tr>`).join('')}</table></div>
-      <p class="desc">Recibida por ${esc(c.recibidaPor||'')} · ${fmtLocal(c.recInicio)} a ${fmtLocal(c.recFin)}</p><button class="btn sec" id="cjMailR" style="width:100%">✉️ Enviar conciliación por correo</button></div>`}
+      <p class="desc">Recibida por ${esc(c.recibidaPor||'')} · ${fmtLocal(c.recInicio)} a ${fmtLocal(c.recFin)}</p><button class="btn sec" id="cjMailR" style="width:100%">✉️ Enviar conciliación por correo</button>${dest&&!esSuperV()?'<button class="btn" id="cjOtra" style="width:100%;margin-top:8px">📥 Recibir otra caja</button>':''}</div>`}
     else if(esSuper()||orig){h+=`<div class="card"><h2>Contenido despachado</h2><table class="rk"><tr><th>Código</th><th class="r">Cantidad</th></tr>${totales(c.despacho).map(t=>`<tr><td>${esc(t.codigo)}${t.desc?`<div class="desc">${esc(t.desc)}</div>`:''}</td><td class="r">${t.cant}</td></tr>`).join('')}</table>
       ${c.estado!=='ABIERTA'?`<div class="row2" style="margin-top:10px"><button class="btn sec" id="cjMailD">✉️ Avisar al destino</button><button class="btn sec" id="cjMailO">✉️ Respaldo al origen</button></div><button class="btn sec" id="cjEtq" style="width:100%;margin-top:8px">🏷️ Reimprimir etiqueta</button>`:''}</div>`}
     h+=`<div class="card"><h2>Fotos</h2>${Object.entries(ETAPAS).map(([k,n])=>`<div class="lrow"><div class="i"><b>${n}</b><span>${(c.fotos[k]||[]).length?(c.fotos[k]||[]).map(f=>fmtLocal(f.f)+' · '+esc(f.usr)).join('<br>'):'—'}</span></div></div>`).join('')}<p class="desc">Las fotos se guardan solo en la PC del administrador (carpeta de cada tienda › cajas › fotos).</p></div>`;
@@ -3213,6 +3231,8 @@ function pintarCaja(){
   $('cjVolver').onclick=()=>show('cajas');
   if($('cjBorrar'))$('cjBorrar').onclick=async()=>{if(!confirm(`¿Eliminar la caja ${c.id} de forma definitiva?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.`))return;if(await borrarRegistro(c)){CJ.all=CJ.all.filter(x=>x.id!==c.id);show('cajas')}};
   if($('cjEtq'))$('cjEtq').onclick=()=>imprimirEtiqueta(c);
+  if($('cjCamConf'))$('cjCamConf').onclick=()=>escanearCamara('Escanea la etiqueta pegada en la caja',v=>{const i=$('cjCod');if(i){i.value=v;i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))}});
+  if($('cjOtra'))$('cjOtra').onclick=()=>{show('cajas');setTimeout(()=>$('cjCamEtq')&&$('cjCamEtq').focus(),100)};
   document.querySelectorAll('#cjCaja [data-foto]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;const et=i.dataset.foto;
     if(et==='RECEPCION_ABIERTA'&&!ok('RECEPCION_SELLADA')){toast('Primero la foto de la caja sellada');return}
     toast('Guardando foto…');try{const data=await comprimir(f);const id=nid('f');
@@ -3222,17 +3242,18 @@ function pintarCaja(){
   if($('cjCod')){const inp=$('cjCod'),msg=(t,k)=>{$('cjMsg').textContent=t;$('cjMsg').className='mensaje '+k};
     inp.onkeydown=async e=>{if(e.key!=='Enter')return;e.preventDefault();const leido=inp.value.trim();inp.value='';if(!leido)return;
       const cant=parseInt($('cjCant').value||'1',10);if(!(cant>=1&&cant<=999)){msg('✖ Cantidad inválida','error');pitido(false);return}
-      if(leido.toUpperCase()===c.id){msg('✖ Ese es el código de la caja, no de un producto','error');pitido(false);return}
+      if(leido.toUpperCase()===c.id){if(tipo==='despacho'&&!c.etiquetaOk){c.etiquetaOk=true;evento(c,'ETIQUETA_CONFIRMADA','Etiqueta pistoleada en la caja');await guardarCaja(c);pintarCaja();const m2=$('cjMsg');if(m2){m2.textContent='✔ Etiqueta confirmada: la caja '+c.id+' está bien identificada';m2.className='mensaje ok'}pitido(true);return}
+        msg(tipo==='despacho'?'Esa es la etiqueta de esta caja (ya confirmada). Ahora pistolea los productos.':'✖ Esa es la etiqueta de la caja, no un producto',tipo==='despacho'?'aviso':'error');pitido(tipo==='despacho');return}
       if(/^CJ-/i.test(leido)){msg('✖ Eso parece el código de otra caja ('+leido+')','error');pitido(false);return}
       const r=resolver(leido);if(r.ok===false&&tipo==='despacho'&&CJ.exigir){msg(`✖ El código ${leido} no existe en el maestro de artículos`,'error');pitido(false);return}
       c[tipo].push({i:nid('l'),codigo:r.codigo,leido,desc:r.desc,cant,usr:usrNom(),f:ahoraISO()});await guardarCaja(c);
       $('cjCant').value=1;pintarCaja();const m2=$('cjMsg');m2.textContent='✔ '+r.codigo+(r.desc?' · '+r.desc:'')+(cant>1?' × '+cant:'')+(r.ok===false?' — no está en el maestro; se registró igual':'');m2.className='mensaje '+(r.ok===false?'aviso':'ok');pitido(true);$('cjCod').focus()};
     setTimeout(()=>inp.focus(),60);
-    if($('cjCamara'))$('cjCamara').onclick=()=>leerCamara(v=>{inp.value=v;inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))})}
+    if($('cjCamara'))$('cjCamara').onclick=()=>escanearCamara('Escanea el código del producto',v=>{inp.value=v;inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))})}
   document.querySelectorAll('#cjCaja [data-elim]').forEach(b=>b.onclick=async()=>{const l=c[tipo].find(x=>x.i===b.dataset.elim);if(!l)return;
     const mot=prompt(`Motivo para eliminar ${l.codigo} × ${l.cant} (queda registrado):`);if(!mot||mot.trim().length<3){toast('Debe escribir el motivo');return}
     l.elim={por:usrNom(),en:ahoraISO(),motivo:mot.trim()};evento(c,'LINEA_ELIMINADA_'+tipo.toUpperCase(),`${l.codigo} × ${l.cant}. Motivo: ${mot.trim()}`);await guardarCaja(c);pintarCaja()});
-  if($('cjCerrar'))$('cjCerrar').onclick=async()=>{const err=[];if(!totales(c.despacho).length)err.push('La caja no tiene productos');if(!ok('DESPACHO_ABIERTA'))err.push('Falta la foto de la caja abierta');if(!ok('DESPACHO_CERRADA'))err.push('Falta la foto de la caja cerrada');
+  if($('cjCerrar'))$('cjCerrar').onclick=async()=>{const err=[];if(!totales(c.despacho).length)err.push('La caja no tiene productos');if(!ok('DESPACHO_ABIERTA'))err.push('Falta la foto de la caja abierta');if(!ok('DESPACHO_CERRADA'))err.push('Falta la foto de la caja cerrada');if(!c.etiquetaOk)err.push('Falta pistolear la etiqueta pegada en la caja');
     if(err.length){toast(err.join(' · '),5000);return}if(!confirm(`¿Cerrar la caja ${c.id}? Ya no se podrá modificar.`))return;
     c.estado='EN_TRANSITO';c.cerradaPor=usrNom();c.cerradaEn=ahoraISO();evento(c,'CAJA_CERRADA','Despachada a '+c.destino);await guardarCaja(c);toast('Caja cerrada y en tránsito ✓',4000);pintarCaja()};
   if($('cjCerrarR'))$('cjCerrarR').onclick=async()=>{if(!confirm('¿Terminaste de contar todo? Al cerrar ya no podrás agregar productos.'))return;
@@ -3254,6 +3275,92 @@ async function leerCamara(cb){let st,stop=false;try{st=await navigator.mediaDevi
   const det=new BarcodeDetector();$('usTit').textContent='Apunta al código de barras';$('usErr').textContent='';$('usOk').textContent='Cancelar';$('usBody').innerHTML='<video id="cjVid" playsinline style="width:100%;border-radius:10px"></video>';$('mUser').classList.add('show');
   const v=$('cjVid');v.srcObject=st;await v.play();const fin=()=>{stop=true;st.getTracks().forEach(t=>t.stop());$('mUser').classList.remove('show')};$('usOk').onclick=fin;
   const loop=async()=>{if(stop)return;try{const r=await det.detect(v);if(r.length){fin();cb(r[0].rawValue);return}}catch(e){}requestAnimationFrame(loop)};loop()}
+// ================= LECTOR DE CÓDIGOS DE BARRAS POR CÁMARA (propio, funciona en iPhone y Android) =================
+// Lee Code 128 (etiquetas de caja y muchos códigos internos) y EAN-13 / EAN-8 / UPC-A (productos).
+const LECTOR=(()=>{
+  const P128=C128.map(p=>[...p].map(Number));
+  const L_EAN=['3211','2221','2122','1411','1132','1231','1114','1312','1213','3112'].map(p=>[...p].map(Number));
+  const G_EAN=L_EAN.map(p=>p.slice().reverse());
+  const PAR=['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLG','LGLGLG','LGLGGL','LGGLGL'];
+  // compara por pares barra+espacio (anula el engrosamiento de tinta y el desenfoque) y, con menos peso, por ancho de cada barra
+  function mejor(runs,tabla,mod){const S=runs.reduce((a,b)=>a+b,0);if(!S)return[-1,99];const n=runs.length,f=mod/S;let bi=-1,be=99;
+    for(let k=0;k<tabla.length;k++){const t=tabla[k];if(t.length!==n)continue;let ep=0,er=0;
+      for(let j=0;j<n;j++){er+=Math.abs(runs[j]*f-t[j]);if(j<n-1)ep+=Math.abs((runs[j]+runs[j+1])*f-(t[j]+t[j+1]))}
+      const e=ep*.8+er*.35;if(e<be){be=e;bi=k}}return[bi,be]}
+  function code128(R){
+    for(let i=0;i+6<R.length;i+=2){
+      const [st,e0]=mejor(R.slice(i,i+6),P128,11);if(!(st>=103&&st<=105)||e0>1.5)continue;
+      // zona de silencio a la izquierda (espacio ancho)
+      const S0=R.slice(i,i+6).reduce((a,b)=>a+b,0);if(i>0&&R[i-1]<S0/11*4)continue;
+      const vals=[st];let j=i+6,ok=false;
+      while(j+6<=R.length&&vals.length<60){
+        if(j+7<=R.length){const [sv,se]=mejor(R.slice(j,j+7),[P128[106]],13);if(sv===0&&se<1.6){ok=true;break}}
+        const [v,e]=mejor(R.slice(j,j+6),P128.slice(0,106),11);if(v<0||e>1.7)break;vals.push(v);j+=6}
+      if(!ok||vals.length<3)continue;
+      const chk=vals.pop();let s=vals[0];for(let k=1;k<vals.length;k++)s+=k*vals[k];if(s%103!==chk)continue;
+      let set=st===103?'A':st===104?'B':'C',out='';
+      for(let k=1;k<vals.length;k++){const v=vals[k];
+        if(set==='C'){if(v<100)out+=String(v).padStart(2,'0');else if(v===100)set='B';else if(v===101)set='A';continue}
+        if(v===99){set='C';continue}if(v===100&&set==='A'){set='B';continue}if(v===101&&set==='B'){set='A';continue}if(v>=96)continue;
+        out+=set==='B'?String.fromCharCode(v+32):(v<64?String.fromCharCode(v+32):String.fromCharCode(v-64))}
+      if(out)return out}
+    return null}
+  function guarda(a,m){return a.every(x=>x>m*.45&&x<m*1.8)}
+  function ean(R){
+    for(let i=0;i+43<=R.length;i+=2){
+      const g=R.slice(i,i+3);const m=(g[0]+g[1]+g[2])/3;if(!guarda(g,m))continue;if(i>0&&R[i-1]<m*3)continue;
+      // EAN-13
+      if(i+59<=R.length){let ok=true,dig=[],par='';
+        for(let d=0;d<6&&ok;d++){const r=R.slice(i+3+d*4,i+7+d*4);const [l,el]=mejor(r,L_EAN,7),[gg,eg]=mejor(r,G_EAN,7);if(Math.min(el,eg)>1.5)ok=false;else if(el<=eg){dig.push(l);par+='L'}else{dig.push(gg);par+='G'}}
+        const cg=R.slice(i+27,i+32);if(ok&&!guarda(cg,m))ok=false;
+        for(let d=0;d<6&&ok;d++){const r=R.slice(i+32+d*4,i+36+d*4);const [x,e]=mejor(r,L_EAN,7);if(e>1.5)ok=false;else dig.push(x)}
+        if(ok&&guarda(R.slice(i+56,i+59),m)){const f=PAR.indexOf(par);if(f>=0){const D=[f,...dig];let s=0;for(let k=0;k<12;k++)s+=D[k]*(k%2?3:1);if((10-s%10)%10===D[12])return D.join('')}}}
+      // EAN-8
+      if(i+43<=R.length){let ok=true,dig=[];
+        for(let d=0;d<4&&ok;d++){const [x,e]=mejor(R.slice(i+3+d*4,i+7+d*4),L_EAN,7);if(e>1.5)ok=false;else dig.push(x)}
+        if(ok&&!guarda(R.slice(i+19,i+24),m))ok=false;
+        for(let d=0;d<4&&ok;d++){const [x,e]=mejor(R.slice(i+24+d*4,i+28+d*4),L_EAN,7);if(e>1.5)ok=false;else dig.push(x)}
+        if(ok&&guarda(R.slice(i+40,i+43),m)){let s=0;for(let k=0;k<7;k++)s+=dig[k]*(k%2?1:3);if((10-s%10)%10===dig[7])return dig.join('')}}}
+    return null}
+  // convierte una línea de píxeles en anchos de barras (empezando por barra oscura)
+  function enfocar(g,k){const n=g.length,o=new Float32Array(n);for(let x=0;x<n;x++){let s=0,c=0;for(let d=-2;d<=2;d++){const y=x+d;if(y>=0&&y<n){s+=g[y];c++}}o[x]=Math.max(0,Math.min(255,g[x]+k*(g[x]-s/c)))}return o}
+  function corridas(g,nitidez){if(nitidez)g=enfocar(g,nitidez);const n=g.length;const sm=new Float32Array(n);for(let x=0;x<n;x++)sm[x]=nitidez?g[x]:(g[Math.max(0,x-1)]+g[x]*2+g[Math.min(n-1,x+1)])/4;
+    const W=Math.max(10,Math.round(n/20)),th=new Float32Array(n),ct=new Float32Array(n);
+    for(let x=0;x<n;x++){let lo=255,hi=0;for(let k=Math.max(0,x-W);k<=Math.min(n-1,x+W);k+=2){const v=sm[k];if(v<lo)lo=v;if(v>hi)hi=v}th[x]=(lo+hi)/2;ct[x]=hi-lo}
+    const P=[],D=[];for(let x=0;x<n-1;x++){if(ct[x]<30)continue;const a=sm[x]-th[x],b=sm[x+1]-th[x+1];if((a<0)!==(b<0)&&a!==b){P.push(x+a/(a-b));D.push(b<0)}}
+    if(P.length<10)return{R:[]};
+    // limpia cruces falsos muy juntos
+    const P2=[P[0]],D2=[D[0]];for(let k=1;k<P.length;k++){if(D[k]===D2[D2.length-1])continue;if(P[k]-P2[P2.length-1]<.6){P2.pop();D2.pop();continue}P2.push(P[k]);D2.push(D[k])}
+    const R=[P2[0]];for(let k=1;k<P2.length;k++)R.push(P2[k]-P2[k-1]);R.push(n-P2[P2.length-1]);
+    return{R,first:!D2[0]}}
+  function leerFila(g){return leerFila1(g,0)||leerFila1(g,1.5)||leerFila1(g,3)}
+  function leerFila1(g,nit){const c=corridas(g,nit);if(!c.R||c.R.length<20)return null;const R=c.R;
+    const fw=c.first?R:R.slice(1);const ultOsc=((R.length-1)%2===0)===c.first;const rv=R.slice().reverse();const bw=ultOsc?rv:rv.slice(1);
+    return code128(fw)||ean(fw)||code128(bw)||ean(bw)}
+  function leerImagen(ctx,w,h){const d=ctx.getImageData(0,0,w,h).data;const votos={};
+    const filas=[.5,.45,.55,.4,.6,.35,.65,.3,.7,.25,.75];
+    for(const f of filas){const y0=Math.round(h*f);const g=new Float32Array(w);const ys=[-2,-1,0,1,2].map(k=>Math.max(0,Math.min(h-1,y0+k)));for(let x=0;x<w;x++){let t=0;for(const y of ys){const k=(y*w+x)*4;t+=(d[k]*299+d[k+1]*587+d[k+2]*114)/1000}g[x]=t/ys.length}
+      const v=leerFila(g);if(v){votos[v]=(votos[v]||0)+1;if(votos[v]>=2)return v}}
+    const ks=Object.keys(votos);return ks.length===1&&/^\d{8,13}$/.test(ks[0])?ks[0]:null}
+  return{leerImagen,leerFila,corridas}})();
+async function escanearCamara(titulo,cb){
+  let st,parar=false,det=null;
+  try{st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})}catch(e){toast('No se pudo abrir la cámara. Revisa el permiso de cámara del navegador.',5000);return}
+  try{if('BarcodeDetector' in window)det=new BarcodeDetector({formats:['code_128','ean_13','ean_8','upc_a','code_39']})}catch(e){det=null}
+  $('mCam').classList.add('show');$('camTit').textContent=titulo||'Apunta al código de barras';$('camMsg').textContent='Coloca el código dentro del recuadro, horizontal y bien iluminado';
+  const v=$('camVid');v.srcObject=st;v.setAttribute('playsinline','');v.muted=true;try{await v.play()}catch(e){}
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+  const fin=()=>{parar=true;try{st.getTracks().forEach(t=>t.stop())}catch(e){}v.srcObject=null;$('mCam').classList.remove('show')};
+  $('camCerrar').onclick=fin;
+  const ciclo=async()=>{if(parar)return;
+    if(v.videoWidth){let val=null;
+      if(det){try{const r=await det.detect(v);if(r.length)val=r[0].rawValue}catch(e){}}
+      if(!val){const W=Math.min(960,v.videoWidth),H=Math.round(W*v.videoHeight/v.videoWidth);const bandH=Math.round(H*.4);cv.width=W;cv.height=bandH;
+        cx.drawImage(v,0,(v.videoHeight-v.videoHeight*.4)/2,v.videoWidth,v.videoHeight*.4,0,0,W,bandH);val=LECTOR.leerImagen(cx,W,bandH)}
+      if(val){fin();try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}cb(String(val).trim());return}}
+    setTimeout(ciclo,120)};
+  ciclo()}
+
 // ---- Excel para Latinium (XLSX propio, sin librerías) ----
 const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC_T[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
