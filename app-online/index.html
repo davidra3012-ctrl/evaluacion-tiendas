@@ -181,7 +181,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 </head>
 <body>
 <header class="top">
-  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v13</b></div></div>
+  <div><div class="brand">warenhaus</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v14</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2643,7 +2643,7 @@ function abrirPersona(id,pre,despues){
   const tiendaSel=lista=>`<select class="t" id="pT"><option value="">— Seleccione la tienda —</option>${lista.map(t=>`<option ${x.tienda===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
   $('usBody').innerHTML=`${resp?'':`<label class="f">Perfil</label><select class="t" id="pP">${Object.entries(PERFILES).map(([k,v])=>`<option value="${k}" ${perf===k?'selected':''}>${v}</option>`).join('')}</select>`}
    <div class="row2"><div><label class="f">Nombres *</label><input class="t" id="pN" value="${esc(x.nombres||'')}" autocomplete="off"></div><div><label class="f">Apellidos</label><input class="t" id="pA" value="${esc(x.apellidos||'')}" autocomplete="off"></div></div>
-   <div class="row2"><div><label class="f">Cédula</label><input class="t" id="pC" value="${esc(x.cedula||'')}" inputmode="numeric" autocomplete="off"></div><div><label class="f">Cargo</label><input class="t" id="pG" value="${esc(x.cargo||'')}" autocomplete="off"></div></div>
+   <label class="f">Cédula</label><input class="t" id="pC" value="${esc(x.cedula||'')}" inputmode="numeric" autocomplete="off">
    <div id="wT"><label class="f">Tienda *</label>${tiendaSel(resp?misTiendas():tiendasAct())}</div>
    <div id="wS"><label class="f">Sección o área a cargo</label><input class="t" id="pS" value="${esc(x.seccion||'')}" autocomplete="off"></div>
    <div id="wM"><label class="f" id="lM">Correo</label><input class="t" id="pM" type="email" value="${esc(x.correo||'')}" autocomplete="off"></div>
@@ -2655,11 +2655,9 @@ function abrirPersona(id,pre,despues){
        <div id="wV"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u&&u.rol==='director'?u.tiendas:(x.tiendas||[]))}</div>
      </div></div>`:''}`;
   bindTodas();
-  const CARGOS=['','Responsable de tienda','Administrador de tienda','Vendedor/a','Director','Evaluador','Administrador'];
   const vis=()=>{const p=resp?'colaborador':$('pP').value;
     $('wT').style.display=(p==='responsable'||p==='colaborador')?'':'none';$('wS').style.display=p==='colaborador'?'':'none';
     $('wM').style.display=p==='colaborador'?'none':'';$('lM').textContent=p==='director'?'Correo (recibe copia de las evaluaciones)':'Correo (opcional)';
-    if(CARGOS.includes($('pG').value))$('pG').value={responsable:'Administrador de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador general'}[p];
     if($('wA')){$('wA').style.display=p==='colaborador'?'none':'';$('wV').style.display=p==='director'?'':'none'}};
   if(!resp)$('pP').onchange=vis;vis();
   const sugerir=()=>{if($('pU')&&!$('pU').disabled&&!$('pU')._t)$('pU').value=slug(($('pN').value.split(' ')[0]||'')+' '+($('pA').value.split(' ')[0]||'')).replace(/-/g,'').slice(0,20)};
@@ -2668,7 +2666,7 @@ function abrirPersona(id,pre,despues){
   $('mUser').classList.add('show');setTimeout(()=>$('pN').focus(),100);
   $('usOk').onclick=async()=>{
     const p=resp?'colaborador':$('pP').value;
-    const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:$('pG').value.trim(),
+    const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:{responsable:'Administrador de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador general'}[p],
       tienda:(p==='responsable'||p==='colaborador')?$('pT').value:'',seccion:p==='colaborador'?$('pS').value.trim():'',correo:p==='colaborador'?'':$('pM').value.trim()};
     const err=m=>{$('usErr').textContent=m};
     if(!v.nombres)return err('Escriba los nombres');
@@ -2745,7 +2743,8 @@ function ptActivos(v){return PT_KEYS.filter(k=>k==='v'||k==='a'||(k==='e0'&&v.ex
 // Último valor real registrado (cierre parcial o final)
 function ptCierre(v,k){let c=null;for(const p of v.per)if(p&&p.real&&p.real[k]!=null)c=p.real[k];return c}
 function ptMinMeta(v,j,k){let m=null;for(let i=0;i<j;i++){const p=v.per[i]||{};for(const x of [p.meta&&p.meta[k],p.real&&p.real[k]])if(x!=null&&(m==null||x>m))m=x}return m}
-function ptObjTotal(v){const o=ptNum(v.objetivo);return o==null&&!v.deuda?null:(o||0)+(v.deuda||0)}
+function ptMetaFinal(v){let m=null;for(const p of v.per)if(p&&p.meta&&p.meta.v!=null)m=p.meta.v;return m}
+function ptObjTotal(v){const o=ptMetaFinal(v);return o==null&&!v.deuda?null:(o||0)+(v.deuda||0)}
 function ptDif(v){const o=ptObjTotal(v),c=ptCierre(v,'v');return o==null||c==null?null:c-o}
 function ptDeudaDe(t,f,pid){
   const prev=PT.all.filter(r=>r.tienda===t&&r.fecha<f&&(r.vend||[]).some(x=>x.pid===pid)).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
@@ -2787,9 +2786,8 @@ function ptRender(){
     `<div class="ptbanner gris">${new Date().getHours()<rec.cfg.inicio?'El pare técnico empieza a las '+ptHH(rec.cfg.inicio):'Jornada terminada: registra el cierre de cada vendedor'}</div>`;
   $('ptVend').innerHTML=rec.vend.map((v,i)=>{const L=ptLabels(v),K=ptActivos(v);
     return `<div class="card ptv"><div class="ptvh"><b>🧑‍💼 ${esc(v.nombre)}</b>${ed?`<button class="ico" data-ptdel="${i}" title="Quitar">🗑️</button>`:''}</div>
-    <div class="row2"><div><label class="f">Objetivo del día ($)</label><input class="t" data-pto="${i}" inputmode="decimal" value="${v.objetivo??''}" ${dis} placeholder="0"></div>
-      <div><label class="f">Deuda de días anteriores</label><div class="ptdeuda ${v.deuda?'neg':''}">${v.deuda?ptMon(v.deuda):'Sin deuda'}</div></div></div>
-    <div class="row2"><div><label class="f">Meta libre 1 (nombre)</label><input class="t" data-ptx="${i}|0" value="${esc(v.extras[0])}" placeholder="Ej.: garantías" ${dis}></div><div><label class="f">Meta libre 2 (nombre)</label><input class="t" data-ptx="${i}|1" value="${esc(v.extras[1])}" placeholder="Ej.: tarjetas" ${dis}></div></div>
+    <label class="f">Deuda de días anteriores</label><div class="ptdeuda ${v.deuda?'neg':''}">${v.deuda?ptMon(v.deuda)+' — se suma a la meta final de hoy':'Sin deuda'}</div>
+    <div class="row2"><div><label class="f">Meta libre 1 (nombre)</label><input class="t" data-ptx="${i}|0" value="${esc(v.extras[0])}" placeholder="Ej.: licuadoras" ${dis}></div><div><label class="f">Meta libre 2 (nombre)</label><input class="t" data-ptx="${i}|1" value="${esc(v.extras[1])}" placeholder="Ej.: sartenes" ${dis}></div></div>
     ${C.map(([a,b],j)=>`<details class="ptp ${j===now?'now':''}" ${(now<0||j===now||j===now-1)?'open':''}><summary>${ptHH(a)} → ${ptHH(b)}${j===now?' <span class="ptya">AHORA</span>':''}${j===C.length-1?' <span class="ptcz">CIERRE</span>':''}<span class="ptsum" data-ptsum="${i}|${j}"></span></summary>
       <table class="ptt"><tr><th></th><th>Meta hasta ${ptHH(b)}</th><th>Vendido a las ${ptHH(b)}</th><th>Dif.</th></tr>
       ${K.map(k=>`<tr><td>${esc(L[k])}</td><td><input data-ptm="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].meta[k]??''}" ${dis}></td><td><input data-ptr="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].real[k]??''}" ${dis}></td><td class="ptd" data-ptd="${i}|${j}|${k}"></td></tr>`).join('')}</table>
@@ -2803,23 +2801,22 @@ function ptCalc(){
   rec.vend.forEach((v,i)=>{const K=ptActivos(v);
     C.forEach((c,j)=>{const p=v.per[j];let msg=[];
       K.forEach(k=>{const m=p.meta[k],r=p.real[k],el=document.querySelector(`[data-ptd="${i}|${j}|${k}"]`);
-        if(el){if(m!=null&&r!=null){const d=r-m;el.textContent=(d>=0?'+':'')+ptFmt(k,d).replace('$-','-$');el.className='ptd '+(d>=0?'pos':'neg');if(d<0&&j<C.length-1)msg.push(`${esc(ptLabels(v)[k])}: faltó ${ptFmt(k,-d)} → la próxima meta no puede ser menor a ${ptFmt(k,ptMinMeta(v,j+1,k))}`)}else{el.textContent='';el.className='ptd'}}
-        const mi=document.querySelector(`[data-ptm="${i}|${j}|${k}"]`),mn=ptMinMeta(v,j,k);if(mi)mi.placeholder=mn!=null?'≥ '+ptCant(mn):'';});
+        if(el){if(m!=null&&r!=null){const d=r-m;el.textContent=(d>=0?'+':'')+ptFmt(k,d).replace('$-','-$');el.className='ptd '+(d>=0?'pos':'neg');if(d<0&&j<C.length-1)msg.push(`${esc(ptLabels(v)[k])}: faltó ${ptFmt(k,-d)} → la próxima meta debe ser mayor a ${ptFmt(k,ptMinMeta(v,j+1,k))}`)}else{el.textContent='';el.className='ptd'}}
+        const mi=document.querySelector(`[data-ptm="${i}|${j}|${k}"]`),mn=ptMinMeta(v,j,k);if(mi)mi.placeholder=mn!=null?'> '+ptCant(mn):'';});
       const s=document.querySelector(`[data-ptsum="${i}|${j}"]`);if(s){const m=p.meta.v,r=p.real.v;s.innerHTML=m!=null||r!=null?` · ${ptMon(m)} / ${ptMon(r)}`:''}
       const me=document.querySelector(`[data-ptmsg="${i}|${j}"]`);if(me)me.innerHTML=msg.map(x=>'⚠️ '+x).join('<br>')});
     const o=ptObjTotal(v),c=ptCierre(v,'v'),d=ptDif(v);if(o!=null){tO+=o;hayO=true}if(c!=null){tC+=c;hayC=true}
     const f=document.querySelector(`[data-ptfin="${i}"]`);
-    if(f)f.innerHTML=`<div><span>Objetivo${v.deuda?' + deuda':''}</span><b>${ptMon(o)}</b></div><div><span>Cierre</span><b>${ptMon(c)}</b></div><div><span>Diferencia</span><b class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</b></div>`+(d!=null&&d<0&&rec.fecha<=hoyISO()?`<p class="ptmsg" style="grid-column:1/-1;margin:4px 0 0">Si cierra así, mañana empieza con una deuda de ${ptMon(-d)}.</p>`:'');
+    if(f)f.innerHTML=`<div><span>Meta final${v.deuda?' + deuda':''}</span><b>${ptMon(o)}</b></div><div><span>Cierre</span><b>${ptMon(c)}</b></div><div><span>Diferencia</span><b class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</b></div>`+(d!=null&&d<0&&rec.fecha<=hoyISO()?`<p class="ptmsg" style="grid-column:1/-1;margin:4px 0 0">Si cierra así, mañana empieza con una deuda de ${ptMon(-d)}.</p>`:'');
   });
-  $('ptRes').innerHTML=rec.vend.length?`<h2>📊 Resumen de ${esc(rec.tienda)}</h2><table class="ptt res"><tr><th>Vendedor</th><th>Objetivo</th><th>Cierre</th><th>Dif.</th></tr>${rec.vend.map(v=>{const d=ptDif(v);return `<tr><td style="text-align:left">${esc(v.nombre)}</td><td>${ptMon(ptObjTotal(v))}</td><td>${ptMon(ptCierre(v,'v'))}</td><td class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td></tr>`}).join('')}
+  $('ptRes').innerHTML=rec.vend.length?`<h2>📊 Resumen de ${esc(rec.tienda)}</h2><table class="ptt res"><tr><th>Vendedor</th><th>Meta final</th><th>Cierre</th><th>Dif.</th></tr>${rec.vend.map(v=>{const d=ptDif(v);return `<tr><td style="text-align:left">${esc(v.nombre)}</td><td>${ptMon(ptObjTotal(v))}</td><td>${ptMon(ptCierre(v,'v'))}</td><td class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td></tr>`}).join('')}
     <tr class="tot"><td style="text-align:left">TOTAL</td><td>${hayO?ptMon(tO):'—'}</td><td>${hayC?ptMon(tC):'—'}</td><td class="${hayO&&hayC?(tC-tO>=0?'pos':'neg'):''}">${hayO&&hayC?(tC-tO>=0?'+':'-')+ptMon(Math.abs(tC-tO)):'—'}</td></tr></table>`:'';
   $('ptRes').classList.toggle('hidden',!rec.vend.length);
 }
 document.addEventListener('change',e=>{const el=e.target,rec=PT.rec;if(!rec||!el.closest||!el.closest('#view-pare'))return;
-  if(el.dataset.pto!=null){rec.vend[+el.dataset.pto].objetivo=ptNum(el.value);ptGuardar();ptCalc();return}
   if(el.dataset.ptx){const[i,n]=el.dataset.ptx.split('|').map(Number);rec.vend[i].extras[n]=el.value.trim();ptGuardar();ptRender();return}
   const a=el.dataset.ptm||el.dataset.ptr;if(!a)return;const[i,j,k]=a.split('|');const v=rec.vend[+i],p=v.per[+j];let n=ptNum(el.value);
-  if(el.dataset.ptm){const mn=ptMinMeta(v,+j,k);if(n!=null&&mn!=null&&n<mn){n=mn;toast(`La meta no puede ser menor a ${ptFmt(k,mn)} (lo prometido antes). Se ajustó.`,4500)}
+  if(el.dataset.ptm){const mn=ptMinMeta(v,+j,k);if(n!=null&&mn!=null&&n<=mn){n=mn+1;toast(`La meta siempre debe subir: tiene que ser mayor a ${ptFmt(k,mn)}. Se ajustó a ${ptFmt(k,n)}.`,5000)}
     if(n==null)delete p.meta[k];else p.meta[k]=n}
   else{if(n==null)delete p.real[k];else p.real[k]=n}
   el.value=n??'';ptGuardar();ptCalc()});
@@ -2829,10 +2826,12 @@ $('ptTienda').onchange=ptCambiar;$('ptFecha').onchange=ptCambiar;
 $('ptAdd').onclick=()=>{const rec=PT.rec,ya=new Set(rec.vend.map(v=>v.pid));const L=ptVendedores(rec.tienda).filter(x=>!ya.has(x.id));
   $('usTit').textContent='Agregar vendedores';$('usErr').textContent='';$('usOk').textContent='Agregar';$('usOk').disabled=false;
   $('usBody').innerHTML=L.length?`<p class="desc">Vendedores registrados en ${esc(rec.tienda)}:</p>`+L.map(x=>`<label class="chk"><input type="checkbox" class="ptSel" value="${x.id}"> ${esc(nomPer(x))}${x.seccion?' <span class="desc">· '+esc(x.seccion)+'</span>':''}</label>`).join(''):
-    `<p class="desc">No hay vendedores registrados en ${esc(rec.tienda)}. Regístralos en <b>Ajustes › Personas y usuarios</b> con el perfil <b>Vendedor</b>.</p>`;
+    `<p class="desc">Todavía no hay vendedores registrados en ${esc(rec.tienda)}.</p>`;
+  $('usBody').innerHTML+=`<button class="btn sec" style="width:100%;margin-top:10px" id="ptNuevoV">+ Nuevo vendedor</button>`;
   $('mUser').classList.add('show');
+  $('ptNuevoV').onclick=()=>abrirPersona(null,{perfil:'colaborador',tienda:rec.tienda},x=>{rec.vend.push({pid:x.id,nombre:nomPer(x)||x.nombres,deuda:0,extras:['',''],per:[]});ptAlinear(rec);ptGuardar();ptRender();toast(`${nomPer(x)||x.nombres} agregado ✓`)});
   $('usOk').onclick=()=>{const sel=[...document.querySelectorAll('.ptSel:checked')].map(x=>x.value);
-    sel.forEach(id=>{const x=CONF.personas.find(o=>o.id===id);rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,objetivo:null,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]})});
+    sel.forEach(id=>{const x=CONF.personas.find(o=>o.id===id);rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]})});
     ptAlinear(rec);$('mUser').classList.remove('show');if(sel.length){ptGuardar();ptRender()}}};
 // ---- Hoja imprimible (igual a la hoja física) ----
 function ptHoja(rec){const C=ptCortes(rec.cfg);
@@ -2842,7 +2841,7 @@ function ptHoja(rec){const C=ptCortes(rec.cfg);
       ${ri===0?`<td rowspan="${K.length}">${ptMon(ptObjTotal(v))}</td><td rowspan="${K.length}">${ptMon(ptCierre(v,'v'))}</td><td rowspan="${K.length}" class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td>`:''}</tr>`).join('')}).join('');
   return `<div class="pth"><div class="ptbrand">warenhaus</div><div>Fecha: <b>${fmtFecha(rec.fecha+'T12:00')}</b> · Tienda: <b>${esc(rec.tienda)}</b></div></div>
   <h1 class="ptt1">PARE TÉCNICO</h1>
-  <table class="pts"><tr><th rowspan="2">Vendedor</th>${C.map(([a,b],j)=>`<th colspan="3">${ptHH(a)} a ${j===C.length-1?'CIERRE':ptHH(b)}</th>`).join('')}<th rowspan="2">OBJETIVO</th><th rowspan="2">CIERRE</th><th rowspan="2">DIF</th></tr>
+  <table class="pts"><tr><th rowspan="2">Vendedor</th>${C.map(([a,b],j)=>`<th colspan="3">${ptHH(a)} a ${j===C.length-1?'CIERRE':ptHH(b)}</th>`).join('')}<th rowspan="2">META FINAL</th><th rowspan="2">CIERRE</th><th rowspan="2">DIF</th></tr>
   <tr>${C.map(()=>'<th></th><th>Meta</th><th>Real</th>').join('')}</tr>${filas||`<tr><td colspan="${C.length*3+4}">Sin vendedores registrados</td></tr>`}</table>
   <p class="ptpie">${rec.por?'Registrado por: '+esc(rec.por)+' · ':''}Generado ${fmtFecha(new Date().toISOString())} ${pad(new Date().getHours())}:${pad(new Date().getMinutes())}</p>`}
 const PT_CSS=`.pth{display:flex;justify-content:space-between;align-items:center;font-size:12px}.ptbrand{font-weight:800;color:#e8730c;font-size:18px}.ptt1{text-align:center;font-size:16px;margin:6px 0}
