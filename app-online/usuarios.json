@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-19T01:17:00.683Z",
+ "actualizado": "2026-11-19T14:11:12.595Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -31,6 +31,21 @@
     "ct": "AHTnVNJu7fAMfxZksSryGci918mGSXqzBFvOnws5H4B29GFb4XHem14TpgjpDl/VXZ6n5d90AFJKOJ4jcUzXQMUJ5XrpPewo9dtMtXJheW6eQsv7GIZMBRoj7ESRVbZpHvIsD+n/fXCYTcn6RQ=="
    },
    "personaId": "p-mwmulgh59g79"
+  },
+  {
+   "usuario": "marcelaalarcon",
+   "personaId": "p-mwnmopw6i6f5",
+   "nombre": "MARCELA ALARCON",
+   "rol": "director",
+   "tiendas": [],
+   "upd": 1795097471802,
+   "cred": {
+    "salt": "n20VSZC5u2S1uDYdBz2oHg==",
+    "iv": "7EKpLTPXgqZswzH6",
+    "iter": 310000,
+    "ct": "WcTEez0KLhKG7L7DQx//Qs+t1VHbaZgfHYrlni2fmHXj+T+rPtjxMQ7UA2wVLF9g4mRE72jV3YRl4+aF/nS/wKefI2la+LmYLerfgJyBn4twSP/ZP5JAcpjnyGQQ+XU7AFNZdl5ER7pqZmYgRA=="
+   },
+   "cambiar": true
   }
  ]
 }
