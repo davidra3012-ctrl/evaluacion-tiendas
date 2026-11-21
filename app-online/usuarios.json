@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-21T17:24:12.618Z",
+ "actualizado": "2026-11-21T17:30:29.982Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -55,14 +55,13 @@
    "tiendas": [
     "Quicentro Sur"
    ],
-   "upd": 1795281851741,
+   "upd": 1795282229982,
    "cred": {
-    "salt": "P0EMoUKaMOhrXDNkg7iK3g==",
-    "iv": "22Kgx3C/vwns82px",
+    "salt": "5wS8Xcb0unpVdaVImDzGBQ==",
+    "iv": "kca3N/tlrF3Bswow",
     "iter": 310000,
-    "ct": "dRUCuJxNBn915uS4FzwJ7jMMaIv0Q7UXd/chE51qOeOOBIascrHA4//n9oVohVcMha0MZ1o2oOYwP5TtZPArQJBNoBoG5eu+q+T+bvfmVImScS7xZ8C+9cEWxZDQsGbzOJvrRk39oXRzgro4Zg=="
-   },
-   "cambiar": true
+    "ct": "lCiqvU7xk+5Zu9YpKwiVApVNYcjRHuicHRgqAHTABRFu7T/yRUggQVOfooiQymGySL6RVxDyOZjPxsvORCZt0/USgBJqQOT+5NeICmW5ujwrTJ9g/BMGmlRKsHAQOkhDdrNXbj6Jyt3naVUZCQ=="
+   }
   }
  ]
 }
