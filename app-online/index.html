@@ -197,12 +197,13 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   .paper{min-width:0;zoom:1!important}
   #view-form,#view-hist,#view-pare,#view-home{display:none!important}
 }
+.vok{display:block;color:#1f9d55;font-size:12px}.vwarn{display:block;color:#c2410c;font-size:12px}
 </style>
 </head>
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v20</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v21</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -213,6 +214,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <button data-v="rep" data-mod="eval">📊<br>Reportes</button>
   <button data-v="comp" data-mod="eval">✅<br>Compromisos</button>
   <button data-v="pare" data-mod="pare">⏱️<br>Pare técnico</button>
+  <button data-v="pthist" data-mod="pare">🗂️<br>Historial</button>
   <button data-v="ptrep" data-mod="pare">📊<br>Reporte</button>
   <button data-v="cajas" data-mod="cajas">📦<br>Cajas</button>
   <button data-v="cjxls" data-mod="cajas">📄<br>Excel</button>
@@ -238,6 +240,15 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   <div class="card" id="ptRes"></div>
   <button class="btn danger hidden" style="width:100%;margin:0 0 14px" id="ptBorrarDia">🗑️ Borrar el pare técnico de este día</button>
   <div class="card"><div class="row2"><button class="btn sec" id="ptVerHoja">📄 Hoja para imprimir</button><button class="btn sec" id="ptAvisos">🔔 Avisos al celular</button></div></div>
+</section>
+<section id="view-pthist" class="hidden">
+  <div class="card"><h2>🗂️ Historial del pare técnico</h2>
+    <p class="desc" id="phInfo"></p>
+    <label class="f">Tienda</label><select class="t" id="phTienda"></select>
+    <div class="row2" style="margin-top:6px"><div><label class="f">Desde</label><input class="t" type="date" id="phDesde"></div><div><label class="f">Hasta</label><input class="t" type="date" id="phHasta"></div></div>
+    <label class="f">Hecho por</label><select class="t" id="phPor"><option value="">Todos</option></select>
+    <div id="phLista" style="margin-top:10px"></div>
+  </div>
 </section>
 <section id="view-ptrep" class="hidden">
   <div class="card"><h2>📊 Reporte del pare técnico</h2>
@@ -411,7 +422,8 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <button class="btn sec hidden" id="hImportar" style="width:100%;margin-bottom:6px">📥 Importar archivo de una tienda</button>
     <label class="f">Filtrar por tienda</label>
     <select class="t" id="h-tienda"></select>
-    <div id="hFiltros2" class="row2 hidden" style="margin-top:6px"><div><label class="f">Qué ver</label><select class="t" id="h-tipo"><option value="">Todo</option><option value="adm">Evaluaciones a administradores</option><option value="colaborador">Evaluaciones a vendedores</option><option value="pare">Pare técnico</option></select></div>
+    <div class="row2" style="margin-top:6px"><div><label class="f">Desde</label><input class="t" type="date" id="h-desde"></div><div><label class="f">Hasta</label><input class="t" type="date" id="h-hasta"></div></div>
+    <div id="hFiltros2" class="row2 hidden" style="margin-top:6px"><div><label class="f">Qué ver</label><select class="t" id="h-tipo"><option value="">Todo</option><option value="adm">Evaluaciones a administradores</option><option value="colaborador">Evaluaciones a vendedores</option></select></div>
     <div><label class="f">Hecho por</label><select class="t" id="h-por"><option value="">Todos</option></select></div></div>
     <div id="h-lista" style="margin-top:10px"></div>
   </div>
@@ -2211,29 +2223,40 @@ async function loadComp(){
 // ---------------- Historial ----------------
 let HIST=[];
 async function loadHist(){if($('hImportar'))$('hImportar').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local'));
-  const todo=await idbAll();const verPare=['admin','local','director'].includes(ROL());$('hFiltros2').classList.toggle('hidden',!verPare);
-  let PTs=[];if(verPare){const s=getSes();PTs=todo.filter(e=>e.tipo==='pare'&&(e.vend||[]).some(v=>ptMetaFinal(v)!=null));if(s&&s.rol==='director'&&Array.isArray(s.tiendas)&&s.tiendas.length)PTs=PTs.filter(e=>s.tiendas.includes(e.tienda))}
-  const fk=e=>e.tipo==='pare'?e.fecha+'T23:59':e.fechaHora;
-  HIST=[...visibles(todo),...PTs].sort((a,b)=>fk(b).localeCompare(fk(a)));
-  const EV=HIST.filter(e=>e.tipo!=='pare');
+  const todo=await idbAll();$('hFiltros2').classList.toggle('hidden',!['admin','local','director'].includes(ROL()));
+  HIST=visibles(todo).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
   const pend=HIST.filter(e=>!e._sync).length;const bk=(await kvGet('respaldo'))||{};const sinBk=HIST.filter(e=>bk[e.id]!==(e._sha||e.id)).length;
-  $('h-info').textContent=HIST.length?`${EV.length} evaluación(es)${PTs.length?' · '+PTs.length+' pare técnico':''} · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
+  $('h-info').textContent=HIST.length?`${HIST.length} evaluación(es) · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
   const pv=$('h-por').value,P=[...new Set(HIST.map(histPor).filter(Boolean))].sort();
   $('h-por').innerHTML='<option value="">Todos</option>'+P.map(n=>`<option>${esc(n)}</option>`).join('');$('h-por').value=P.includes(pv)?pv:'';
   paintHist();
 }
 function histPor(e){return String(e.tipo==='pare'?(e.por||''):(e.evaluador||'')).trim()}
+const diaLocal=iso=>{const d=new Date(iso);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
 function ptResumen(r){const V=(r.vend||[]).filter(v=>ptMetaFinal(v)!=null);let o=0,c=0,ok=0;V.forEach(v=>{const m=ptObjTotal(v)||0,x=ptCierre(v,'v');o+=m;c+=x||0;if(x!=null&&x>=m)ok++});return{n:V.length,ok,p:o?Math.round(c/o*100):null}}
 function paintHist(){
-  const t=$('h-tienda').value,ti=$('h-tipo').value,po=$('h-por').value;
-  const L=HIST.filter(e=>(!t||e.tienda===t)&&(!ti||(ti==='adm'?(e.tipo!=='colaborador'&&e.tipo!=='pare'):e.tipo===ti))&&(!po||histPor(e)===po));
-  if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay registros con estos filtros.</p>';return}
-  $('h-lista').innerHTML=L.map(e=>{const por=histPor(e),sub=e._sync?'':'<span class="pill">sin subir</span>';
-    if(e.tipo==='pare'){const R=ptResumen(e),col=R.p==null?'#888':R.p>=100?'#1f9d55':R.p>=80?'#c98a00':'#d64545';
-      return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col};font-size:12px">${R.p==null?'PT':R.p+'%'}</div><div class="i"><b>${esc(e.tienda)}<span class="pill" style="background:#eef6d5;color:#3f6212">pare técnico</span>${sub}</b><span>${fmtFecha(e.fecha+'T12:00')} · ${R.ok} de ${R.n} vendedor(es) cumplieron${por?' · por '+esc(por):''}</span></div><div>›</div></div>`}
+  const t=$('h-tienda').value,ti=$('h-tipo').value,po=$('h-por').value,de=$('h-desde').value,ha=$('h-hasta').value;
+  const L=HIST.filter(e=>{const d=diaLocal(e.fechaHora);return (!t||e.tienda===t)&&(!ti||(ti==='adm'?e.tipo!=='colaborador':e.tipo===ti))&&(!po||histPor(e)===po)&&(!de||d>=de)&&(!ha||d<=ha)});
+  if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay evaluaciones con estos filtros.</p>';return}
+  $('h-lista').innerHTML=`<p class="desc" style="margin:0 0 6px">${L.length} resultado(s)</p>`+L.map(e=>{const por=histPor(e),sub=e._sync?'':'<span class="pill">sin subir</span>';
     const col=e.calificacionFinal>=85?'#1f9d55':e.calificacionFinal>=70?'#c98a00':'#d64545';
-    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.tipo==='colaborador'?'<span class="pill" style="background:#e8f5e9;color:#1f9d55">vendedor</span>':''}${sub}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}${por&&e.tipo==='colaborador'?' · por '+esc(por):''}</span></div><div>›</div></div>`}).join('');
-  document.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>{const e=HIST[+el.dataset.i];if(e.tipo==='pare'){PT_DESDE_HIST=true;const r=JSON.parse(JSON.stringify(e));ptAlinear(r);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(r);show('ptdoc');window.scrollTo(0,0)}else showDoc(e)});
+    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.tipo==='colaborador'?'<span class="pill" style="background:#e8f5e9;color:#1f9d55">vendedor</span>':''}${sub}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}${e.ubicacion&&!e.ubicacion.error?' · 📍':''}${por?' · por '+esc(por):''}</span></div><div>›</div></div>`}).join('');
+  document.querySelectorAll('#h-lista .hist-item').forEach(el=>el.onclick=()=>showDoc(HIST[+el.dataset.i]));
+}
+// ---- Historial del pare técnico ----
+let PTH=[];
+async function loadPtHist(){await ptCargarTodo();const T=ptTiendas();
+  const tv=$('phTienda').value;$('phTienda').innerHTML=(T.length>1?'<option value="">Todas las tiendas</option>':'')+T.map(t=>`<option>${esc(t)}</option>`).join('');$('phTienda').value=T.includes(tv)?tv:$('phTienda').options[0]?$('phTienda').options[0].value:'';
+  PTH=PT.all.filter(r=>T.includes(r.tienda)&&(r.vend||[]).length).sort((a,b)=>(b.fecha+b.tienda).localeCompare(a.fecha+a.tienda));
+  const pend=PTH.filter(r=>!r._sync).length;$('phInfo').textContent=PTH.length?`${PTH.length} pare técnico registrado(s)${pend?' · '+pend+' sin subir a la nube':''}`:'';
+  const pv=$('phPor').value,P=[...new Set(PTH.map(histPor).filter(Boolean))].sort();$('phPor').innerHTML='<option value="">Todos</option>'+P.map(n=>`<option>${esc(n)}</option>`).join('');$('phPor').value=P.includes(pv)?pv:'';
+  paintPtHist()}
+function paintPtHist(){const t=$('phTienda').value,de=$('phDesde').value,ha=$('phHasta').value,po=$('phPor').value;
+  const L=PTH.filter(r=>(!t||r.tienda===t)&&(!de||r.fecha>=de)&&(!ha||r.fecha<=ha)&&(!po||histPor(r)===po));
+  if(!L.length){$('phLista').innerHTML='<p style="color:#888">No hay pare técnico con estos filtros.</p>';return}
+  $('phLista').innerHTML=`<p class="desc" style="margin:0 0 6px">${L.length} resultado(s)</p>`+L.map(r=>{const R=ptResumen(r),V=ptVerif(r),col=R.p==null?'#888':R.p>=100?'#1f9d55':R.p>=80?'#c98a00':'#d64545',por=histPor(r);
+    return `<div class="hist-item" data-pt="${esc(r.id)}"><div class="sc" style="background:${col};font-size:${R.p==null?13:17}px">${R.p==null?'—':R.p+'%'}</div><div class="i"><b>${esc(r.tienda)}${r._sync?'':'<span class="pill">sin subir</span>'}</b><span>${fmtFecha(r.fecha+'T12:00')} · ${R.ok} de ${R.n} vendedor(es) cumplieron${por?' · por '+esc(por):''}</span><span class="${V.n&&V.ok===V.n?'vok':'vwarn'}">${V.n?`🕐 ${V.ok} de ${V.n} registros a tiempo${V.gps?' · 📍':''}`:'🕐 sin registro de hora (versión anterior)'}</span></div><div>›</div></div>`}).join('');
+  document.querySelectorAll('#phLista .hist-item').forEach(el=>el.onclick=()=>{const r=PT.all.find(x=>x.id===el.dataset.pt);if(!r)return;PT_DESDE_HIST=true;const c=JSON.parse(JSON.stringify(r));ptAlinear(c);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(c);show('ptdoc');window.scrollTo(0,0)});
 }
 let PT_DESDE_HIST=false;
 
@@ -2332,7 +2355,7 @@ async function sincronizar(silencio){
   if(!SYNC_ERR&&!$('view-aj').classList.contains('hidden')&&$('gLista'))pintarGente();
   if(!SYNC_ERR&&ROL()==='admin'&&!window._migrando){window._migrando=1;try{await migrarPersonas()}catch(e){}window._migrando=0}
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
-  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
+  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-pthist').classList.contains('hidden'))loadPtHist();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
 }
 async function copiarConfAEvaluadores(){
   const hechos=(await kvGet('confCopias'))||{};const key=confKey(CONF);let cambio=false;
@@ -2904,7 +2927,7 @@ document.addEventListener('change',e=>{const el=e.target,rec=PT.rec;if(!rec||!el
   if(el.dataset.ptm){const mn=ptMinMeta(v,+j,k);if(n!=null&&mn!=null&&n<=mn){n=mn+1;toast(`La meta siempre debe subir: tiene que ser mayor a ${ptFmt(k,mn)}. Se ajustó a ${ptFmt(k,n)}.`,5000)}
     if(n==null)delete p.meta[k];else p.meta[k]=n}
   else{if(n==null)delete p.real[k];else p.real[k]=n}
-  el.value=n??'';ptGuardar();ptCalc()});
+  el.value=n??'';if(n!=null)ptMarcar(rec,(el.dataset.ptm?'m':'r')+j);ptGuardar();ptCalc()});
 document.addEventListener('click',e=>{const d=e.target.closest&&e.target.closest('[data-ptdel]');if(!d)return;const v=PT.rec.vend[+d.dataset.ptdel];
   if(confirm(`¿Quitar a ${v.nombre} del pare técnico de este día?`)){PT.rec.vend.splice(+d.dataset.ptdel,1);ptGuardar();ptRender()}});
 $('ptBorrarDia').onclick=async()=>{const r=PT.all.find(x=>x.id===PT.rec.id);if(!r)return;if(!confirm(`¿Borrar el pare técnico de ${r.tienda} del ${fmtFecha(r.fecha+'T12:00')}?\n\nSe borra para todos. No se puede deshacer.`))return;if(await borrarRegistro(r)){PT.all=PT.all.filter(x=>x.id!==r.id);ptCambiar()}};
@@ -2920,6 +2943,23 @@ $('ptAdd').onclick=()=>{const rec=PT.rec,ya=new Set(rec.vend.map(v=>v.pid));cons
     sel.forEach(id=>{const x=CONF.personas.find(o=>o.id===id);rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]})});
     ptAlinear(rec);$('mUser').classList.remove('show');if(sel.length){ptGuardar();ptRender()}}};
 // ---- Hoja imprimible (igual a la hoja física) ----
+// ---- Control de hora y ubicación del pare técnico ----
+function ptMarcar(rec,key){rec.reg=rec.reg||{};if(rec.reg[key])return;const s=getSes();const o={h:new Date().toISOString(),por:s?s.nombre:getEvaluador()};rec.reg[key]=o;
+  getUbicacion().then(u=>{if(u&&!u.error){o.la=u.lat;o.lo=u.lon;o.p=u.precision}else o.ue=(u&&u.error)||'no disponible';if(PT.rec===rec)ptGuardar();else{rec.upd=Date.now();rec._sync=false;idbPut(rec)}})}
+function ptVentana(rec,key){const C=ptCortes(rec.cfg),j=+key.slice(1),c=C[j];if(!c)return null;const[a,b]=c,ult=j===C.length-1;return key[0]==='m'?[a-1,a+1]:ult?[b-1,b+2]:[b-.5,b+1.5]}
+function ptEstado(rec,key){const g=(rec.reg||{})[key];if(!g)return null;const d=new Date(g.h);if(diaLocal(g.h)!==rec.fecha)return'otro día';const w=ptVentana(rec,key);if(!w)return'ok';const h=d.getHours()+d.getMinutes()/60;return h<w[0]?'antes':h>w[1]?'tarde':'ok'}
+function ptVerif(rec){const k=Object.keys(rec.reg||{});return{n:k.length,ok:k.filter(x=>ptEstado(rec,x)==='ok').length,gps:k.some(x=>rec.reg[x].la!=null)}}
+function ptRegHTML(rec){const C=ptCortes(rec.cfg),G=rec.reg||{};
+  const cel=key=>{const g=G[key];if(!g)return'<td>—</td>';const e=ptEstado(rec,key),d=new Date(g.h);return `<td class="${e==='ok'?'pos':'neg'}">${pad(d.getHours())}:${pad(d.getMinutes())} ${e==='ok'?'✓':'⚠️ '+e}${diaLocal(g.h)!==rec.fecha?'<br><small>'+fmtFecha(g.h)+'</small>':''}</td>`};
+  const ub=key=>{const g=G[key];return g&&g.la!=null?`<a href="${mapsURL({lat:g.la,lon:g.lo})}" target="_blank">📍 ${g.la}, ${g.lo} (±${g.p} m)</a>`:g&&g.ue?'Sin GPS ('+esc(g.ue)+')':''};
+  const V=ptVerif(rec);
+  return `<div class="ptreg"><div class="ptregt"><b>Control de hora y ubicación</b> · ${V.n?`${V.ok} de ${V.n} registros a tiempo`:'sin registros con hora'}</div>
+  <table class="pts"><tr><th>Corte</th><th>Metas puestas</th><th>Venta real registrada</th><th>Ubicación</th></tr>
+  ${C.map(([a,b],j)=>`<tr><td>${ptHH(a)} a ${j===C.length-1?'cierre':ptHH(b)}</td>${cel('m'+j)}${cel('r'+j)}<td style="text-align:left">${ub('r'+j)||ub('m'+j)}</td></tr>`).join('')}</table></div>`}
+function ptQR(rec){const R=ptResumen(rec),G=rec.reg||{};const C=ptCortes(rec.cfg);
+  const r=Object.keys(G).sort().map(k=>{const g=G[k],d=new Date(g.h),e=ptEstado(rec,k);const x=[k,diaLocal(g.h)===rec.fecha?pad(d.getHours())+':'+pad(d.getMinutes()):g.h.slice(0,16),e==='ok'?1:0];if(g.la!=null)x.push(+(+g.la).toFixed(5),+(+g.lo).toFixed(5),g.p);return x});
+  const d={k:'p',id:rec.id,t:rec.tienda,f:rec.fecha,v:rec.por||'',n:R.p,vc:R.ok+'/'+R.n,c:C.map(([a,b],j)=>ptHH(a)+'-'+(j===C.length-1?'cierre':ptHH(b))),r};
+  return APP_BASE+'verificar.html#'+b64url(JSON.stringify(d))}
 function ptHoja(rec){const C=ptCortes(rec.cfg);
   const filas=rec.vend.map(v=>{const L=ptLabels(v),K=ptActivos(v);const d=ptDif(v);
     return K.map((k,ri)=>`<tr${ri===0?' class="top"':''}>${ri===0?`<td rowspan="${K.length}" class="nom">${esc(v.nombre)}${v.deuda?`<br><small>Deuda ant.: ${ptMon(v.deuda)}</small>`:''}</td>`:''}
@@ -2929,12 +2969,13 @@ function ptHoja(rec){const C=ptCortes(rec.cfg);
   <h1 class="ptt1">PARE TÉCNICO</h1>
   <table class="pts"><tr><th rowspan="2">Vendedor</th>${C.map(([a,b],j)=>`<th colspan="3">${ptHH(a)} a ${j===C.length-1?'CIERRE':ptHH(b)}</th>`).join('')}<th rowspan="2">META FINAL</th><th rowspan="2">CIERRE</th><th rowspan="2">DIF</th></tr>
   <tr>${C.map(()=>'<th></th><th>Meta</th><th>Real</th>').join('')}</tr>${filas||`<tr><td colspan="${C.length*3+4}">Sin vendedores registrados</td></tr>`}</table>
+  <div class="ptfoot">${ptRegHTML(rec)}<div class="ptqr"><div>${window.qrSVG(ptQR(rec),130)}</div><div style="font-size:9px;max-width:130px">Escanee con la cámara para verificar fecha, hora de cada corte y ubicación.</div></div></div>
   <p class="ptpie">${rec.por?'Registrado por: '+esc(rec.por)+' · ':''}Generado ${fmtFecha(new Date().toISOString())} ${pad(new Date().getHours())}:${pad(new Date().getMinutes())}</p>`}
 const PT_CSS=`.pth{display:flex;justify-content:space-between;align-items:center;font-size:12px}.ptbrand{font-weight:800;color:#3f6212;font-size:16px}.ptt1{text-align:center;font-size:16px;margin:6px 0}
-.pts{width:100%;border-collapse:collapse;font-size:10px}.pts th,.pts td{border:1px solid #555;padding:3px 2px;text-align:center}.pts th{background:#f3f3f3}.pts .nom{font-weight:700;text-align:left;min-width:70px}.pts .lb{text-align:left;color:#555}.pts tr.top td{border-top:2px solid #222}.pos{color:#1f9d55;font-weight:700}.neg{color:#d64545;font-weight:700}.ptpie{font-size:10px;color:#666;margin-top:6px}`;
+.pts{width:100%;border-collapse:collapse;font-size:10px}.pts th,.pts td{border:1px solid #555;padding:3px 2px;text-align:center}.pts th{background:#f3f3f3}.pts .nom{font-weight:700;text-align:left;min-width:70px}.pts .lb{text-align:left;color:#555}.pts tr.top td{border-top:2px solid #222}.pos{color:#1f9d55;font-weight:700}.neg{color:#d64545;font-weight:700}.ptpie{font-size:10px;color:#666;margin-top:6px}.ptfoot{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:10px}.ptreg{flex:1;min-width:260px}.ptregt{font-size:11px;margin-bottom:4px}.ptreg a{color:#1d4ed8;text-decoration:none}.ptqr{text-align:center;flex:none}.ptqr svg{width:110px;height:110px}`;
 function ptStandalone(rec){return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pare técnico ${esc(rec.tienda)} ${rec.fecha}</title><style>body{font-family:Arial,sans-serif;margin:0;padding:12px}${PT_CSS}@page{size:A4 landscape;margin:8mm}</style></head><body>${ptHoja(rec)}</body></html>`}
 $('ptVerHoja').onclick=()=>{PT_DESDE_HIST=false;$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(PT.rec);show('ptdoc');window.scrollTo(0,0)};
-$('ptPrint').onclick=()=>window.print();$('ptVolver').onclick=()=>{if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('hist');return}show('pare')};
+$('ptPrint').onclick=()=>window.print();$('ptVolver').onclick=()=>{if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('pthist');return}show('pare')};
 $('ptShare').onclick=()=>compartirArchivo(`pare-tecnico_${limpio(PT.rec.tienda)}_${PT.rec.fecha}.html`,ptStandalone(PT.rec),'text/html','Pare técnico '+PT.rec.tienda);
 // ---- Avisos al celular ----
 function ptHorasAviso(cfg){const C=ptCortes(cfg);return [[C[0][0],'Pare técnico: coloca las metas de tus vendedores']].concat(C.map(([a,b],j)=>[b,j===C.length-1?'Pare técnico: CIERRE del día, registra la venta final':'Pare técnico: revisa la venta y pon la nueva meta']))}
@@ -3461,7 +3502,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v20';
+let TREE0=[],ESTADOS={};const VERSION_APP='v21';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
@@ -3537,13 +3578,13 @@ $('btnShare').onclick=()=>currentDoc&&compartirArchivo(nombreBase(currentDoc)+'.
 // ---------------- Navegación ----------------
 let MODULO='eval';
 function show(v){
-  if(v==='pare'||v==='ptdoc'||v==='ptrep')MODULO='pare';else if(v==='cajas'||v==='caja'||v==='cjxls')MODULO='cajas';else if(['form','colab','doc','hist','rep','comp'].includes(v))MODULO='eval';
+  if(v==='pare'||v==='ptdoc'||v==='ptrep'||v==='pthist')MODULO='pare';else if(v==='cajas'||v==='caja'||v==='cjxls')MODULO='cajas';else if(['form','colab','doc','hist','rep','comp'].includes(v))MODULO='eval';
   if(v==='home')MODULO='home';
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('offmod',!(b.dataset.mod==='all'||b.dataset.mod===MODULO)));
   $('hdrSub').textContent=MODULO==='cajas'?'Control de cajas':MODULO==='pare'?'Pare técnico':MODULO==='home'?'Inicio':'Evaluación de tiendas';
   if(v==='home'){const s=getSes();$('homeHola').textContent='Hola'+(s?', '+s.nombre.split(' ')[0]:'')+' 👋';$('tilePare').classList.toggle('hidden',ROL()==='evaluador'||ROL()==='bodega');$('tileCajas').classList.toggle('hidden',!['admin','local','responsable','bodega'].includes(ROL()));document.querySelector('[data-ir="eval"]').classList.toggle('hidden',ROL()==='bodega')}
   if(v==='form'&&(ROL()==='responsable'||((ROL()==='admin'||ROL()==='local')&&MODO==='colab')))v='colab';
-  ['home','pare','ptrep','ptdoc','cajas','caja','cjxls','form','colab','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
+  ['home','pare','pthist','ptrep','ptdoc','cajas','caja','cjxls','form','colab','doc','hist','rep','comp','aj'].forEach(x=>$('view-'+x).classList.toggle('hidden',x!==v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='colab'&&b.dataset.v==='form')));
   $('totalbar').classList.toggle('hidden',v!=='form');$('totalbarC').classList.toggle('hidden',v!=='colab');
   document.querySelectorAll('[data-modo]').forEach(b=>b.classList.toggle('on',b.dataset.modo===v));
@@ -3554,6 +3595,7 @@ function show(v){
   if(v==='aj'){pintarAjustes();pintarNube();aplicarRol()}
   if(v==='pare')abrirPare();
   if(v==='ptrep')loadPtRep();
+  if(v==='pthist')loadPtHist();
   if(v==='cajas')abrirCajas();
   if(v==='caja')pintarCaja();
   if(v==='cjxls')cjCargar().then(pintarXls);
@@ -3568,7 +3610,7 @@ $('btnFinalizar').onclick=finalizar;
 $('btnPrint').onclick=()=>window.print();
 $('btnVolver').onclick=()=>show('hist');
 $('btnLimpiar').onclick=()=>{if(confirm('¿Borrar todo lo ingresado en este formulario?'))resetForm()};
-$('h-tienda').onchange=paintHist;$('h-tipo').onchange=paintHist;$('h-por').onchange=paintHist;
+$('h-tienda').onchange=paintHist;$('h-tipo').onchange=paintHist;$('h-por').onchange=paintHist;$('h-desde').onchange=paintHist;$('h-hasta').onchange=paintHist;['phTienda','phDesde','phHasta','phPor'].forEach(id=>$(id).onchange=paintPtHist);
 $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('celQR').innerHTML=window.qrSVG(u,200);$('celURL').textContent=u;$('mCel').classList.add('show')};
 
 // ---------------- Inicio ----------------

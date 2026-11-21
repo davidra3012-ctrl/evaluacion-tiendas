@@ -50,6 +50,19 @@ main{max-width:560px;margin:0 auto;padding:14px}
     const tx=Math.floor(xt),ty=Math.floor(yt),px=(xt-tx)*256,py=(yt-ty)*256;let im='';
     for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)im+=`<img src="https://tile.openstreetmap.org/${z}/${tx+dx}/${ty+dy}.png" style="position:absolute;left:${(dx+1)*256}px;top:${(dy+1)*256}px;width:256px;height:256px" alt="">`;
     return `<div style="position:relative;width:100%;height:${h}px;overflow:hidden;border-radius:12px;margin-top:10px;background:#eee"><div style="position:absolute;left:calc(50% - ${256+px}px);top:${h/2-256-py}px;width:768px;height:768px">${im}</div><div style="position:absolute;left:calc(50% - 12px);top:${h/2-30}px;font-size:30px">📍</div><div style="position:absolute;right:4px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);padding:0 3px">© OpenStreetMap</div></div>`}
+  if(d.k==='p'){
+    const DI=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],ff=new Date(d.f+'T12:00');
+    const row=(k,v)=>`<div class="row"><span>${k}</span><b>${v}</b></div>`;
+    const nom=k=>{const j=+k.slice(1),c=(d.c||[])[j]||('corte '+(j+1));return (k[0]==='m'?'Metas ':'Venta real ')+c};
+    const R=(d.r||[]);const ok=R.filter(x=>x[2]).length;const g=R.find(x=>x.length>3);
+    document.querySelector('header div').textContent='Verificación de pare técnico';document.title='Verificación de pare técnico · Gestión Tiendas';
+    M.innerHTML=`<div class="card ok"><div class="i">✓</div><div><h1>Pare técnico registrado</h1><p>Datos leídos del código QR de la hoja.</p></div></div>
+    <div class="card"><div class="nota">${d.n==null?'—':esc(d.n)+'%'}</div><div class="nl">Venta vs. meta final</div>
+      ${row('Tienda',esc(d.t))}${row('Fecha',DI[ff.getDay()]+' '+pad(ff.getDate())+'/'+pad(ff.getMonth()+1)+'/'+ff.getFullYear())}${row('Registrado por',esc(d.v||'-'))}${row('Vendedores que cumplieron',esc(d.vc))}</div>
+    <div class="card"><b>Hora de cada registro</b> <span style="color:#666;font-size:13px">· ${ok} de ${R.length} a tiempo</span>
+      ${R.length?R.map(x=>row(esc(nom(x[0])),`${esc(x[1])} ${x[2]?'<span style="color:#1f9d55">✓ a tiempo</span>':'<span class="err">⚠️ fuera de hora</span>'}${x.length>3?`<br><a href="https://maps.google.com/?q=${encodeURIComponent(x[3]+','+x[4])}" target="_blank" rel="noopener" style="font-weight:400;font-size:13px">📍 ${esc(x[3])}, ${esc(x[4])} (±${esc(x[5])} m)</a>`:'<br><span class="err" style="font-weight:400;font-size:13px">sin GPS</span>'}`)).join(''):'<p class="err">Sin registros con hora.</p>'}
+      ${g?mapa(+g[3],+g[4]):''}</div>
+    <div class="foot">ID: ${esc(d.id)}</div>`;return}
   const row=(k,v)=>`<div class="row"><span>${k}</span><b>${v}</b></div>`;
   M.innerHTML=`
   <div class="card ok"><div class="i">✓</div><div><h1>${d.k==='c'?'Evaluación de colaborador':'Evaluación registrada'}</h1><p>Datos leídos del código QR del documento.</p></div></div>
