@@ -152,6 +152,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 .paper .pb{page-break-before:always;break-before:page;margin-top:18px}
 /*ENDPAPER*/
 .offmod{display:none!important}
+.sync{font-size:12px;display:inline-block;margin-top:3px;padding:2px 8px;border-radius:8px}.sync.ok{background:#e6f4ea;color:#1a7f37}.sync.warn{background:#fff4e0;color:#8a5a00}.sync.no{background:#f3f3f3;color:#666}
 .camw{position:relative;border-radius:12px;overflow:hidden;background:#000}.camw video{width:100%;display:block;max-height:60vh;object-fit:cover}.camguia{position:absolute;left:6%;right:6%;top:30%;bottom:30%;border:3px solid var(--or);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}.camguia:after{content:'';position:absolute;left:4%;right:4%;top:50%;border-top:2px solid #e53935}
 .btn.grande{width:100%;padding:18px;font-size:18px}
 .btn.danger{background:#fff;color:#c62828;border:2px solid #e8b4b4}.comoC{border:2px dashed var(--or)}
@@ -201,7 +202,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v19</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v20</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -406,8 +407,12 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <h2>Evaluaciones guardadas</h2>
     <div style="display:flex;align-items:center;gap:8px;margin:4px 0 6px"><div id="nubeEstado" style="flex:1;font-size:14px">☁️ …</div><button class="mini" id="btnSync">↻</button></div>
     <p class="desc" id="h-info"></p>
+    <button class="btn sec" id="hSubir" style="width:100%;margin-bottom:6px">☁️ Subir ahora</button>
+    <button class="btn sec hidden" id="hImportar" style="width:100%;margin-bottom:6px">📥 Importar archivo de una tienda</button>
     <label class="f">Filtrar por tienda</label>
     <select class="t" id="h-tienda"></select>
+    <div id="hFiltros2" class="row2 hidden" style="margin-top:6px"><div><label class="f">Qué ver</label><select class="t" id="h-tipo"><option value="">Todo</option><option value="adm">Evaluaciones a administradores</option><option value="colaborador">Evaluaciones a vendedores</option><option value="pare">Pare técnico</option></select></div>
+    <div><label class="f">Hecho por</label><select class="t" id="h-por"><option value="">Todos</option></select></div></div>
     <div id="h-lista" style="margin-top:10px"></div>
   </div>
 </section>
@@ -2205,19 +2210,32 @@ async function loadComp(){
 
 // ---------------- Historial ----------------
 let HIST=[];
-async function loadHist(){
-  HIST=visibles(await idbAll()).sort((a,b)=>b.fechaHora.localeCompare(a.fechaHora));
+async function loadHist(){if($('hImportar'))$('hImportar').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local'));
+  const todo=await idbAll();const verPare=['admin','local','director'].includes(ROL());$('hFiltros2').classList.toggle('hidden',!verPare);
+  let PTs=[];if(verPare){const s=getSes();PTs=todo.filter(e=>e.tipo==='pare'&&(e.vend||[]).some(v=>ptMetaFinal(v)!=null));if(s&&s.rol==='director'&&Array.isArray(s.tiendas)&&s.tiendas.length)PTs=PTs.filter(e=>s.tiendas.includes(e.tienda))}
+  const fk=e=>e.tipo==='pare'?e.fecha+'T23:59':e.fechaHora;
+  HIST=[...visibles(todo),...PTs].sort((a,b)=>fk(b).localeCompare(fk(a)));
+  const EV=HIST.filter(e=>e.tipo!=='pare');
   const pend=HIST.filter(e=>!e._sync).length;const bk=(await kvGet('respaldo'))||{};const sinBk=HIST.filter(e=>bk[e.id]!==(e._sha||e.id)).length;
-  $('h-info').textContent=HIST.length?`${HIST.length} evaluación(es) · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
+  $('h-info').textContent=HIST.length?`${EV.length} evaluación(es)${PTs.length?' · '+PTs.length+' pare técnico':''} · ${pend?pend+' sin subir a la nube · ':''}${sinBk} sin respaldar en este equipo`:'';
+  const pv=$('h-por').value,P=[...new Set(HIST.map(histPor).filter(Boolean))].sort();
+  $('h-por').innerHTML='<option value="">Todos</option>'+P.map(n=>`<option>${esc(n)}</option>`).join('');$('h-por').value=P.includes(pv)?pv:'';
   paintHist();
 }
+function histPor(e){return String(e.tipo==='pare'?(e.por||''):(e.evaluador||'')).trim()}
+function ptResumen(r){const V=(r.vend||[]).filter(v=>ptMetaFinal(v)!=null);let o=0,c=0,ok=0;V.forEach(v=>{const m=ptObjTotal(v)||0,x=ptCierre(v,'v');o+=m;c+=x||0;if(x!=null&&x>=m)ok++});return{n:V.length,ok,p:o?Math.round(c/o*100):null}}
 function paintHist(){
-  const t=$('h-tienda').value;const L=HIST.filter(e=>!t||e.tienda===t);
-  if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay evaluaciones todavía.</p>';return}
-  $('h-lista').innerHTML=L.map((e,i)=>{const col=e.calificacionFinal>=85?'#1f9d55':e.calificacionFinal>=70?'#c98a00':'#d64545';
-    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.tipo==='colaborador'?'<span class="pill" style="background:#e8f5e9;color:#1f9d55">colaborador</span>':''}${e._sync?'':'<span class="pill">sin subir</span>'}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}</span></div><div>›</div></div>`}).join('');
-  document.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>showDoc(HIST[+el.dataset.i]));
+  const t=$('h-tienda').value,ti=$('h-tipo').value,po=$('h-por').value;
+  const L=HIST.filter(e=>(!t||e.tienda===t)&&(!ti||(ti==='adm'?(e.tipo!=='colaborador'&&e.tipo!=='pare'):e.tipo===ti))&&(!po||histPor(e)===po));
+  if(!L.length){$('h-lista').innerHTML='<p style="color:#888">No hay registros con estos filtros.</p>';return}
+  $('h-lista').innerHTML=L.map(e=>{const por=histPor(e),sub=e._sync?'':'<span class="pill">sin subir</span>';
+    if(e.tipo==='pare'){const R=ptResumen(e),col=R.p==null?'#888':R.p>=100?'#1f9d55':R.p>=80?'#c98a00':'#d64545';
+      return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col};font-size:12px">${R.p==null?'PT':R.p+'%'}</div><div class="i"><b>${esc(e.tienda)}<span class="pill" style="background:#eef6d5;color:#3f6212">pare técnico</span>${sub}</b><span>${fmtFecha(e.fecha+'T12:00')} · ${R.ok} de ${R.n} vendedor(es) cumplieron${por?' · por '+esc(por):''}</span></div><div>›</div></div>`}
+    const col=e.calificacionFinal>=85?'#1f9d55':e.calificacionFinal>=70?'#c98a00':'#d64545';
+    return `<div class="hist-item" data-i="${HIST.indexOf(e)}"><div class="sc" style="background:${col}">${e.calificacionFinal}%</div><div class="i"><b>${esc(e.tienda)}${e.tipo==='colaborador'?'<span class="pill" style="background:#e8f5e9;color:#1f9d55">vendedor</span>':''}${sub}</b><span>${esc(e.nombres)} ${esc(e.apellidos)} · ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}${por&&e.tipo==='colaborador'?' · por '+esc(por):''}</span></div><div>›</div></div>`}).join('');
+  document.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>{const e=HIST[+el.dataset.i];if(e.tipo==='pare'){PT_DESDE_HIST=true;const r=JSON.parse(JSON.stringify(e));ptAlinear(r);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(r);show('ptdoc');window.scrollTo(0,0)}else showDoc(e)});
 }
+let PT_DESDE_HIST=false;
 
 // ---------------- Nube (repositorio privado de GitHub) ----------------
 const NUBE={owner:'davidra3012-ctrl',repo:'evaluaciones-datos',branch:'main'};
@@ -2291,8 +2309,8 @@ async function sincronizar(silencio){
       const r=await gh('/git/trees/'+NUBE.branch+'?recursive=1',null,repo);
       if((r.status===401||r.status===403)&&repo===reposLectura()[0])throw new Error('La clave no es válida, venció o fue revocada');
       if(!r.ok)continue;leido=true;
-      const t=await r.json();const tree=t.tree||[];
-      if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await aplicarBorrados(tree,repo);await cargarLlave(tree,repo);await revisarLlave(tree,repo)}
+      const t=await r.json();const tree=t.tree||[];if(repo===reposLectura()[0])TREE0=tree;
+      if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await aplicarBorrados(tree,repo);await leerEstados(tree);await cargarLlave(tree,repo);await revisarLlave(tree,repo)}
       for(const it of tree.filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
         if(BORRADOS.size&&[...BORRADOS].some(id=>it.path.includes(id)))continue;
@@ -2305,11 +2323,13 @@ async function sincronizar(silencio){
       }
     }
     if(!leido)throw new Error('No se pudo leer la nube');
+    try{await senalSync(TREE0)}catch(x){console.warn('señal',x)}
     try{const nf=await subirFotos();if(nf)sub+=0}catch(x){console.warn('fotos',x)}
     LAST_SYNC=new Date();
   }catch(err){SYNC_ERR=(err&&err.message)||'Error de conexión'}
   SYNCING=false;pintarNube();
   if(!SYNC_ERR)respaldoAuto();
+  if(!SYNC_ERR&&!$('view-aj').classList.contains('hidden')&&$('gLista'))pintarGente();
   if(!SYNC_ERR&&ROL()==='admin'&&!window._migrando){window._migrando=1;try{await migrarPersonas()}catch(e){}window._migrando=0}
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
   if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
@@ -2692,7 +2712,7 @@ function pintarGente(){
   $('gDesc').textContent=resp?'Registra aquí a los colaboradores de tu tienda para poder evaluarlos.':'Todas las personas en un solo lugar: responsables, colaboradores, directores, evaluadores y administradores. Si alguien necesita entrar a la app, actívale el acceso y ponle usuario y contraseña.';
   let L=buscarPersonas($('gQ').value,$('gTienda').value,$('gPerfil').value);if(resp)L=L.filter(x=>MT.includes(x.tienda));
   $('gLista').innerHTML=(L.slice(0,300).map(x=>{const u=usrDe(x);const sub=[perfilDe(x)==='director'?(x.correo||'sin correo'):x.tienda,x.seccion,x.cedula].filter(Boolean).join(' · ');
-    return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>${u.cambiar?' <span class="rolp" style="background:#f3fbe6;color:#b4540a">clave temporal</span>':''}`:''}</b><span>${esc(sub)}</span></div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
+    return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>${u.cambiar?' <span class="rolp" style="background:#f3fbe6;color:#b4540a">clave temporal</span>':''}`:''}</b><span>${esc(sub)}</span>${u&&ROL()==='admin'?'<br>'+estadoUsuarioHTML(u):''}</div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
   if(r==='admin')adminPuede().then(ok=>{$('gWarn').innerHTML=ok?'':'<div style="background:#f3fbe6;border:1px solid #c5e59a;border-radius:10px;padding:10px;font-size:13px;margin:6px 0">Para dar acceso con usuario y contraseña falta un permiso de la clave de la nube.</div>'});
 }
 $('gQ').oninput=pintarGente;$('gPerfil').onchange=pintarGente;$('gTienda').onchange=pintarGente;
@@ -2913,8 +2933,8 @@ function ptHoja(rec){const C=ptCortes(rec.cfg);
 const PT_CSS=`.pth{display:flex;justify-content:space-between;align-items:center;font-size:12px}.ptbrand{font-weight:800;color:#3f6212;font-size:16px}.ptt1{text-align:center;font-size:16px;margin:6px 0}
 .pts{width:100%;border-collapse:collapse;font-size:10px}.pts th,.pts td{border:1px solid #555;padding:3px 2px;text-align:center}.pts th{background:#f3f3f3}.pts .nom{font-weight:700;text-align:left;min-width:70px}.pts .lb{text-align:left;color:#555}.pts tr.top td{border-top:2px solid #222}.pos{color:#1f9d55;font-weight:700}.neg{color:#d64545;font-weight:700}.ptpie{font-size:10px;color:#666;margin-top:6px}`;
 function ptStandalone(rec){return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pare técnico ${esc(rec.tienda)} ${rec.fecha}</title><style>body{font-family:Arial,sans-serif;margin:0;padding:12px}${PT_CSS}@page{size:A4 landscape;margin:8mm}</style></head><body>${ptHoja(rec)}</body></html>`}
-$('ptVerHoja').onclick=()=>{$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(PT.rec);show('ptdoc');window.scrollTo(0,0)};
-$('ptPrint').onclick=()=>window.print();$('ptVolver').onclick=()=>show('pare');
+$('ptVerHoja').onclick=()=>{PT_DESDE_HIST=false;$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(PT.rec);show('ptdoc');window.scrollTo(0,0)};
+$('ptPrint').onclick=()=>window.print();$('ptVolver').onclick=()=>{if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('hist');return}show('pare')};
 $('ptShare').onclick=()=>compartirArchivo(`pare-tecnico_${limpio(PT.rec.tienda)}_${PT.rec.fecha}.html`,ptStandalone(PT.rec),'text/html','Pare técnico '+PT.rec.tienda);
 // ---- Avisos al celular ----
 function ptHorasAviso(cfg){const C=ptCortes(cfg);return [[C[0][0],'Pare técnico: coloca las metas de tus vendedores']].concat(C.map(([a,b],j)=>[b,j===C.length-1?'Pare técnico: CIERRE del día, registra la venta final':'Pare técnico: revisa la venta y pon la nueva meta']))}
@@ -3440,6 +3460,33 @@ async function borrarRegistro(e){
 async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PATH);if(!it)return;if((await kvGet('borradosSha'))===it.sha)return;
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
+// ---------------- Señal de sincronización de cada usuario ----------------
+let TREE0=[],ESTADOS={};const VERSION_APP='v20';
+async function senalSync(tree){
+  const s=getSes();if(!s||!s.usuario)return;
+  const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
+  const path='config/estado/'+s.usuario+'.json',it=tree.find(x=>x.path===path);
+  let prev=null;try{prev=JSON.parse((await kvGet('ultimaSenal'))||'null')}catch(e){}
+  const now=Date.now();if(it&&prev&&prev.pendientes===pend&&prev.evaluaciones===mios.length&&now-prev.t<30*60*1000)return;
+  const o={usuario:s.usuario,nombre:s.nombre,rol:s.rol,tiendas:s.tiendas||[],ultima:new Date().toISOString(),pendientes:pend,evaluaciones:mios.length,version:VERSION_APP};
+  await putFile(path,JSON.stringify(o),it?it.sha:null,'Estado de '+s.usuario,repoPropio());
+  await kvSet('ultimaSenal',JSON.stringify({t:now,pendientes:pend,evaluaciones:mios.length}))}
+async function leerEstados(tree){if(!(ROL()==='admin'||ROL()==='local'))return;
+  const L=tree.filter(x=>x.path.startsWith('config/estado/')&&x.path.endsWith('.json'));
+  for(const it of L){const u=it.path.slice(14,-5);if(ESTADOS[u]&&ESTADOS[u]._sha===it.sha)continue;
+    try{const g=await gh('/git/blobs/'+it.sha);if(g.ok){const o=JSON.parse(utf8b64((await g.json()).content));o._sha=it.sha;ESTADOS[u]=o}}catch(e){}}
+  try{await kvSet('estados',ESTADOS)}catch(e){}}
+(async()=>{try{ESTADOS=(await kvGet('estados'))||{}}catch(e){}})();
+function hace(iso){const m=Math.round((Date.now()-new Date(iso).getTime())/60000);if(m<2)return'hace un momento';if(m<60)return`hace ${m} min`;const h=Math.round(m/60);if(h<48)return`hace ${h} h`;return`hace ${Math.round(h/24)} días`}
+function estadoUsuarioHTML(u){const e=ESTADOS[u.usuario];
+  if(!e)return '<span class="sync no">☁️ nunca ha sincronizado</span>';
+  const viejo=Date.now()-new Date(e.ultima).getTime()>24*3600*1000;
+  return `<span class="sync ${e.pendientes?'warn':viejo?'no':'ok'}">☁️ ${hace(e.ultima)} · ${e.evaluaciones} evaluación(es)${e.pendientes?` · <b>${e.pendientes} sin subir</b>`:' · todo subido'}${e.version&&e.version!==VERSION_APP?' · app '+esc(e.version):''}</span>`}
+
+// ---------------- Copia de seguridad desde Historial ----------------
+$('hSubir').onclick=async()=>{if(!getTok()){toast('Este celular no tiene sesión iniciada',4000);return}await sincronizar(false);loadHist();const p=(await idbAll()).filter(e=>!e._sync).length;toast(p?`⚠️ Quedan ${p} sin subir: ${/fetch|network/i.test(SYNC_ERR||'')?'no hay conexión con la nube, revisa el internet':(SYNC_ERR||'revisa el internet')}.`:'✓ Todo está en la nube',5000)};
+$('hImportar').onclick=()=>$('btnImportar').click();
+
 // ---------------- Enviar a la PC / Importar en la PC ----------------
 async function exportar(){
   const todos=(await idbAll());const pend=todos.filter(e=>!e.exportado);
@@ -3521,7 +3568,7 @@ $('btnFinalizar').onclick=finalizar;
 $('btnPrint').onclick=()=>window.print();
 $('btnVolver').onclick=()=>show('hist');
 $('btnLimpiar').onclick=()=>{if(confirm('¿Borrar todo lo ingresado en este formulario?'))resetForm()};
-$('h-tienda').onchange=paintHist;
+$('h-tienda').onchange=paintHist;$('h-tipo').onchange=paintHist;$('h-por').onchange=paintHist;
 $('btnCel').onclick=()=>{const u=location.href.split('#')[0].split('?')[0];$('celQR').innerHTML=window.qrSVG(u,200);$('celURL').textContent=u;$('mCel').classList.add('show')};
 
 // ---------------- Inicio ----------------
