@@ -204,7 +204,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v23</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v24</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2847,7 +2847,8 @@ function ptLeerHoras(t){return [...new Set(String(t||'').split(/[,;\s]+/).map(x=
 function ptTiendas(){const s=getSes(),r=ROL();if((r==='responsable'||r==='director')&&s&&Array.isArray(s.tiendas)&&s.tiendas.length)return s.tiendas;return tiendasAct()}
 function ptPuedeEditar(rec){const r=ROL();if(r==='admin'||r==='local')return true;if(r==='responsable')return misTiendas().includes(rec.tienda)&&rec.fecha>=hoyISO();return false}
 function ptVendedores(t){return activos('personas').filter(x=>perfilDe(x)==='colaborador'&&x.tienda===t).sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'))}
-function ptCfgDefecto(t){const prev=PT.all.filter(r=>r.tienda===t).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];return prev?{...prev.cfg}:{inicio:12,cada:3,cierre:21}}
+const PT_HORAS=[12,14,17,19];
+function ptCfgDefecto(t){const prev=PT.all.filter(r=>r.tienda===t).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];const ci=prev&&prev.cfg&&prev.cfg.cierre>PT_HORAS[PT_HORAS.length-1]?prev.cfg.cierre:21;return {inicio:PT_HORAS[0],cada:2,cierre:ci,horas:PT_HORAS.slice()}}
 function ptLabels(v){return {v:'Venta $',a:'Artículos',e0:v.extras[0]||'Libre 1',e1:v.extras[1]||'Libre 2'}}
 function ptActivos(v){return PT_KEYS.filter(k=>k==='v'||k==='a'||(k==='e0'&&v.extras[0])||(k==='e1'&&v.extras[1]))}
 // Último valor real registrado (cierre parcial o final)
@@ -2870,7 +2871,9 @@ async function abrirPare(){
 }
 async function ptCambiar(){await ptCargarTodo();const t=$('ptTienda').value,f=$('ptFecha').value||hoyISO();
   if(!t){$('ptVend').innerHTML='<div class="card"><p class="desc">No hay tiendas registradas.</p></div>';return}
-  PT.rec=PT.all.find(r=>r.id==='PT-'+slug(t)+'-'+f)||ptNuevo(t,f);ptAlinear(PT.rec);
+  PT.rec=PT.all.find(r=>r.id==='PT-'+slug(t)+'-'+f)||ptNuevo(t,f);
+  if(PT.rec.fecha>=hoyISO()&&String(PT.rec.cfg.horas)!==String(PT_HORAS)&&ptPuedeEditar(PT.rec)){PT.rec.cfg=ptCfgDefecto(t);if(PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
+  ptAlinear(PT.rec);
   // la deuda se recalcula con los días anteriores
   PT.rec.vend.forEach(v=>v.deuda=ptDeudaDe(t,f,v.pid));
   ptRender()}
@@ -2882,17 +2885,10 @@ function ptAhora(rec){if(rec.fecha!==hoyISO())return -1;const d=new Date(),h=d.g
 function ptRender(){
   const rec=PT.rec,ed=ptPuedeEditar(rec),C=ptCortes(rec.cfg),now=ptAhora(rec),dis=ed?'':'disabled';
   const hs=(id,val,ops)=>`<select class="t" id="${id}" ${dis}>${ops.map(([v,l])=>`<option value="${v}" ${+val===+v?'selected':''}>${l}</option>`).join('')}</select>`;
-  $('ptCfg').innerHTML=`<div class="row2" style="grid-template-columns:1fr 1fr 1fr"><div><label class="f">Inicio</label>${hs('ptIni',rec.cfg.inicio,[8,9,10,11,12,13,14].map(h=>[h,ptHH(h)]))}</div>
-    <div><label class="f">Corte cada</label>${hs('ptCada',rec.cfg.horas&&rec.cfg.horas.length?0:rec.cfg.cada,[[1,'1 hora'],[2,'2 horas'],[3,'3 horas'],[0,'Horas de reporte']])}</div>
-    <div><label class="f">Cierre</label>${hs('ptFin',rec.cfg.cierre,[17,18,19,20,21,22].map(h=>[h,ptHH(h)]))}</div></div>
-    <div id="ptHorasW" class="${rec.cfg.horas&&rec.cfg.horas.length?'':'hidden'}"><label class="f">Horas en que la tienda reporta (antes del cierre)</label><input class="t" id="ptHoras" value="${(rec.cfg.horas||[]).map(ptHH).join(', ')}" placeholder="Ej.: 12, 14, 17, 19" ${dis}></div>
-    <p class="desc" style="margin:6px 0 0">Cortes: ${C.map(([a,b])=>ptHH(a)+'–'+ptHH(b)).join(' · ')}</p>`;
-  ['ptIni','ptCada','ptFin','ptHoras'].forEach(id=>$(id).onchange=()=>{let n={inicio:+$('ptIni').value,cada:+$('ptCada').value,cierre:+$('ptFin').value};
-    if(n.cada===0){const H=ptLeerHoras($('ptHoras').value).filter(h=>h<n.cierre);if(!H.length){$('ptHorasW').classList.remove('hidden');if(id!=='ptHoras'){$('ptHoras').focus();return}toast('Escribe las horas, ej.: 12, 14, 17, 19');return}n={inicio:H[0],cada:rec.cfg.cada||3,cierre:n.cierre,horas:H}}
-    if(n.cierre<=n.inicio){toast('El cierre debe ser después del inicio');ptRender();return}
-    const tiene=rec.vend.some(v=>v.per.some(p=>Object.keys(p.meta||{}).length||Object.keys(p.real||{}).length));
-    if(tiene&&!confirm('Ya hay metas registradas hoy. Al cambiar el horario, los cortes se reorganizan por orden. ¿Continuar?')){ptRender();return}
-    rec.cfg=n;ptAlinear(rec);ptGuardar();ptRender()});
+  $('ptCfg').innerHTML=`<p class="desc" style="margin:0 0 6px">El pare técnico se hace a la misma hora que se envía el reporte de ventas: <b>${PT_HORAS.map(ptHH).join(', ')} y cierre</b>.</p>
+    <label class="f">Hora de cierre de la tienda</label>${hs('ptFin',rec.cfg.cierre,[20,20.5,21,21.5,22].map(h=>[h,ptHH(h)]))}
+    <p class="desc" style="margin:6px 0 0">Cortes: ${C.map(([a,b],j)=>ptHH(a)+'–'+(j===C.length-1?'cierre ('+ptHH(b)+')':ptHH(b))).join(' · ')}</p>`;
+  $('ptFin').onchange=()=>{rec.cfg={inicio:PT_HORAS[0],cada:2,cierre:+$('ptFin').value,horas:PT_HORAS.slice()};ptAlinear(rec);ptGuardar();ptRender()};
   $('ptAhora').innerHTML=rec.fecha!==hoyISO()?`<div class="ptbanner gris">📅 Viendo el ${fmtFecha(rec.fecha+'T12:00')}${ed?'':' (solo lectura)'}</div>`:
     now>=0?`<div class="ptbanner">⏱️ Corte actual: <b>${ptHH(C[now][0])} → ${ptHH(C[now][1])}</b>${now>0?` · registra lo vendido hasta las ${ptHH(C[now][0])} y la nueva meta`:' · coloca las metas hasta las '+ptHH(C[now][1])}</div>`:
     `<div class="ptbanner gris">${new Date().getHours()<rec.cfg.inicio?'El pare técnico empieza a las '+ptHH(rec.cfg.inicio):'Jornada terminada: registra el cierre de cada vendedor'}</div>`;
@@ -2993,19 +2989,25 @@ $('ptFotoIn').onchange=async()=>{const f=$('ptFotoIn').files[0];if(!f)return;con
   ocrMostrar(rec,R)};
 function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
   if(!R.filas.length){$('usTit').textContent='📷 No encontré vendedores';$('usBody').innerHTML='<p>No pude leer la tabla de vendedores. Usa una captura de pantalla clara del reporte (no una foto a la pantalla) e inténtalo otra vez.</p>';return}
-  const cand=[...rec.vend.map((v,i)=>({k:'v'+i,n:v.nombre})),...ptVendedores(rec.tienda).filter(x=>!rec.vend.some(v=>v.pid===x.id)).map(x=>({k:'p'+x.id,n:nomPer(x),nuevo:1}))];
+  const per=id=>CONF.personas.find(o=>o.id===id);
+  const cand=[...rec.vend.map((v,i)=>({k:'v'+i,n:v.nombre,pid:v.pid})),...ptVendedores(rec.tienda).filter(x=>!rec.vend.some(v=>v.pid===x.id)).map(x=>({k:'p'+x.id,n:nomPer(x),pid:x.id,nuevo:1}))];
   const usados=new Set();
-  const F=R.filas.map(r=>{let b=null,bs=0;cand.forEach(c=>{if(usados.has(c.k))return;const x=ocrSim(r.nombre,c.n);if(x>bs){bs=x;b=c}});if(bs<.6)b=null;if(b)usados.add(b.k);return{...r,dest:b?b.k:''}});
+  // 1º: nombre ya aprendido (cómo sale en la imagen) · 2º: parecido del nombre, sin importar el orden
+  const sc=(r,c)=>{const x=per(c.pid);return x&&(x.ocr||[]).includes(r.nombre)?2:ocrSim(r.nombre,c.n)};
+  const F=R.filas.map(r=>({...r,dest:''}));
+  const pares=[];F.forEach((r,q)=>cand.forEach(c=>pares.push([sc(r,c),q,c])));pares.sort((a,b)=>b[0]-a[0]);
+  const fUsada=new Set();pares.forEach(([x,q,c])=>{if(x<.6||fUsada.has(q)||usados.has(c.k))return;F[q].dest=c.k;fUsada.add(q);usados.add(c.k)});
   const auto=ocrCorteAuto(rec);
   const ops=[['ini',`Vendido antes de empezar (${ptHH(C[0][0])})`],...C.map(([a,b],j)=>[j,`Vendido a las ${ptHH(b)}${j===C.length-1?' (cierre)':''}`])];
   const avF=R.fecha?(R.fecha===rec.fecha?`<p class="ocrok">📅 Fecha de la imagen: ${fmtFecha(R.fecha+'T12:00')} ✓</p>`:`<p class="ocrmal">⚠️ La imagen es del <b>${fmtFecha(R.fecha+'T12:00')}</b> y el pare técnico es del <b>${fmtFecha(rec.fecha+'T12:00')}</b>. Revisa que sea la imagen correcta.</p>`):'<p class="ocrmal">⚠️ No pude leer la fecha de la imagen.</p>';
   const avT=R.tienda&&R.tienda!==rec.tienda?`<p class="ocrmal">⚠️ La imagen parece de <b>${esc(R.tienda)}</b>, no de ${esc(rec.tienda)}.</p>`:'';
-  const opV=sel=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('');
+  const tit=t=>t.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
+  const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+`<option value="n" ${sel?'':'selected'}>➕ Crear vendedor: ${esc(tit(r.nombre))}</option>`;
   const falt=rec.vend.filter((v,i)=>!F.some(r=>r.dest==='v'+i)).map(v=>v.nombre);
   $('usTit').textContent='📷 Ventas leídas de la imagen';
   $('usBody').innerHTML=`${avF}${avT}<label class="f">Registrar como</label><select class="t" id="ocrCorte">${ops.map(([v,l])=>`<option value="${v}" ${String(v)===String(auto)?'selected':''}>${l}</option>`).join('')}</select>
     <p class="desc" style="margin:10px 0 4px">Revisa que cada número sea igual al de la imagen. Si alguno está mal, corrígelo aquí.</p>
-    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
+    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.dest?'':' <span class="ocrmal" style="display:inline">· no está registrado</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
     ${falt.length?`<p class="desc">No aparecen en la imagen: ${falt.map(esc).join(', ')}</p>`:''}<p class="ocrmal hidden" id="ocrAv"></p>`;
   $('usOk').disabled=false;
   const revisar=()=>{const k=$('ocrCorte').value;let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
@@ -3014,11 +3016,14 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
     const m=[];if(n&&iguales===n)m.push('Los valores son iguales a los del corte anterior. ¿Es la imagen nueva?');if(baja.length)m.push('La venta no puede bajar durante el día: revisa '+baja.join(', ')+'.');
     $('ocrAv').innerHTML=m.map(x=>'⚠️ '+x).join('<br>');$('ocrAv').classList.toggle('hidden',!m.length)};
   $('ocrCorte').onchange=revisar;document.querySelectorAll('[data-ocrv],[data-ocrd]').forEach(e=>e.onchange=revisar);revisar();
-  $('usOk').onclick=()=>{const k=$('ocrCorte').value,ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0;
+  $('usOk').onclick=async()=>{const k=$('ocrCorte').value,ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0,conf=false;
+    const aprender=(x,nm)=>{if(!x)return;x.ocr=x.ocr||[];if(!x.ocr.includes(nm)){x.ocr.push(nm);x.upd=Date.now();conf=true}};
     F.forEach((r,q)=>{let d=document.querySelector(`[data-ocrd="${q}"]`).value;const val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||val==null)return;
+      if(d==='n'){const pa=tit(r.nombre).split(' '),x={id:nid('p'),nombres:pa[0],apellidos:pa.slice(1).join(' '),perfil:'colaborador',tienda:rec.tienda,ocr:[r.nombre],upd:Date.now()};CONF.personas.push(x);conf=true;d='p'+x.id}
       if(d.startsWith('p')){const id=d.slice(1),x=CONF.personas.find(o=>o.id===id);if(!x)return;rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]});ptAlinear(rec);d='v'+(rec.vend.length-1)}
-      const v=rec.vend[+d.slice(1)];if(!v)return;if(k==='ini')v.ini=val;else v.per[+k].real.v=val;v.hr=v.hr||{};if(!v.hr[key])v.hr[key]=ahora;n++});
+      const v=rec.vend[+d.slice(1)];if(!v)return;aprender(per(v.pid),r.nombre);if(k==='ini')v.ini=val;else v.per[+k].real.v=val;v.hr=v.hr||{};if(!v.hr[key])v.hr[key]=ahora;n++});
     if(!n){$('usErr').textContent='No hay ningún vendedor asignado.';return}
+    if(conf){try{await guardarConf(true);refrescarListas()}catch(x){}}
     ptMarcar(rec,key);rec.cargas=rec.cargas||[];rec.cargas.push({h:ahora,corte:key,n,fecha:R.fecha||'',fuente:'imagen'});
     $('mUser').classList.remove('show');ptGuardar();ptRender();
     const sig=k==='ini'?0:+k+1;toast(sig<C.length?`✓ Ventas de ${n} vendedor(es) cargadas. Ahora pon la nueva meta hasta las ${ptHH(C[sig][1])}.`:`✓ Cierre cargado para ${n} vendedor(es).`,6000);
@@ -3582,7 +3587,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v23';
+let TREE0=[],ESTADOS={};const VERSION_APP='v24';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
