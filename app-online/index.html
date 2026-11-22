@@ -197,6 +197,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   .paper{min-width:0;zoom:1!important}
   #view-form,#view-hist,#view-pare,#view-home{display:none!important}
 }
+.ptsel{position:sticky;top:0;z-index:5}.ptmas{margin-top:8px;font-size:13px}.ptmas summary{color:var(--mut);cursor:pointer;padding:4px 0}
 .ocrbar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.ocrbar i{display:block;height:100%;width:0;background:#65a30d;transition:width .3s}.ocrf{border-top:1px solid #eee;padding:8px 0}.ocrn{font-weight:700;font-size:13px;margin-bottom:4px}.ocrok{color:#1f9d55;font-size:13px;margin:4px 0}.ocrmal{color:#c2410c;font-size:13px;margin:4px 0}
 .vok{display:block;color:#1f9d55;font-size:12px}.vwarn{display:block;color:#c2410c;font-size:12px}
 </style>
@@ -204,7 +205,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v24</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v25</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -236,7 +237,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <div id="ptAhora"></div>
     <details class="ptcfgw"><summary>⚙️ Horario de cortes</summary><div id="ptCfg"></div></details>
   </div>
-  <div class="card hidden" id="ptFotoW"><button class="btn" style="width:100%" id="ptFoto">📷 Cargar imagen de ventas</button><p class="desc" style="margin:6px 0 0">Sube la imagen del reporte de ventas: la app pone lo vendido por cada vendedor y tú solo colocas la nueva meta.</p><input type="file" id="ptFotoIn" accept="image/*" class="hidden"></div>
+  <div class="card hidden" id="ptFotoW"><button class="btn" style="width:100%;font-size:17px;padding:16px" id="ptFoto">📷 Subir reporte de ventas</button><p class="desc" style="margin:6px 0 0">Sube la imagen del reporte, elige su hora y la app llena lo vendido. Luego eliges el asesor y pones su nueva meta.</p><input type="file" id="ptFotoIn" accept="image/*" class="hidden"></div>
   <div id="ptVend"></div>
   <button class="btn" style="width:100%;margin:0 0 14px" id="ptAdd">+ Agregar vendedores</button>
   <div class="card" id="ptRes"></div>
@@ -2882,6 +2883,9 @@ function ptGuardar(){const rec=PT.rec;if(!rec||!ptPuedeEditar(rec))return;rec.up
   clearTimeout(PT_SAVE);PT_SAVE=setTimeout(async()=>{rec._sync=false;rec._html=true;await idbPut(rec);const i=PT.all.findIndex(r=>r.id===rec.id);i<0?PT.all.push(rec):PT.all[i]=rec;
     clearTimeout(PT_SYNC);PT_SYNC=setTimeout(()=>sincronizar(true),15000)},400)}
 function ptAhora(rec){if(rec.fecha!==hoyISO())return -1;const d=new Date(),h=d.getHours()+d.getMinutes()/60;const C=ptCortes(rec.cfg);return C.findIndex(([a,b])=>h>=a&&h<b)}
+function ptPasos(rec){const C=ptCortes(rec.cfg);return [`Reporte de las ${ptHH(C[0][0])} (inicio)`,...C.map(([a,b],j)=>j===C.length-1?`Reporte del cierre (${ptHH(b)})`:`Reporte de las ${ptHH(b)}`)]}
+function ptPasoAuto(rec){const k=ocrCorteAuto(rec);return k==='ini'?0:k+1}
+function ptFoco(){const e=document.querySelector('#ptVend [data-ptm]')||document.querySelector('#ptVend [data-ptr]');if(e&&!e.disabled&&!e.value)setTimeout(()=>e.focus(),200)}
 function ptRender(){
   const rec=PT.rec,ed=ptPuedeEditar(rec),C=ptCortes(rec.cfg),now=ptAhora(rec),dis=ed?'':'disabled';
   const hs=(id,val,ops)=>`<select class="t" id="${id}" ${dis}>${ops.map(([v,l])=>`<option value="${v}" ${+val===+v?'selected':''}>${l}</option>`).join('')}</select>`;
@@ -2892,16 +2896,25 @@ function ptRender(){
   $('ptAhora').innerHTML=rec.fecha!==hoyISO()?`<div class="ptbanner gris">📅 Viendo el ${fmtFecha(rec.fecha+'T12:00')}${ed?'':' (solo lectura)'}</div>`:
     now>=0?`<div class="ptbanner">⏱️ Corte actual: <b>${ptHH(C[now][0])} → ${ptHH(C[now][1])}</b>${now>0?` · registra lo vendido hasta las ${ptHH(C[now][0])} y la nueva meta`:' · coloca las metas hasta las '+ptHH(C[now][1])}</div>`:
     `<div class="ptbanner gris">${new Date().getHours()<rec.cfg.inicio?'El pare técnico empieza a las '+ptHH(rec.cfg.inicio):'Jornada terminada: registra el cierre de cada vendedor'}</div>`;
-  $('ptVend').innerHTML=rec.vend.map((v,i)=>{const L=ptLabels(v),K=ptActivos(v);
-    return `<div class="card ptv"><div class="ptvh"><b>🧑‍💼 ${esc(v.nombre)}</b>${ed?`<button class="ico" data-ptdel="${i}" title="Quitar">🗑️</button>`:''}</div>
-    <label class="f">Deuda de días anteriores</label><div class="ptdeuda ${v.deuda?'neg':''}">${v.deuda?ptMon(v.deuda)+' — se suma a la meta final de hoy':'Sin deuda'}</div>
-    <label class="f">Vendido antes de empezar (a las ${ptHH(C[0][0])})</label><input class="t" data-ptini="${i}" inputmode="decimal" value="${v.ini??''}" placeholder="Se llena con la imagen de las ${ptHH(C[0][0])}" ${dis}>
-    <div class="row2"><div><label class="f">Meta libre 1 (nombre)</label><input class="t" data-ptx="${i}|0" value="${esc(v.extras[0])}" placeholder="Ej.: licuadoras" ${dis}></div><div><label class="f">Meta libre 2 (nombre)</label><input class="t" data-ptx="${i}|1" value="${esc(v.extras[1])}" placeholder="Ej.: sartenes" ${dis}></div></div>
-    ${C.map(([a,b],j)=>`<details class="ptp ${j===now?'now':''}" ${(now<0||j===now||j===now-1)?'open':''}><summary>${ptHH(a)} → ${ptHH(b)}${j===now?' <span class="ptya">AHORA</span>':''}${j===C.length-1?' <span class="ptcz">CIERRE</span>':''}<span class="ptsum" data-ptsum="${i}|${j}"></span></summary>
-      <table class="ptt"><tr><th></th><th>Meta hasta ${ptHH(b)}</th><th>Vendido a las ${ptHH(b)}</th><th>Dif.</th></tr>
-      ${K.map(k=>`<tr><td>${esc(L[k])}</td><td><input data-ptm="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].meta[k]??''}" ${dis}></td><td><input data-ptr="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].real[k]??''}" ${dis}></td><td class="ptd" data-ptd="${i}|${j}|${k}"></td></tr>`).join('')}</table>
-      <div class="ptmsg" data-ptmsg="${i}|${j}"></div></details>`).join('')}
-    <div class="ptfin" data-ptfin="${i}"></div></div>`}).join('')||`<div class="card"><p class="desc" style="margin:0">Agrega a los vendedores que participan hoy${ed?' con el botón de abajo':''}.</p></div>`;
+  // ---- Trabajo por pasos: horario del reporte + asesor (sin lista larga) ----
+  const S=ptPasos(rec);if(PT.selS==null||PT.selS>=S.length)PT.selS=ptPasoAuto(rec);if(PT.selV==null||PT.selV>=rec.vend.length)PT.selV=0;
+  if(!rec.vend.length){$('ptVend').innerHTML=`<div class="card"><p class="desc" style="margin:0">${ed?'Sube el reporte de ventas: los asesores se agregan solos. También puedes agregarlos con el botón de abajo.':'No hay asesores en este día.'}</p></div>`}
+  else{const st=PT.selS,i=PT.selV,v=rec.vend[i],L=ptLabels(v),K=ptActivos(v),ult=st===C.length,jr=st-1,jm=st;
+    const hecho=x=>{const w=rec.vend[x];const r=st===0?w.ini!=null:w.per[jr]&&w.per[jr].real.v!=null,m=ult||(w.per[jm]&&w.per[jm].meta.v!=null);return r&&m};
+    const nHechos=rec.vend.filter((w,x)=>hecho(x)).length;
+    $('ptVend').innerHTML=`<div class="card ptsel"><div class="row2"><div><label class="f">Horario del reporte</label><select class="t" id="ptSelS">${S.map((x,q)=>`<option value="${q}" ${q===st?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label class="f">Asesor (${nHechos}/${rec.vend.length} listos)</label><select class="t" id="ptSelV">${rec.vend.map((w,x)=>`<option value="${x}" ${x===i?'selected':''}>${hecho(x)?'✓ ':''}${esc(w.nombre)}</option>`).join('')}</select></div></div></div>
+    <div class="card ptv"><div class="ptvh"><b>🧑‍💼 ${esc(v.nombre)}</b>${ed?`<button class="ico" data-ptdel="${i}" title="Quitar">🗑️</button>`:''}</div>
+      ${v.deuda?`<div class="ptdeuda neg">Deuda de días anteriores: ${ptMon(v.deuda)} — se suma a la meta final de hoy</div>`:''}
+      ${st>0&&v.per[jr].meta.v!=null?`<p class="desc" style="margin:4px 0">Meta que prometió hasta las ${ptHH(C[jr][1])}: <b>${ptMon(v.per[jr].meta.v)}</b></p>`:''}
+      <table class="ptt"><tr><th></th><th>${st===0?'Vendido antes de empezar':'Vendido a las '+ptHH(C[jr][1])}</th>${ult?'':`<th>Nueva meta hasta ${jm===C.length-1?'el cierre':ptHH(C[jm][1])}</th>`}${st>0?'<th>Dif.</th>':''}</tr>
+      ${K.map(k=>`<tr><td>${esc(L[k])}</td><td>${st===0?(k==='v'?`<input data-ptini="${i}" inputmode="decimal" value="${v.ini??''}" ${dis}>`:'—'):`<input data-ptr="${i}|${jr}|${k}" inputmode="decimal" value="${v.per[jr].real[k]??''}" ${dis}>`}</td>${ult?'':`<td><input data-ptm="${i}|${jm}|${k}" inputmode="decimal" value="${v.per[jm].meta[k]??''}" ${dis}></td>`}${st>0?`<td class="ptd" data-ptd="${i}|${jr}|${k}"></td>`:''}</tr>`).join('')}</table>
+      ${st>0?`<div class="ptmsg" data-ptmsg="${i}|${jr}"></div>`:''}${ult?`<div class="ptfin" data-ptfin="${i}"></div>`:''}
+      <details class="ptmas"><summary>Metas libres (licuadoras, sartenes…)</summary><div class="row2"><div><label class="f">Meta libre 1 (nombre)</label><input class="t" data-ptx="${i}|0" value="${esc(v.extras[0])}" placeholder="Ej.: licuadoras" ${dis}></div><div><label class="f">Meta libre 2 (nombre)</label><input class="t" data-ptx="${i}|1" value="${esc(v.extras[1])}" placeholder="Ej.: sartenes" ${dis}></div></div></details>
+      <div class="row2" style="margin-top:10px"><button class="btn sec" id="ptPrev" ${i===0?'disabled':''}>‹ Anterior</button><button class="btn" id="ptNext">${i<rec.vend.length-1?'Siguiente asesor ›':'✓ Terminar'}</button></div></div>`;
+    $('ptSelS').onchange=()=>{PT.selS=+$('ptSelS').value;ptRender()};$('ptSelV').onchange=()=>{PT.selV=+$('ptSelV').value;ptRender()};
+    $('ptPrev').onclick=()=>{PT.selV=Math.max(0,i-1);ptRender();ptFoco()};
+    $('ptNext').onclick=()=>{if(i<rec.vend.length-1){PT.selV=i+1;ptRender();ptFoco()}else{const f=rec.vend.length-nHechos;toast(f?`Faltan ${f} asesor(es) por completar en este horario.`:'✓ Pare técnico de este horario completo.',4000);$('ptRes').scrollIntoView({behavior:'smooth'})}};}
   $('ptAdd').classList.toggle('hidden',!ed);$('ptFotoW').classList.toggle('hidden',!ed);
   $('ptBorrarDia').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local')||!PT.all.some(r=>r.id===rec.id));
   ptCalc();
@@ -2919,7 +2932,7 @@ function ptCalc(){
     const f=document.querySelector(`[data-ptfin="${i}"]`);
     if(f)f.innerHTML=`<div><span>Meta final${v.deuda?' + deuda':''}</span><b>${ptMon(o)}</b></div><div><span>Cierre</span><b>${ptMon(c)}</b></div><div><span>Diferencia</span><b class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</b></div>`+(d!=null&&d<0&&rec.fecha<=hoyISO()?`<p class="ptmsg" style="grid-column:1/-1;margin:4px 0 0">Si cierra así, mañana empieza con una deuda de ${ptMon(-d)}.</p>`:'');
   });
-  $('ptRes').innerHTML=rec.vend.length?`<h2>📊 Resumen de ${esc(rec.tienda)}</h2><table class="ptt res"><tr><th>Vendedor</th><th>Meta final</th><th>Cierre</th><th>Dif.</th></tr>${rec.vend.map(v=>{const d=ptDif(v);return `<tr><td style="text-align:left">${esc(v.nombre)}</td><td>${ptMon(ptObjTotal(v))}</td><td>${ptMon(ptCierre(v,'v'))}</td><td class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td></tr>`}).join('')}
+  $('ptRes').innerHTML=rec.vend.length?`<h2>📊 Resumen de ${esc(rec.tienda)}</h2><table class="ptt res"><tr><th>Asesor</th><th>Meta final</th><th>Vendido</th><th>Dif.</th></tr>${rec.vend.map(v=>{const d=ptDif(v);return `<tr><td style="text-align:left">${esc(v.nombre)}</td><td>${ptMon(ptObjTotal(v))}</td><td>${ptMon(ptCierre(v,'v'))}</td><td class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td></tr>`}).join('')}
     <tr class="tot"><td style="text-align:left">TOTAL</td><td>${hayO?ptMon(tO):'—'}</td><td>${hayC?ptMon(tC):'—'}</td><td class="${hayO&&hayC?(tC-tO>=0?'pos':'neg'):''}">${hayO&&hayC?(tC-tO>=0?'+':'-')+ptMon(Math.abs(tC-tO)):'—'}</td></tr></table>`:'';
   $('ptRes').classList.toggle('hidden',!rec.vend.length);
 }
@@ -2998,25 +3011,25 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
   const pares=[];F.forEach((r,q)=>cand.forEach(c=>pares.push([sc(r,c),q,c])));pares.sort((a,b)=>b[0]-a[0]);
   const fUsada=new Set();pares.forEach(([x,q,c])=>{if(x<.6||fUsada.has(q)||usados.has(c.k))return;F[q].dest=c.k;fUsada.add(q);usados.add(c.k)});
   const auto=ocrCorteAuto(rec);
-  const ops=[['ini',`Vendido antes de empezar (${ptHH(C[0][0])})`],...C.map(([a,b],j)=>[j,`Vendido a las ${ptHH(b)}${j===C.length-1?' (cierre)':''}`])];
+  const ops=[['ini',`Reporte de las ${ptHH(C[0][0])} (inicio)`],...C.map(([a,b],j)=>[j,j===C.length-1?`Reporte del cierre (${ptHH(b)})`:`Reporte de las ${ptHH(b)}`])];
   const avF=R.fecha?(R.fecha===rec.fecha?`<p class="ocrok">📅 Fecha de la imagen: ${fmtFecha(R.fecha+'T12:00')} ✓</p>`:`<p class="ocrmal">⚠️ La imagen es del <b>${fmtFecha(R.fecha+'T12:00')}</b> y el pare técnico es del <b>${fmtFecha(rec.fecha+'T12:00')}</b>. Revisa que sea la imagen correcta.</p>`):'<p class="ocrmal">⚠️ No pude leer la fecha de la imagen.</p>';
   const avT=R.tienda&&R.tienda!==rec.tienda?`<p class="ocrmal">⚠️ La imagen parece de <b>${esc(R.tienda)}</b>, no de ${esc(rec.tienda)}.</p>`:'';
   const tit=t=>t.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
   const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+`<option value="n" ${sel?'':'selected'}>➕ Crear vendedor: ${esc(tit(r.nombre))}</option>`;
   const falt=rec.vend.filter((v,i)=>!F.some(r=>r.dest==='v'+i)).map(v=>v.nombre);
   $('usTit').textContent='📷 Ventas leídas de la imagen';
-  $('usBody').innerHTML=`${avF}${avT}<label class="f">Registrar como</label><select class="t" id="ocrCorte">${ops.map(([v,l])=>`<option value="${v}" ${String(v)===String(auto)?'selected':''}>${l}</option>`).join('')}</select>
+  $('usBody').innerHTML=`${avF}${avT}<label class="f"><b>¿A qué hora corresponde este reporte?</b></label><select class="t" id="ocrCorte"><option value="">— Elige la hora —</option>${ops.map(([v,l])=>`<option value="${v}">${l}${String(v)===String(auto)?' · sugerido':''}</option>`).join('')}</select>
     <p class="desc" style="margin:10px 0 4px">Revisa que cada número sea igual al de la imagen. Si alguno está mal, corrígelo aquí.</p>
     ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.dest?'':' <span class="ocrmal" style="display:inline">· no está registrado</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
     ${falt.length?`<p class="desc">No aparecen en la imagen: ${falt.map(esc).join(', ')}</p>`:''}<p class="ocrmal hidden" id="ocrAv"></p>`;
   $('usOk').disabled=false;
-  const revisar=()=>{const k=$('ocrCorte').value;let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
+  const revisar=()=>{const k=$('ocrCorte').value;if(k===''){$('ocrAv').classList.add('hidden');return}let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
       let prev=v.ini??null;if(k!=='ini')for(let j=0;j<+k;j++){const x=v.per[j]&&v.per[j].real.v;if(x!=null)prev=x}
       if(prev!=null&&k!=='ini'&&Math.abs(prev-val)<.005)iguales++;if(prev!=null&&val<prev-.005)baja.push(v.nombre)});
     const m=[];if(n&&iguales===n)m.push('Los valores son iguales a los del corte anterior. ¿Es la imagen nueva?');if(baja.length)m.push('La venta no puede bajar durante el día: revisa '+baja.join(', ')+'.');
     $('ocrAv').innerHTML=m.map(x=>'⚠️ '+x).join('<br>');$('ocrAv').classList.toggle('hidden',!m.length)};
   $('ocrCorte').onchange=revisar;document.querySelectorAll('[data-ocrv],[data-ocrd]').forEach(e=>e.onchange=revisar);revisar();
-  $('usOk').onclick=async()=>{const k=$('ocrCorte').value,ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0,conf=false;
+  $('usOk').onclick=async()=>{const k=$('ocrCorte').value;if(k===''){$('usErr').textContent='Elige a qué hora corresponde el reporte.';$('ocrCorte').focus();return}const ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0,conf=false;
     const aprender=(x,nm)=>{if(!x)return;x.ocr=x.ocr||[];if(!x.ocr.includes(nm)){x.ocr.push(nm);x.upd=Date.now();conf=true}};
     F.forEach((r,q)=>{let d=document.querySelector(`[data-ocrd="${q}"]`).value;const val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||val==null)return;
       if(d==='n'){const pa=tit(r.nombre).split(' '),x={id:nid('p'),nombres:pa[0],apellidos:pa.slice(1).join(' '),perfil:'colaborador',tienda:rec.tienda,ocr:[r.nombre],upd:Date.now()};CONF.personas.push(x);conf=true;d='p'+x.id}
@@ -3026,8 +3039,8 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
     if(conf){try{await guardarConf(true);refrescarListas()}catch(x){}}
     ptMarcar(rec,key);rec.cargas=rec.cargas||[];rec.cargas.push({h:ahora,corte:key,n,fecha:R.fecha||'',fuente:'imagen'});
     $('mUser').classList.remove('show');ptGuardar();ptRender();
-    const sig=k==='ini'?0:+k+1;toast(sig<C.length?`✓ Ventas de ${n} vendedor(es) cargadas. Ahora pon la nueva meta hasta las ${ptHH(C[sig][1])}.`:`✓ Cierre cargado para ${n} vendedor(es).`,6000);
-    if(sig<C.length){const e=document.querySelector(`[data-ptm="0|${sig}|v"]`);if(e){const dt=e.closest('details');if(dt)dt.open=true;e.scrollIntoView({block:'center'});setTimeout(()=>e.focus(),300)}}}}
+    PT.selS=k==='ini'?0:+k+1;PT.selV=0;ptRender();$('ptVend').scrollIntoView({behavior:'smooth'});ptFoco();
+    toast(PT.selS<C.length?`✓ Ventas de ${n} asesor(es) cargadas. Ahora pon la nueva meta de cada asesor.`:`✓ Cierre cargado para ${n} asesor(es).`,6000)}}
 // ---- Hoja imprimible (igual a la hoja física) ----
 // ---- Control de hora y ubicación del pare técnico ----
 function ptMarcar(rec,key){rec.reg=rec.reg||{};if(rec.reg[key])return;const s=getSes();const o={h:new Date().toISOString(),por:s?s.nombre:getEvaluador()};rec.reg[key]=o;
@@ -3587,7 +3600,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v24';
+let TREE0=[],ESTADOS={};const VERSION_APP='v25';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
