@@ -198,6 +198,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   #view-form,#view-hist,#view-pare,#view-home{display:none!important}
 }
 .ptsel{position:sticky;top:0;z-index:5}.ptmas{margin-top:8px;font-size:13px}.ptmas summary{color:var(--mut);cursor:pointer;padding:4px 0}
+.pthoy{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid #eee;font-size:13px;cursor:pointer}.pthoy span{text-align:right}
 .ocrbar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.ocrbar i{display:block;height:100%;width:0;background:#65a30d;transition:width .3s}.ocrf{border-top:1px solid #eee;padding:8px 0}.ocrn{font-weight:700;font-size:13px;margin-bottom:4px}.ocrok{color:#1f9d55;font-size:13px;margin:4px 0}.ocrmal{color:#c2410c;font-size:13px;margin:4px 0}
 .vok{display:block;color:#1f9d55;font-size:12px}.vwarn{display:block;color:#c2410c;font-size:12px}
 </style>
@@ -205,7 +206,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v33</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v34</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -237,6 +238,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <div id="ptAhora"></div>
     <details class="ptcfgw"><summary>⚙️ Horario de cortes</summary><div id="ptCfg"></div></details>
   </div>
+  <div class="card hidden" id="ptHoyW"></div>
   <div class="card hidden" id="ptFotoW"><button class="btn" style="width:100%;font-size:17px;padding:16px" id="ptFoto">📷 Subir reporte de ventas</button><p class="desc" style="margin:6px 0 0">Sube la imagen del reporte, elige su hora y la app llena lo vendido. Luego eliges el asesor y pones su nueva meta.</p><input type="file" id="ptFotoIn" accept="image/*" class="hidden"></div>
   <div id="ptVend"></div>
   <button class="btn" style="width:100%;margin:0 0 14px" id="ptAdd">+ Agregar vendedores</button>
@@ -2326,6 +2328,7 @@ async function sincronizar(silencio){
       const repo=e._repo||repoPropio();
       if(e.tipo==='caja'){if(!LLAVE)continue;try{const rm=await leerRemoto(rutaNube(e,'.json'),repo);if(rm&&rm.obj.enc){const o=unirCaja(e,await descifrarObj(rm.obj));Object.keys(o).forEach(k=>{if(k[0]!=='_')e[k]=o[k]});e._sha=rm.sha}}catch(x){}
         e._sha=await putFile(rutaNube(e,'.json'),JSON.stringify(await cifrarObj(JSON.parse(jsonLimpio(e)))),e._sha,`Caja ${e.id}`,repo);e._html=true;e._repo=repo;e._sync=true;await idbPut(e);sub++;continue}
+      if(e.tipo==='pare'){try{const rm=await leerRemoto(rutaNube(e,'.json'),repo);if(rm&&rm.sha!==e._sha&&rm.obj&&rm.obj.id===e.id){const m=ptMezclar(e,rm.obj);Object.keys(m).forEach(k=>{if(k[0]!=='_')e[k]=m[k]})}if(rm)e._sha=rm.sha}catch(x){}}
       e._sha=await putFile(rutaNube(e,'.json'),jsonLimpio(e),e._sha,(e.tipo==='pare'?`Pare técnico ${e.tienda} ${e.fecha}`:`Evaluación ${e.tienda} ${fmtFecha(e.fechaHora)} ${fmtHora(e.fechaHora)}`),repo);
       if(!e._html){try{await putFile(rutaNube(e,'.html'),docStandalone(e),null,`Documento ${e.tienda} ${fmtFecha(e.fechaHora)}`,repo);e._html=true}catch(x){}}
       e._repo=repo;e._sync=true;await idbPut(e);sub++;
@@ -2345,7 +2348,7 @@ async function sincronizar(silencio){
         let ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
         if(ev.enc){if(!LLAVE)continue;try{ev=await descifrarObj(ev)}catch(x){continue}}
         if(BORRADOS.has(ev.id))continue;
-        const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync)continue;
+        const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync){if(ev.tipo==='pare'&&loc.tipo==='pare'){const m=ptMezclar(loc,ev);Object.keys(m).forEach(k=>{if(k[0]!=='_')loc[k]=m[k]});loc._sha=it.sha;await idbPut(loc);baj++}continue}
         ev._sha=it.sha;ev._repo=repo;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
       }
     }
@@ -2359,7 +2362,7 @@ async function sincronizar(silencio){
   if(!SYNC_ERR&&!$('view-aj').classList.contains('hidden')&&$('gLista'))pintarGente();
   if(!SYNC_ERR&&ROL()==='admin'&&!window._migrando){window._migrando=1;try{await migrarPersonas()}catch(e){}window._migrando=0}
   if(!silencio&&(sub||baj))toast(`☁️ ${sub?sub+' subida(s) ':''}${baj?baj+' descargada(s)':''}`.trim());
-  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-pthist').classList.contains('hidden'))loadPtHist();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
+  if((sub||baj)){if(!$('view-hist').classList.contains('hidden'))loadHist();if(!$('view-rep').classList.contains('hidden'))loadRep();if(!$('view-comp').classList.contains('hidden'))loadComp();if(!$('view-ptrep').classList.contains('hidden'))loadPtRep();if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view-pare input,#mUser')))ptCambiar();if(!$('view-pthist').classList.contains('hidden'))loadPtHist();if(!$('view-cajas').classList.contains('hidden')&&!document.activeElement.matches('#view-cajas input'))abrirCajas();if(!$('view-caja').classList.contains('hidden')&&!document.activeElement.matches('#view-caja input'))cjCargar().then(pintarCaja);if(!$('view-cjxls').classList.contains('hidden'))cjCargar().then(pintarXls);if(!$('view-pare').classList.contains('hidden')&&!(document.activeElement&&document.activeElement.matches('#view-pare input[inputmode],#view-pare input[data-ptx]')))abrirPare();}
 }
 async function copiarConfAEvaluadores(){
   const hechos=(await kvGet('confCopias'))||{};const key=confKey(CONF);let cambio=false;
@@ -2878,6 +2881,17 @@ function ptDif(v){const o=ptObjTotal(v),c=ptCierre(v,'v');return o==null||c==nul
 function ptDeudaDe(t,f,pid){
   const prev=PT.all.filter(r=>r.tienda===t&&r.fecha<f&&(r.vend||[]).some(x=>x.pid===pid)).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
   if(!prev)return 0;const v=prev.vend.find(x=>x.pid===pid);const d=ptDif(v);return d!=null&&d<0?Math.round(-d*100)/100:0}
+// Une dos copias del mismo pare técnico sin perder datos de ninguna (gana el dato escrito; si ambos tienen, el más reciente)
+function ptMezclar(a,b){const nv=(a.upd||0)>=(b.upd||0)?a:b,vj=nv===a?b:a;const r=JSON.parse(JSON.stringify(nv));
+  if(String((a.cfg||{}).horas)!==String((b.cfg||{}).horas)){(vj.vend||[]).forEach(v=>{if(!r.vend.some(w=>w.pid===v.pid))r.vend.push(JSON.parse(JSON.stringify(v)))});ptAlinear(r);return r}
+  const mx=(x,y)=>x==null||x===''?y:x;
+  (vj.vend||[]).forEach(v=>{let w=r.vend.find(z=>z.pid===v.pid);if(!w){r.vend.push(JSON.parse(JSON.stringify(v)));return}
+    w.ini=mx(w.ini,v.ini);w.extras=(w.extras||['','']).map((e,i)=>e||(v.extras||[])[i]||'');
+    (v.per||[]).forEach((p,j)=>{w.per[j]=w.per[j]||{meta:{},real:{}};['meta','real'].forEach(t=>Object.keys(p[t]||{}).forEach(k=>{w.per[j][t][k]=mx(w.per[j][t][k],p[t][k])}))});
+    w.hr=w.hr||{};Object.entries(v.hr||{}).forEach(([k,h])=>{if(!w.hr[k]||h<w.hr[k])w.hr[k]=h})});
+  r.reg=r.reg||{};Object.entries(vj.reg||{}).forEach(([k,g])=>{if(!r.reg[k]||g.h<r.reg[k].h)r.reg[k]=g});
+  const cg=[...(r.cargas||[]),...(vj.cargas||[])];r.cargas=cg.filter((c,i)=>cg.findIndex(d=>d.h===c.h&&d.corte===c.corte)===i);
+  r.upd=Math.max(a.upd||0,b.upd||0);ptAlinear(r);return r}
 async function ptCargarTodo(){PT.all=(await idbAll()).filter(e=>e.tipo==='pare')}
 function ptNuevo(t,f){return {id:'PT-'+slug(t)+'-'+f,tipo:'pare',tienda:t,fecha:f,fechaHora:f+'T12:00:00',cfg:ptCfgDefecto(t),vend:[],upd:Date.now()}}
 function ptAlinear(rec){const n=ptCortes(rec.cfg).length;rec.vend.forEach(v=>{v.extras=v.extras||['',''];v.per=v.per||[];while(v.per.length<n)v.per.push({meta:{},real:{}});if(v.per.length>n)v.per.length=n})}
@@ -2891,7 +2905,7 @@ async function limpiarDupOCR(){const r=ROL();if(!(r==='admin'||r==='responsable'
   const T=(await idbAll()).filter(e=>e.tipo==='pare'&&(e.vend||[]).some(v=>mapa[v.pid]));
   for(const e of T){e.vend.forEach(v=>{const o=mapa[v.pid];if(o){v.pid=o.id;v.nombre=nomPer(o)||o.nombres}});const vis=new Set();e.vend=e.vend.filter(v=>!vis.has(v.pid)&&vis.add(v.pid));e.upd=Date.now();e._sync=false;await idbPut(e)}
   toast(`Se unieron ${Object.keys(mapa).length} vendedor(es) duplicados con su registro original ✓`,5000);sincronizar(true)}
-async function abrirPare(){try{await limpiarDupOCR()}catch(x){}
+async function abrirPare(){try{await limpiarDupOCR()}catch(x){}if(['admin','local','director'].includes(ROL()))setTimeout(()=>sincronizar(true),300);
   await ptCargarTodo();const T=ptTiendas();
   const tv=$('ptTienda').value;$('ptTienda').innerHTML=T.map(t=>`<option>${esc(t)}</option>`).join('');$('ptTienda').value=T.includes(tv)?tv:T[0]||'';
   if(!$('ptFecha').value)$('ptFecha').value=hoyISO();
@@ -2900,8 +2914,9 @@ async function abrirPare(){try{await limpiarDupOCR()}catch(x){}
 async function ptCambiar(){await ptCargarTodo();const t=$('ptTienda').value,f=$('ptFecha').value||hoyISO();
   if(!t){$('ptVend').innerHTML='<div class="card"><p class="desc">No hay tiendas registradas.</p></div>';return}
   PT.rec=PT.all.find(r=>r.id==='PT-'+slug(t)+'-'+f)||ptNuevo(t,f);
-  if(PT.rec.fecha>=hoyISO()&&String(PT.rec.cfg.horas)!==String(PT_HORAS)&&ptPuedeEditar(PT.rec)){PT.rec.cfg=ptCfgDefecto(t);if(PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
-  if(ptPuedeEditar(PT.rec)){const n0=PT.rec.vend.length;PT.rec.vend=PT.rec.vend.filter(v=>{const x=CONF.personas.find(o=>o.id===v.pid);return !(x&&(x.del||perfilDe(x)==='responsable'))});if(PT.rec.vend.length!==n0&&PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
+  const dueña=ROL()==='responsable'&&misTiendas().includes(t)&&ptPuedeEditar(PT.rec),existe=PT.all.some(r=>r.id===PT.rec.id);
+  if(PT.rec.fecha>=hoyISO()&&String(PT.rec.cfg.horas)!==String(PT_HORAS)&&(dueña||!existe)){PT.rec.cfg=ptCfgDefecto(t);if(existe&&dueña)setTimeout(ptGuardar,0)}
+  if(dueña){const n0=PT.rec.vend.length;PT.rec.vend=PT.rec.vend.filter(v=>{const x=CONF.personas.find(o=>o.id===v.pid);return !(x&&(x.del||perfilDe(x)==='responsable'))});if(PT.rec.vend.length!==n0&&existe)setTimeout(ptGuardar,0)}
   ptAlinear(PT.rec);
   // la deuda se recalcula con los días anteriores
   PT.rec.vend.forEach(v=>v.deuda=ptDeudaDe(t,f,v.pid));
@@ -2914,7 +2929,18 @@ function ptAhora(rec){if(rec.fecha!==hoyISO())return -1;const d=new Date(),h=d.g
 function ptPasos(rec){const C=ptCortes(rec.cfg);return [`Reporte de las ${ptHH(C[0][0])} (inicio)`,...C.map(([a,b],j)=>j===C.length-1?`Reporte del cierre (${ptHH(b)})`:`Reporte de las ${ptHH(b)}`)]}
 function ptPasoAuto(rec){const k=ocrCorteAuto(rec);return k==='ini'?0:k+1}
 function ptFoco(){const e=document.querySelector('#ptVend [data-ptm]')||document.querySelector('#ptVend [data-ptr]');if(e&&!e.disabled&&!e.value)setTimeout(()=>e.focus(),200)}
+function ptHoyHTML(){const r=ROL();if(!['admin','local','director'].includes(r))return '';const f=hoyISO();
+  const T=ptTiendas();const filas=T.map(t=>{const x=PT.all.find(e=>e.id==='PT-'+slug(t)+'-'+f);const n=x?(x.vend||[]).length:0;
+    if(!x||!n)return `<div class="pthoy" data-pth="${esc(t)}"><b>${esc(t)}</b><span class="neg">— sin pare hoy</span></div>`;
+    const k=Object.keys(x.reg||{}),u=x.upd?new Date(x.upd):null,ult=(x.cargas||[]).slice(-1)[0];const C=ptCortes(x.cfg);
+    const rep=ult?(ult.corte==='ini'?ptHH(C[0][0]):ptHH(C[+ult.corte.slice(1)][1])):null;
+    return `<div class="pthoy" data-pth="${esc(t)}"><b>${esc(t)}</b><span class="pos">✓ ${n} asesor(es)${rep?' · reporte '+rep:''}${u?' · act. '+pad(u.getHours())+':'+pad(u.getMinutes()):''}${x.por?' · '+esc(x.por):''}${x._sync===false?' · <span class="neg">sin subir</span>':''}</span></div>`}).join('');
+  const hechas=T.filter(t=>{const x=PT.all.find(e=>e.id==='PT-'+slug(t)+'-'+f);return x&&(x.vend||[]).length}).length;
+  return `<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">📍 Hoy en las tiendas (${hechas}/${T.length})</h2><button class="btn sec" id="ptHoyAct" style="padding:6px 10px">🔄 Actualizar</button></div><div style="margin-top:8px">${filas}</div><p class="desc" style="margin:6px 0 0">Toca una tienda para ver su pare técnico.</p>`}
 function ptRender(){
+  {const h=ptHoyHTML();$('ptHoyW').classList.toggle('hidden',!h);if(h){$('ptHoyW').innerHTML=h;
+    document.querySelectorAll('[data-pth]').forEach(el=>el.onclick=()=>{$('ptTienda').value=el.dataset.pth;$('ptFecha').value=hoyISO();ptCambiar()});
+    $('ptHoyAct').onclick=async()=>{$('ptHoyAct').textContent='⏳';try{await sincronizar(false)}catch(x){}await ptCambiar();toast(SYNC_ERR?'⚠️ Sin conexión con la nube':'✓ Actualizado')}}}
   const rec=PT.rec,ed=ptPuedeEditar(rec),C=ptCortes(rec.cfg),now=ptAhora(rec),dis=ed?'':'disabled';
   const hs=(id,val,ops)=>`<select class="t" id="${id}" ${dis}>${ops.map(([v,l])=>`<option value="${v}" ${+val===+v?'selected':''}>${l}</option>`).join('')}</select>`;
   $('ptCfg').innerHTML=`<p class="desc" style="margin:0 0 6px">El pare técnico se hace a la misma hora que se envía el reporte de ventas: <b>${PT_HORAS.map(ptHH).join(', ')} y cierre</b>.</p>
@@ -3646,7 +3672,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v33';
+let TREE0=[],ESTADOS={};const VERSION_APP='v34';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
