@@ -205,7 +205,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v26</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v27</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -264,7 +264,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <section id="view-caja" class="hidden"><div id="cjCaja"></div></section>
 <section id="view-cjxls" class="hidden"><div id="cjXls"></div></section>
 <section id="view-ptdoc" class="hidden">
-  <div class="docbar no-print"><button class="btn sec" id="ptVolver">← Volver</button><button class="btn sec" id="ptShare">📤 Compartir</button><button class="btn" id="ptPrint">🖨️ Imprimir</button></div>
+  <div class="docbar no-print"><button class="btn sec" id="ptVolver">← Volver</button><button class="btn sec" id="ptShare">📤 Compartir</button><button class="btn" id="ptPrint">🖨️ Imprimir</button><button class="btn danger hidden" id="ptBorrarHoja">🗑️ Eliminar</button></div>
   <div id="ptDoc" style="background:#fff;padding:10px;border-radius:12px;overflow-x:auto"></div>
 </section>
 <section id="view-form">
@@ -385,6 +385,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <button class="btn" id="btnPrint">🖨️ Imprimir / Guardar PDF</button>
     <button class="btn sec" id="btnShare">📤 Compartir</button>
     <button class="btn gray" id="btnVolver">← Volver</button>
+    <button class="btn danger hidden" id="docBorrar">🗑️ Eliminar</button>
   </div>
   <div class="card no-print" id="docActs"></div>
   <div id="doc"></div>
@@ -2158,7 +2159,7 @@ function renderDocActs(){
    ${(ev.compromisos||[]).map(x=>`<div class="comp"><div class="top"><b>Compromiso ${x.n}</b>${BADGE[estadoComp(x)]}</div>
      <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Resultados: <b>${fmtLocal(x.fecha)}</b></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">Esta evaluación no tiene compromisos.</p>'}`;
 }
-function showDoc(ev){currentDoc=ev;$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
+function showDoc(ev){currentDoc=ev;$('docBorrar').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local'));$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
 
 // ---------------- Reportes ----------------
 // ---------------- Tablero de estadísticas ----------------
@@ -2259,7 +2260,7 @@ function paintPtHist(){const t=$('phTienda').value,de=$('phDesde').value,ha=$('p
   if(!L.length){$('phLista').innerHTML='<p style="color:#888">No hay pare técnico con estos filtros.</p>';return}
   $('phLista').innerHTML=`<p class="desc" style="margin:0 0 6px">${L.length} resultado(s)</p>`+L.map(r=>{const R=ptResumen(r),V=ptVerif(r),col=R.p==null?'#888':R.p>=100?'#1f9d55':R.p>=80?'#c98a00':'#d64545',por=histPor(r);
     return `<div class="hist-item" data-pt="${esc(r.id)}"><div class="sc" style="background:${col};font-size:${R.p==null?13:17}px">${R.p==null?'—':R.p+'%'}</div><div class="i"><b>${esc(r.tienda)}${r._sync?'':'<span class="pill">sin subir</span>'}</b><span>${fmtFecha(r.fecha+'T12:00')} · ${R.ok} de ${R.n} vendedor(es) cumplieron${por?' · por '+esc(por):''}</span><span class="${V.n&&V.ok===V.n?'vok':'vwarn'}">${V.n?`🕐 ${V.ok} de ${V.n} registros a tiempo${V.gps?' · 📍':''}`:'🕐 sin registro de hora (versión anterior)'}</span></div><div>›</div></div>`}).join('');
-  document.querySelectorAll('#phLista .hist-item').forEach(el=>el.onclick=()=>{const r=PT.all.find(x=>x.id===el.dataset.pt);if(!r)return;PT_DESDE_HIST=true;const c=JSON.parse(JSON.stringify(r));ptAlinear(c);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(c);show('ptdoc');window.scrollTo(0,0)});
+  document.querySelectorAll('#phLista .hist-item').forEach(el=>el.onclick=()=>{const r=PT.all.find(x=>x.id===el.dataset.pt);if(!r)return;PT_DESDE_HIST=true;ptMostrarHoja(r)});
 }
 let PT_DESDE_HIST=false;
 
@@ -2874,7 +2875,7 @@ async function ptCambiar(){await ptCargarTodo();const t=$('ptTienda').value,f=$(
   if(!t){$('ptVend').innerHTML='<div class="card"><p class="desc">No hay tiendas registradas.</p></div>';return}
   PT.rec=PT.all.find(r=>r.id==='PT-'+slug(t)+'-'+f)||ptNuevo(t,f);
   if(PT.rec.fecha>=hoyISO()&&String(PT.rec.cfg.horas)!==String(PT_HORAS)&&ptPuedeEditar(PT.rec)){PT.rec.cfg=ptCfgDefecto(t);if(PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
-  if(ptPuedeEditar(PT.rec))PT.rec.vend=PT.rec.vend.filter(v=>{const x=CONF.personas.find(o=>o.id===v.pid);return !(x&&perfilDe(x)==='responsable')});
+  if(ptPuedeEditar(PT.rec)){const n0=PT.rec.vend.length;PT.rec.vend=PT.rec.vend.filter(v=>{const x=CONF.personas.find(o=>o.id===v.pid);return !(x&&(x.del||perfilDe(x)==='responsable'))});if(PT.rec.vend.length!==n0&&PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
   ptAlinear(PT.rec);
   // la deuda se recalcula con los días anteriores
   PT.rec.vend.forEach(v=>v.deuda=ptDeudaDe(t,f,v.pid));
@@ -2949,6 +2950,10 @@ document.addEventListener('click',e=>{const d=e.target.closest&&e.target.closest
   if(confirm(`¿Quitar a ${v.nombre} del pare técnico de este día?`)){PT.rec.vend.splice(+d.dataset.ptdel,1);ptGuardar();ptRender()}});
 $('ptBorrarDia').onclick=async()=>{const r=PT.all.find(x=>x.id===PT.rec.id);if(!r)return;if(!confirm(`¿Borrar el pare técnico de ${r.tienda} del ${fmtFecha(r.fecha+'T12:00')}?\n\nSe borra para todos. No se puede deshacer.`))return;if(await borrarRegistro(r)){PT.all=PT.all.filter(x=>x.id!==r.id);ptCambiar()}};
 $('ptTienda').onchange=ptCambiar;$('ptFecha').onchange=ptCambiar;
+$('docBorrar').onclick=async()=>{const ev=currentDoc;if(!ev)return;if(!confirm('¿Eliminar esta evaluación de forma definitiva?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.'))return;if(await borrarRegistro(ev))show('hist')};
+let PT_HOJA=null;function ptMostrarHoja(r){PT_HOJA=r;const c=JSON.parse(JSON.stringify(r));ptAlinear(c);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(c);$('ptBorrarHoja').classList.toggle('hidden',!((ROL()==='admin'||ROL()==='local')&&PT.all.some(x=>x.id===r.id)));show('ptdoc');window.scrollTo(0,0)}
+$('ptBorrarHoja').onclick=async()=>{const r=PT_HOJA&&PT.all.find(x=>x.id===PT_HOJA.id);if(!r)return;if(!confirm(`¿Eliminar el pare técnico de ${r.tienda} del ${fmtFecha(r.fecha+'T12:00')}?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.`))return;
+  if(await borrarRegistro(r)){PT.all=PT.all.filter(x=>x.id!==r.id);if(PT.rec&&PT.rec.id===r.id)PT.rec=null;if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('pthist')}else{show('pare')}}};
 $('ptAdd').onclick=()=>{const rec=PT.rec,ya=new Set(rec.vend.map(v=>v.pid));const L=ptVendedores(rec.tienda).filter(x=>!ya.has(x.id));
   $('usTit').textContent='Agregar vendedores';$('usErr').textContent='';$('usOk').textContent='Agregar';$('usOk').disabled=false;
   $('usBody').innerHTML=L.length?`<p class="desc">Vendedores registrados en ${esc(rec.tienda)}:</p>`+L.map(x=>`<label class="chk"><input type="checkbox" class="ptSel" value="${x.id}"> ${esc(nomPer(x))}${x.seccion?' <span class="desc">· '+esc(x.seccion)+'</span>':''}</label>`).join(''):
@@ -3077,7 +3082,7 @@ function ptHoja(rec){const C=ptCortes(rec.cfg);
 const PT_CSS=`.pth{display:flex;justify-content:space-between;align-items:center;font-size:12px}.ptbrand{font-weight:800;color:#3f6212;font-size:16px}.ptt1{text-align:center;font-size:16px;margin:6px 0}
 .pts{width:100%;border-collapse:collapse;font-size:10px}.pts th,.pts td{border:1px solid #555;padding:3px 2px;text-align:center}.pts th{background:#f3f3f3}.pts .nom{font-weight:700;text-align:left;min-width:70px}.pts .lb{text-align:left;color:#555}.pts tr.top td{border-top:2px solid #222}.pos{color:#1f9d55;font-weight:700}.neg{color:#d64545;font-weight:700}.ptpie{font-size:10px;color:#666;margin-top:6px}.ptfoot{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:10px}.ptreg{flex:1;min-width:260px}.ptregt{font-size:11px;margin-bottom:4px}.pthr{font-size:8.5px;color:#1f9d55;white-space:nowrap}.pthr.neg{color:#d64545}.ptreg a{color:#1d4ed8;text-decoration:none}.ptqr{text-align:center;flex:none}.ptqr svg{width:110px;height:110px}`;
 function ptStandalone(rec){return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pare técnico ${esc(rec.tienda)} ${rec.fecha}</title><style>body{font-family:Arial,sans-serif;margin:0;padding:12px}${PT_CSS}@page{size:A4 landscape;margin:8mm}</style></head><body>${ptHoja(rec)}</body></html>`}
-$('ptVerHoja').onclick=()=>{PT_DESDE_HIST=false;$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(PT.rec);show('ptdoc');window.scrollTo(0,0)};
+$('ptVerHoja').onclick=()=>{PT_DESDE_HIST=false;ptMostrarHoja(PT.rec)};
 $('ptPrint').onclick=()=>window.print();$('ptVolver').onclick=()=>{if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('pthist');return}show('pare')};
 $('ptShare').onclick=()=>compartirArchivo(`pare-tecnico_${limpio(PT.rec.tienda)}_${PT.rec.fecha}.html`,ptStandalone(PT.rec),'text/html','Pare técnico '+PT.rec.tienda);
 // ---- Avisos al celular ----
@@ -3605,7 +3610,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v26';
+let TREE0=[],ESTADOS={};const VERSION_APP='v27';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
