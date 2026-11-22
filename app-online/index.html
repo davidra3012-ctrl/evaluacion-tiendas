@@ -206,7 +206,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v34</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v35</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2343,11 +2343,10 @@ async function sincronizar(silencio){
       if(repo===reposLectura()[0]){await syncConf(tree.find(x=>x.path===CONF_PATH),repo);await aplicarBorrados(tree,repo);await leerEstados(tree);await cargarLlave(tree,repo);await revisarLlave(tree,repo)}
       for(const it of tree.filter(x=>x.type==='blob'&&x.path.startsWith('datos/')&&x.path.endsWith('.json'))){
         if(shas.has(it.sha))continue;
-        if(BORRADOS.size&&[...BORRADOS].some(id=>it.path.includes(id)))continue;
         const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)continue;
         let ev=JSON.parse(utf8b64((await g.json()).content));if(!ev||!ev.id)continue;
         if(ev.enc){if(!LLAVE)continue;try{ev=await descifrarObj(ev)}catch(x){continue}}
-        if(BORRADOS.has(ev.id))continue;
+        if(estaBorrado(ev))continue;
         const loc=local.find(e=>e.id===ev.id);if(loc&&!loc._sync){if(ev.tipo==='pare'&&loc.tipo==='pare'){const m=ptMezclar(loc,ev);Object.keys(m).forEach(k=>{if(k[0]!=='_')loc[k]=m[k]});loc._sha=it.sha;await idbPut(loc);baj++}continue}
         ev._sha=it.sha;ev._repo=repo;ev._sync=true;ev._html=true;await idbPut(ev);baj++;
       }
@@ -3654,8 +3653,10 @@ async function revisarLlave(tree,repo){if(!esSuper()||!LLAVE||window._llaveOk)re
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);await desenvolver(JSON.parse(utf8b64((await g.json()).content)));window._llaveOk=1}
   catch(e){try{const raw=b64d(await kvGet('llaveCajas'));await putFile(LLAVE_PATH,JSON.stringify(await envolver(raw),null,1),it.sha,'Llave de cajas re-envuelta con la clave actual',NUBE.repo);window._llaveOk=1}catch(x){}}}
 // ================= BORRADO DEFINITIVO (solo administrador general) =================
-const BORR_PATH='config/borrados.json';let BORRADOS=new Set();
-(async()=>{try{BORRADOS=new Set((await kvGet('borrados'))||[])}catch(e){}})();
+const BORR_PATH='config/borrados.json';let BORRADOS=new Set(),BORR_T={};
+(async()=>{try{BORRADOS=new Set((await kvGet('borrados'))||[]);BORR_T=(await kvGet('borradosT'))||{}}catch(e){}})();
+// Un registro borrado vuelve a verse si se creó de nuevo DESPUÉS del borrado (ej.: el pare técnico de la misma tienda y día)
+function estaBorrado(e){if(!e||!BORRADOS.has(e.id))return false;const t=BORR_T[e.id];if(t)return !((e.upd||0)>t);return !(e.tipo==='pare'||String(e.id).startsWith('PT-'))}
 async function idbDel(id){const d=await idb();return new Promise(res=>{const t=d.transaction('ev','readwrite');t.objectStore('ev').delete(id);t.oncomplete=()=>res();t.onerror=()=>res()})}
 // Admin general: todo. Administrador de tienda: evaluaciones de vendedores y pare técnico de su tienda.
 function puedeBorrar(e){const r=ROL();if(r==='admin'||r==='local')return true;return r==='responsable'&&!!e&&(e.tipo==='colaborador'||e.tipo==='pare')&&misTiendas().includes(e.tienda)}
@@ -3663,16 +3664,16 @@ async function borrarRegistro(e){
   if(!puedeBorrar(e)){toast('No tienes permiso para borrar este registro');return false}
   toast('Borrando…');
   try{if(getTok()){
-    const r=await leerRemoto(BORR_PATH);const ids=new Set((r&&r.obj.ids)||[]);ids.add(e.id);
-    await putFile(BORR_PATH,JSON.stringify({ids:[...ids]}),r?r.sha:null,'Registro borrado por el administrador',NUBE.repo);BORRADOS=ids;await kvSet('borrados',[...ids]);
+    const r=await leerRemoto(BORR_PATH);const ids=new Set((r&&r.obj.ids)||[]);ids.add(e.id);const t={...((r&&r.obj.t)||{}),[e.id]:Date.now()};
+    await putFile(BORR_PATH,JSON.stringify({ids:[...ids],t}),r?r.sha:null,'Registro borrado por el administrador',NUBE.repo);BORRADOS=ids;BORR_T=t;await kvSet('borrados',[...ids]);await kvSet('borradosT',t);
     for(const ext of ['.json','.html']){const p=rutaNube(e,ext);const g=await gh('/contents/'+encPath(p)+'?ref='+NUBE.branch);if(g.ok){const sha=(await g.json()).sha;await gh('/contents/'+encPath(p),{method:'DELETE',body:JSON.stringify({message:'Borrado por el administrador',sha,branch:NUBE.branch})})}}}}
   catch(x){toast('Sin conexión: no se pudo borrar de la nube. Inténtalo con internet.',5000);return false}
   await idbDel(e.id);toast('Eliminado ✓');return true}
 async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PATH);if(!it)return;if((await kvGet('borradosSha'))===it.sha)return;
-  try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
-    for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
+  try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const o=JSON.parse(utf8b64((await g.json()).content)),ids=o.ids||[];BORRADOS=new Set(ids);BORR_T=o.t||{};await kvSet('borrados',ids);await kvSet('borradosT',BORR_T);await kvSet('borradosSha',it.sha);
+    for(const e of await idbAll())if(estaBorrado(e))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v34';
+let TREE0=[],ESTADOS={};const VERSION_APP='v35';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
