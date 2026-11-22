@@ -205,7 +205,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v27</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v30</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2151,7 +2151,7 @@ async function toggleCumplido(key){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cum]');if(b)toggleCumplido(b.dataset.cum)});
 function renderDocActs(){
   const ev=currentDoc;const c=correoDe(ev);
-  setTimeout(()=>{if(ROL()==='admin'||ROL()==='local'){const b=document.createElement('button');b.className='btn danger';b.style.cssText='width:100%;margin-top:14px';b.textContent='🗑️ Eliminar esta evaluación';
+  setTimeout(()=>{if(puedeBorrar(ev)){const b=document.createElement('button');b.className='btn danger';b.style.cssText='width:100%;margin-top:14px';b.textContent='🗑️ Eliminar esta evaluación';
     b.onclick=async()=>{if(!confirm('¿Eliminar esta evaluación de forma definitiva?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.'))return;if(await borrarRegistro(ev))show('hist')};$('docActs').appendChild(b)}},0);
   $('docActs').innerHTML=`<h2>Enviar y agendar</h2>
    <a class="btn" style="display:block;text-align:center;text-decoration:none;margin:6px 0" href="${mailtoEval(ev)}">✉️ Enviar por correo a la tienda</a>
@@ -2159,7 +2159,7 @@ function renderDocActs(){
    ${(ev.compromisos||[]).map(x=>`<div class="comp"><div class="top"><b>Compromiso ${x.n}</b>${BADGE[estadoComp(x)]}</div>
      <div style="font-size:15px">${esc(x.texto)}</div><div class="desc" style="margin:4px 0 0">${esc(x.responsable||'')} · Resultados: <b>${fmtLocal(x.fecha)}</b></div>${compBotones(ev,x)}</div>`).join('')||'<p class="desc">Esta evaluación no tiene compromisos.</p>'}`;
 }
-function showDoc(ev){currentDoc=ev;$('docBorrar').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local'));$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
+function showDoc(ev){currentDoc=ev;$('docBorrar').classList.toggle('hidden',!puedeBorrar(ev));$('doc').innerHTML=docHTML(ev);renderDocActs();show('doc');fitDoc();window.scrollTo(0,0)}
 
 // ---------------- Reportes ----------------
 // ---------------- Tablero de estadísticas ----------------
@@ -2606,19 +2606,28 @@ const SECC_COLAB=[
  {id:'C5',titulo:'COMPROMISO INSTITUCIONAL',desc:'Actitud, presentación y cultura de la empresa.',items:[
   ['puntualidad','Puntualidad y asistencia',4],['uniforme','Uniforme e imagen personal',4],['mision','Conoce la misión y visión de la empresa',4],['equipo','Trabajo en equipo y actitud',3]]}];
 const ITEMS_C=SECC_COLAB.flatMap(s=>s.items.map(i=>({k:i[0],n:i[1],w:i[2]})));
+// Bodega de la tienda: solo si el vendedor es encargado de bodega (bodegas pequeñas, sin estanterías)
+const SECC_BOD={id:'C6',titulo:'BODEGA DE LA TIENDA',desc:'Solo para el encargado de bodega. Bodega pequeña, sin estanterías: se revisa que esté ordenada, limpia y segura.',items:[
+  ['bod_orden','Mercadería agrupada por tipo o marca (no mezclada ni regada en el piso)',3],['bod_pasillo','Paso libre: se puede entrar y llegar a la mercadería sin mover cajas',3],
+  ['bod_limpieza','Bodega limpia: sin basura, cartón suelto ni polvo',3],['bod_cajas','Cajas en buen estado, cerradas y con el producto o la etiqueta a la vista',3],
+  ['bod_apilado','Cajas apiladas de forma segura (lo pesado abajo, sin torres muy altas)',3],['bod_danado','Producto dañado o devuelto separado y marcado',2],
+  ['bod_guardado','Mercadería recibida guardada el mismo día (sin cajas pendientes en la sala de ventas)',3]]};
+const ITEMS_B=SECC_BOD.items.map(i=>({k:i[0],n:i[1],w:i[2]}));
+const PESO_BOD=ITEMS_B.reduce((a,i)=>a+i.w,0);
+const itemsC=s=>s.bodega==='SI'?[...ITEMS_C,...ITEMS_B]:ITEMS_C;
 const PESO_VENTAS=25;
 let stC=newStateC();
 function newStateC(){return{r:{},o:{},firmas:{},comp:[]}}
 const num=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.'));return isFinite(n)?n:0};
 const money=v=>'$'+Number(v||0).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 function ventasC(pres,venta){pres=num(pres);venta=num(venta);const cump=pres>0?venta/pres*100:0;return{presupuesto:pres,venta,cumplimiento:Math.round(cump*10)/10,puntaje:Math.round(Math.min(cump,100)/100*PESO_VENTAS*10)/10}}
-function calcC(s,pres,venta){const v=ventasC(pres,venta);let t=v.puntaje,n=0;ITEMS_C.forEach(i=>{if(s.r[i.k]){n++;if(s.r[i.k]==='SI')t+=i.w}});return{total:Math.round(t),n,v}}
+function calcC(s,pres,venta){const v=ventasC(pres,venta);let t=v.puntaje,n=0,b=0;itemsC(s).forEach(i=>{if(s.r[i.k]){n++;if(s.r[i.k]==='SI'){t+=i.w;if(i.k.startsWith('bod_'))b+=i.w}}});const bod=s.bodega==='SI';return{total:Math.round(bod?t/(100+PESO_BOD)*100:t),n,v,bod:bod?Math.round(b/PESO_BOD*100):null}}
 function refrescarColab(){const T=misTiendas(),cur=$('c-f-tienda').value;$('c-f-tienda').innerHTML=(T.length===1?'':'<option value="">— Seleccione la tienda —</option>')+T.map(t=>`<option>${esc(t)}</option>`).join('');$('c-f-tienda').value=T.includes(cur)?cur:(T.length===1?T[0]:'')}
 window.refrescarColab=refrescarColab;
 const CF=['tienda','apellidos','nombres','cedula','cargo','seccion','periodo','evaluador','modalidad','accion','comentarios','pres','venta'];
 function readC(){const d={};CF.forEach(f=>d[f]=$('c-f-'+f).value.trim());return d}
 function saveC(){try{localStorage.setItem('ev_draft_c',JSON.stringify({st:stC,f:readC()}))}catch(e){}}
-function updateC(){const f=readC(),c=calcC(stC,f.pres,f.venta);$('tc-score').textContent=c.total+'%';$('tc-cnt').textContent=c.n+'/'+ITEMS_C.length;$('tc-prog').style.width=(c.n/ITEMS_C.length*100)+'%';
+function updateC(){const f=readC(),c=calcC(stC,f.pres,f.venta);$('tc-score').textContent=c.total+'%';const NI=itemsC(stC).length;$('tc-cnt').textContent=c.n+'/'+NI;$('tc-prog').style.width=(c.n/NI*100)+'%';
   $('c-ventas-res').innerHTML=c.v.presupuesto>0?`Cumplimiento: <b style="font-size:20px;color:${c.v.cumplimiento>=100?'#1f9d55':c.v.cumplimiento>=80?'#d9731a':'#d64545'}">${c.v.cumplimiento}%</b> · Puntaje: <b>${c.v.puntaje} de ${PESO_VENTAS}%</b>`:'<span class="desc">Ingrese el presupuesto y la venta para calcular el cumplimiento.</span>';
   $('c-sn-colab').textContent=(f.nombres+' '+f.apellidos).trim();$('c-sn-resp').textContent=f.evaluador;saveC()}
 function renderCompC(){
@@ -2629,9 +2638,13 @@ function renderCompC(){
   $('c-comps').querySelectorAll('.comp').forEach(el=>{const i=+el.dataset.i;el.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=inp.onchange=()=>{stC.comp[i][inp.dataset.f]=inp.value;saveC()});
     el.querySelector('[data-delc]').onclick=()=>{stC.comp.splice(i,1);renderCompC();saveC()}});
 }
+function pintarBodC(){document.querySelectorAll('#cBodQ [data-bq]').forEach(b=>b.classList.toggle('on',b.dataset.bq===stC.bodega));$('cBodW').classList.toggle('hidden',stC.bodega!=='SI')}
 function paintItemC(el){const v=stC.r[el.dataset.k];el.querySelectorAll('.yn button').forEach(b=>b.classList.toggle('on',b.dataset.val===v))}
 function renderColab(){
-  $('c-factores').innerHTML=SECC_COLAB.map(s=>`<div class="card"><h2>${s.id} ${esc(s.titulo)}</h2><p class="desc">${esc(s.desc)}</p>${s.items.map(i=>itemHTML('c',i[0],i[1],'',i[2])).join('')}</div>`).join('');
+  $('c-factores').innerHTML=SECC_COLAB.map(s=>`<div class="card"><h2>${s.id} ${esc(s.titulo)}</h2><p class="desc">${esc(s.desc)}</p>${s.items.map(i=>itemHTML('c',i[0],i[1],'',i[2])).join('')}</div>`).join('')+
+    `<div class="card"><h2>📦 ¿Es encargado/a de bodega?</h2><p class="desc">Si responde SÍ, se evalúa también el estado de la bodega de la tienda.</p><div class="yn" id="cBodQ"><button data-bq="NO">NO</button><button data-bq="SI">SÍ</button></div>
+     <div id="cBodW" class="hidden" style="margin-top:12px"><h2 style="margin-top:6px">${SECC_BOD.id} ${esc(SECC_BOD.titulo)}</h2><p class="desc">${esc(SECC_BOD.desc)}</p>${SECC_BOD.items.map(i=>itemHTML('c',i[0],i[1],'',i[2])).join('')}</div></div>`;
+  document.querySelectorAll('#cBodQ [data-bq]').forEach(b=>b.onclick=()=>{stC.bodega=b.dataset.bq;if(stC.bodega==='NO')ITEMS_B.forEach(i=>delete stC.r[i.k]);pintarBodC();document.querySelectorAll('#cBodW .item').forEach(paintItemC);updateC()});
   document.querySelectorAll('#view-colab .item').forEach(el=>{const k=el.dataset.k;
     el.querySelectorAll('.yn button').forEach(b=>b.onclick=()=>{stC.r[k]=stC.r[k]===b.dataset.val?undefined:b.dataset.val;if(stC.r[k]===undefined)delete stC.r[k];paintItemC(el);updateC()});
     const inp=el.querySelector('[data-obs]');inp.oninput=()=>{stC.o[k]=inp.value;saveC()};el.querySelector('[data-sn]').onclick=()=>{inp.value='S/N';stC.o[k]='S/N';saveC()}});
@@ -2647,22 +2660,23 @@ function usarColab(x){['apellidos','nombres','cedula','cargo','seccion'].forEach
   $('mPick').classList.remove('show');updateC();toast('Colaborador seleccionado: '+nomPer(x))}
 function loadDraftC(){try{const d=JSON.parse(localStorage.getItem('ev_draft_c')||'null');if(!d)return;stC=Object.assign(newStateC(),d.st);
   Object.entries(d.f||{}).forEach(([k,v])=>{if($('c-f-'+k)&&v)$('c-f-'+k).value=v});
-  document.querySelectorAll('#view-colab .item').forEach(el=>{paintItemC(el);el.querySelector('[data-obs]').value=stC.o[el.dataset.k]||''});renderCompC()}catch(e){}}
+  document.querySelectorAll('#view-colab .item').forEach(el=>{paintItemC(el);el.querySelector('[data-obs]').value=stC.o[el.dataset.k]||''});pintarBodC();renderCompC()}catch(e){}}
 function resetC(){stC=newStateC();localStorage.removeItem('ev_draft_c');
   ['apellidos','nombres','cedula','seccion','accion','comentarios','pres','venta'].forEach(f=>$('c-f-'+f).value='');$('c-f-cargo').value='Vendedor/a';
   const d=new Date();$('c-f-periodo').value=d.getFullYear()+'-'+pad(d.getMonth()+1);$('c-f-evaluador').value=getEvaluador();refrescarColab();
   document.querySelectorAll('#view-colab .item').forEach(el=>{paintItemC(el);el.querySelector('[data-obs]').value=''});
   document.querySelectorAll('#view-colab canvas[data-sig]').forEach(c=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.parentNode.querySelector('.ph').style.display=''});
-  renderCompC();updateC();window.scrollTo(0,0)}
+  pintarBodC();renderCompC();updateC();window.scrollTo(0,0)}
 async function finalizarC(){
   const f=readC();
   if(!f.tienda||!f.apellidos||!f.nombres){toast('Complete tienda, apellidos y nombres del colaborador');window.scrollTo({top:0,behavior:'smooth'});return}
   if(!(num(f.pres)>0)){toast('Ingrese el presupuesto de ventas del período');$('c-f-pres').focus();return}
-  const faltan=ITEMS_C.filter(i=>!stC.r[i.k]);
+  if(!stC.bodega){toast('Responda si es encargado/a de bodega',4000);$('cBodQ').scrollIntoView({behavior:'smooth',block:'center'});return}
+  const faltan=itemsC(stC).filter(i=>!stC.r[i.k]);
   if(faltan.length){toast('Falta calificar: '+faltan.map(i=>i.n).slice(0,2).join(', ')+(faltan.length>2?'…':''),4000);const el=document.querySelector(`#view-colab .item[data-k="${faltan[0].k}"]`);el&&el.scrollIntoView({behavior:'smooth',block:'center'});return}
   const comps=stC.comp.filter(x=>x.texto.trim());if(comps.some(x=>!x.fecha)){toast('Ponga la fecha y hora de resultados de cada compromiso',4000);return}
   const c=calcC(stC,f.pres,f.venta);
-  if(!confirm(`¿Finalizar la evaluación del colaborador?\n\nTienda: ${f.tienda}\nColaborador: ${f.nombres} ${f.apellidos}\nCumplimiento de ventas: ${c.v.cumplimiento}%\nCalificación final: ${c.total}%\n\nSe registrará la fecha y hora exacta de este momento.`))return;
+  if(!confirm(`¿Finalizar la evaluación del colaborador?\n\nTienda: ${f.tienda}\nColaborador: ${f.nombres} ${f.apellidos}\nCumplimiento de ventas: ${c.v.cumplimiento}%\n${c.bod!=null?'Bodega: '+c.bod+'%\n':''}Calificación final: ${c.total}%\n\nSe registrará la fecha y hora exacta de este momento.`))return;
   toast('Obteniendo ubicación GPS…',8000);const ubic=await getUbicacion();
   if(ubic.error&&!confirm('No se pudo obtener la ubicación: '+ubic.error+'\n\nAceptar = guardar SIN ubicación\nCancelar = volver'))return;
   const now=new Date();
@@ -2670,7 +2684,7 @@ async function finalizarC(){
   const ev={tipo:'colaborador',id,fechaHora:now.toISOString(),zona:Intl.DateTimeFormat().resolvedOptions().timeZone,
     tienda:f.tienda,nombres:f.nombres,apellidos:f.apellidos,cedula:f.cedula,cargo:f.cargo,seccion:f.seccion,periodo:f.periodo,evaluador:f.evaluador,modalidad:f.modalidad,
     accion:f.accion,comentarios:f.comentarios,correo:correoTienda(f.tienda),ventas:c.v,respuestas:stC.r,observaciones:stC.o,
-    firmas:{colaborador:stC.firmas['c:colab'],responsable:stC.firmas['c:resp']},calificacionFinal:c.total,ubicacion:ubic,version:3,
+    firmas:{colaborador:stC.firmas['c:colab'],responsable:stC.firmas['c:resp']},calificacionFinal:c.total,bodega:stC.bodega==='SI',bodegaPct:c.bod,ubicacion:ubic,version:3,
     evaluadorUsuario:(getSes()||{}).usuario||'admin',compromisos:comps.map((x,i)=>({n:i+1,texto:x.texto.trim(),responsable:x.responsable.trim(),fecha:x.fecha,estado:'pendiente'}))};
   const ok=await guardarLocal(ev);toast(ok?'Evaluación guardada ✓ — subiendo a la nube…':'No se pudo guardar en el dispositivo',3500);
   localStorage.removeItem('ev_draft_c');showDoc(ev);resetC();
@@ -2679,17 +2693,17 @@ const MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto'
 const periodoTxt=p=>{if(!p)return'-';const [a,m]=p.split('-');return MESES_L[+m-1]+' '+a};
 function docHTMLColab(ev){
   const X=(v,w)=>v===w?'X':'';const V=ev.ventas||{};
-  const filas=SECC_COLAB.map(s=>`<tr class="sec"><td colspan="6"><b>${s.id}. ${esc(s.titulo)}:</b> ${esc(s.desc)}</td></tr>`+
+  const filas=(ev.bodega?[...SECC_COLAB,SECC_BOD]:SECC_COLAB).map(s=>`<tr class="sec"><td colspan="6"><b>${s.id}. ${esc(s.titulo)}:</b> ${esc(s.desc)}</td></tr>`+
     s.items.map(i=>{const v=ev.respuestas[i[0]];return `<tr><td>${esc(i[1])}</td><td class="x">${X(v,'NO')}</td><td class="x">${X(v,'SI')}</td><td class="c">${v==='SI'?i[2]:0}%</td><td class="c">${i[2]}%</td><td>${esc(ev.observaciones[i[0]]||'')}</td></tr>`}).join('')).join('');
   const firma=(img,nombre,tit)=>`<div>${img?`<img src="${img}">`:'<div class="ph2"></div>'}<div class="ln">${esc(tit)}${nombre?`<br><b>${esc(nombre)}</b>`:''}</div></div>`;
   const comps=(ev.compromisos||[]).length?`<table class="blk"><tr><th style="width:4%">#</th><th>COMPROMISOS</th><th style="width:22%">Responsable</th><th style="width:20%">Fecha y hora de resultados</th></tr>${ev.compromisos.map(x=>`<tr><td class="c">${x.n}</td><td>${esc(x.texto)}</td><td>${esc(x.responsable)}</td><td class="c">${fmtLocal(x.fecha)}</td></tr>`).join('')}</table>`:'';
   return `<div class="paper"><div class="ph"><div><h1>EVALUACIÓN DE COLABORADORES DE TIENDA</h1><div>DATOS DEL COLABORADOR EVALUADO</div></div><div class="logo">Gestión Tiendas</div></div>
   <table><tr><td style="width:50%"><b>Apellidos:</b> ${esc(ev.apellidos)}</td><td><b>Nombres:</b> ${esc(ev.nombres)}</td><td><b>Cédula:</b> ${esc(ev.cedula)}</td></tr>
-   <tr><td><b>Cargo:</b> ${esc(ev.cargo)} · <b>Sección:</b> ${esc(ev.seccion||'-')}</td><td><b>Tienda:</b> ${esc(ev.tienda)}</td><td><b>Período:</b> ${esc(periodoTxt(ev.periodo))}</td></tr></table>
+   <tr><td><b>Cargo:</b> ${esc(ev.cargo)} · <b>Sección:</b> ${esc(ev.seccion||'-')} · <b>Encargado de bodega:</b> ${ev.bodega?'Sí':'No'}</td><td><b>Tienda:</b> ${esc(ev.tienda)}</td><td><b>Período:</b> ${esc(periodoTxt(ev.periodo))}</td></tr></table>
   <table class="blk"><tr><th colspan="4">C1. RESULTADOS COMERCIALES (25%)</th></tr><tr><th>Presupuesto de ventas</th><th>Venta real</th><th>% Cumplimiento</th><th>Puntaje obtenido</th></tr>
    <tr><td class="c">${money(V.presupuesto)}</td><td class="c">${money(V.venta)}</td><td class="c"><b>${V.cumplimiento??0}%</b></td><td class="c"><b>${V.puntaje??0}%</b> de 25%</td></tr></table>
   <table class="blk"><tr><th style="width:47%">FACTORES</th><th style="width:7%">NO</th><th style="width:7%">SI</th><th style="width:8%">% Cumpl.</th><th style="width:8%">% Equiv.</th><th>Observaciones</th></tr>
-   ${filas}<tr class="tot"><td class="r">TOTAL (incluye resultados comerciales)</td><td></td><td></td><td class="c">${ev.calificacionFinal}%</td><td class="c">100%</td><td></td></tr></table>
+   ${filas}<tr class="tot"><td class="r">TOTAL (incluye resultados comerciales${ev.bodega?` y bodega: puntos sobre ${100+PESO_BOD}, llevados a %`:''})</td><td></td><td></td><td class="c">${ev.calificacionFinal}%</td><td class="c">100%</td><td></td></tr>${ev.bodega&&ev.bodegaPct!=null?`<tr><td class="r"><b>Estado de la bodega</b></td><td></td><td></td><td class="c"><b>${ev.bodegaPct}%</b></td><td></td><td></td></tr>`:''}</table>
   <table class="blk"><tr><td style="width:70%"><b>Acción recomendada:</b> ${esc(ev.accion)||'—'}</td><td class="r"><b>Calificación final</b></td><td class="c final">${ev.calificacionFinal}%</td></tr></table>
   ${comps}
   <div class="firmas" style="grid-template-columns:1fr 1fr;margin-top:6px">${firma(ev.firmas&&ev.firmas.colaborador,(ev.nombres+' '+ev.apellidos).trim(),'Firma del colaborador')}${firma(ev.firmas&&ev.firmas.responsable,ev.evaluador,'Firma del administrador de tienda')}</div>
@@ -2699,7 +2713,7 @@ function docHTMLColab(ev){
    <div class="qrbox"><div class="qr">${window.qrSVG(qrTexto(ev),118)}</div><div style="font-size:8.5px;max-width:105px">Escanee con la cámara para verificar fecha, hora exacta, ubicación y calificación.</div></div></div></div>`;
 }
 function textoCorreoColab(ev){const V=ev.ventas||{};
-  const malos=ITEMS_C.filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n}${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
+  const malos=(ev.bodega?[...ITEMS_C,...ITEMS_B]:ITEMS_C).filter(i=>ev.respuestas[i.k]==='NO').map(i=>`- ${i.n}${ev.observaciones[i.k]&&ev.observaciones[i.k]!=='S/N'?': '+ev.observaciones[i.k]:''}`);
   const comps=(ev.compromisos||[]).map(x=>`${x.n}. ${x.texto}\n   Responsable: ${x.responsable||'-'} | Resultados: ${fmtLocal(x.fecha)}`);
   return `Evaluación de colaborador — tienda ${ev.tienda}\n\nColaborador: ${ev.nombres} ${ev.apellidos}\nSección: ${ev.seccion||'-'}\nPeríodo: ${periodoTxt(ev.periodo)}\nEvaluador: ${ev.evaluador}\nFecha: ${fmtFecha(ev.fechaHora)} ${fmtHora(ev.fechaHora)}\n\nVENTAS: presupuesto ${money(V.presupuesto)} · venta ${money(V.venta)} · cumplimiento ${V.cumplimiento}%\nCALIFICACIÓN FINAL: ${ev.calificacionFinal}%\n\nASPECTOS A MEJORAR:\n${malos.length?malos.join('\n'):'- Ninguno'}\n\nACCIÓN RECOMENDADA:\n${ev.accion||'-'}\n\nCOMPROMISOS:\n${comps.length?comps.join('\n'):'- Sin compromisos'}\n\nID: ${ev.id}\n\nSaludos,\n${ev.evaluador}`;
 }
@@ -2732,12 +2746,12 @@ function usrDe(p){return p?usrActivos().find(u=>u.personaId===p.id):null}
 function pintarGente(){
   if(!$('gLista'))return;const r=ROL(),resp=r==='responsable';
   const pv=$('gPerfil').value,tv=$('gTienda').value;
-  $('gPerfil').innerHTML=resp?'<option value="colaborador">Vendedores</option>':'<option value="">Todos los perfiles</option><option value="responsable">Administradores de tienda</option><option value="bodega">Operadores de bodega</option><option value="colaborador">Vendedores</option><option value="director">Directores</option><option value="evaluador">Evaluadores</option><option value="admin">Administradores generales</option>';
-  $('gPerfil').value=resp?'colaborador':pv;$('gPerfil').classList.toggle('hidden',resp);
+  $('gPerfil').innerHTML=resp?'<option value="">Vendedores y bodega</option><option value="colaborador">Vendedores</option><option value="bodega">Operadores de bodega</option>':'<option value="">Todos los perfiles</option><option value="responsable">Administradores de tienda</option><option value="bodega">Operadores de bodega</option><option value="colaborador">Vendedores</option><option value="director">Directores</option><option value="evaluador">Evaluadores</option><option value="admin">Administradores generales</option>';
+  $('gPerfil').value=pv;
   const MT=misTiendas();$('gTienda').innerHTML=(MT.length>1||!resp?'<option value="">Todas las tiendas</option>':'')+MT.map(t=>`<option>${esc(t)}</option>`).join('');$('gTienda').value=MT.includes(tv)?tv:($('gTienda').options[0]||{}).value||'';
-  $('btnNewGente').textContent=resp?'+ Nuevo colaborador':'+ Nueva persona';
-  $('gDesc').textContent=resp?'Registra aquí a los colaboradores de tu tienda para poder evaluarlos.':'Todas las personas en un solo lugar: responsables, colaboradores, directores, evaluadores y administradores. Si alguien necesita entrar a la app, actívale el acceso y ponle usuario y contraseña.';
-  let L=buscarPersonas($('gQ').value,$('gTienda').value,$('gPerfil').value);if(resp)L=L.filter(x=>MT.includes(x.tienda));
+  $('btnNewGente').textContent='+ Nueva persona';
+  $('gDesc').textContent=resp?'Registra a los vendedores y operadores de bodega de tu tienda. Al operador de bodega puedes darle usuario y contraseña.':'Todas las personas en un solo lugar: responsables, colaboradores, directores, evaluadores y administradores. Si alguien necesita entrar a la app, actívale el acceso y ponle usuario y contraseña.';
+  let L=buscarPersonas($('gQ').value,$('gTienda').value,$('gPerfil').value);if(resp)L=L.filter(x=>MT.includes(x.tienda)&&PRESP.includes(perfilDe(x)));
   $('gLista').innerHTML=(L.slice(0,300).map(x=>{const u=usrDe(x);const sub=[perfilDe(x)==='director'?(x.correo||'sin correo'):x.tienda,x.seccion,x.cedula].filter(Boolean).join(' · ');
     return `<div class="lrow"><div class="i"><b>${esc(nomPer(x)||x.nombres)} <span class="rolp">${PERFILES[perfilDe(x)]}</span>${u?` <span class="rolp" style="background:#e8f5e9;color:#1f9d55">🔑 ${esc(u.usuario)}</span>${u.cambiar?' <span class="rolp" style="background:#f3fbe6;color:#b4540a">clave temporal</span>':''}`:''}</b><span>${esc(sub)}</span>${u&&ROL()==='admin'?'<br>'+estadoUsuarioHTML(u):''}</div><button class="ico" data-pe="${x.id}">✏️</button><button class="ico" data-pd="${x.id}">🗑️</button></div>`}).join('')||'<p class="desc">No hay personas con ese filtro.</p>')+(L.length>300?`<p class="desc">Mostrando 300 de ${L.length}. Use el buscador.</p>`:'');
   if(r==='admin')adminPuede().then(ok=>{$('gWarn').innerHTML=ok?'':'<div style="background:#f3fbe6;border:1px solid #c5e59a;border-radius:10px;padding:10px;font-size:13px;margin:6px 0">Para dar acceso con usuario y contraseña falta un permiso de la clave de la nube.</div>'});
@@ -2745,20 +2759,21 @@ function pintarGente(){
 $('gQ').oninput=pintarGente;$('gPerfil').onchange=pintarGente;$('gTienda').onchange=pintarGente;
 $('btnNewGente').onclick=()=>abrirPersona(null,{perfil:ROL()==='responsable'?'colaborador':($('gPerfil').value||'responsable'),tienda:$('gTienda').value||(ROL()==='responsable'?misTiendas()[0]:'')});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-pe]'),d=e.target.closest('[data-pd]');if(a)abrirPersona(a.dataset.pe);if(d)borrarPersona(d.dataset.pd)});
+const PRESP=['colaborador','bodega'];// lo que un administrador de tienda puede crear (solo en su tienda)
 function abrirPersona(id,pre,despues){
   const resp=ROL()==='responsable',adm=ROL()==='admin';
   const x=id?CONF.personas.find(o=>o.id===id):Object.assign({perfil:'responsable',cargo:''},pre||{});if(!x)return;
-  if(resp&&(perfilDe(x)!=='colaborador'))return;
+  if(resp&&(!PRESP.includes(perfilDe(x))||(x.tienda&&!misTiendas().includes(x.tienda))))return;
   const u=usrDe(x);const perf=perfilDe(x);
   $('usTit').textContent=id?'Editar '+(nomPer(x)||x.nombres):(resp?'Nuevo colaborador':'Nueva persona');$('usErr').textContent='';$('usOk').textContent='Guardar';$('usOk').disabled=false;
   const tiendaSel=lista=>`<select class="t" id="pT"><option value="">— Seleccione la tienda —</option>${lista.map(t=>`<option ${x.tienda===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
-  $('usBody').innerHTML=`${resp?'':`<label class="f">Perfil</label><select class="t" id="pP">${Object.entries(PERFILES).map(([k,v])=>`<option value="${k}" ${perf===k?'selected':''}>${v}</option>`).join('')}</select>`}
+  $('usBody').innerHTML=`${`<label class="f">Perfil</label><select class="t" id="pP">${Object.entries(PERFILES).filter(([k])=>!resp||PRESP.includes(k)).map(([k,v])=>`<option value="${k}" ${perf===k?'selected':''}>${v}</option>`).join('')}</select>`}
    <div class="row2"><div><label class="f">Nombres *</label><input class="t" id="pN" value="${esc(x.nombres||'')}" autocomplete="off"></div><div><label class="f">Apellidos</label><input class="t" id="pA" value="${esc(x.apellidos||'')}" autocomplete="off"></div></div>
    <label class="f">Cédula</label><input class="t" id="pC" value="${esc(x.cedula||'')}" inputmode="numeric" autocomplete="off">
    <div id="wT"><label class="f" id="lT">Tienda *</label>${tiendaSel(resp?misTiendas():lugaresAct())}</div>
    <div id="wS"><label class="f">Sección o área a cargo</label><input class="t" id="pS" value="${esc(x.seccion||'')}" autocomplete="off"></div>
    <div id="wM"><label class="f" id="lM">Correo</label><input class="t" id="pM" type="email" value="${esc(x.correo||'')}" autocomplete="off"></div>
-   ${adm?`<div id="wA" style="border-top:1px solid var(--ln);margin-top:12px;padding-top:8px">
+   ${(adm||resp)?`<div id="wA" style="border-top:1px solid var(--ln);margin-top:12px;padding-top:8px">
      <label class="chk" style="font-size:15px"><input type="checkbox" id="pAcc" ${u?'checked':''}> <b>Tiene acceso a la app (usuario y contraseña)</b></label>
      <div id="wU" style="${u?'':'display:none'}">
        <div class="row2"><div><label class="f">Usuario</label><input class="t" id="pU" value="${esc(u?u.usuario:'')}" ${u?'disabled':''} autocapitalize="none" autocomplete="off"></div>
@@ -2766,25 +2781,26 @@ function abrirPersona(id,pre,despues){
        <div id="wV"><label class="f">Tiendas que puede ver</label>${tiendasCheck(u&&u.rol==='director'?u.tiendas:(x.tiendas||[]))}</div>
      </div></div>`:''}`;
   bindTodas();
-  const vis=()=>{const p=resp?'colaborador':$('pP').value;
+  const vis=()=>{const p=$('pP').value;
     $('wT').style.display=(p==='responsable'||p==='colaborador'||p==='bodega')?'':'none';$('lT').textContent=p==='bodega'?'Bodega o tienda donde trabaja *':'Tienda *';$('wS').style.display=p==='colaborador'?'':'none';
     $('wM').style.display=p==='colaborador'?'none':'';$('lM').textContent=p==='director'?'Correo (recibe copia de las evaluaciones)':'Correo (opcional)';
     if($('wA')){$('wA').style.display=p==='colaborador'?'none':'';$('wV').style.display=p==='director'?'':'none'}};
-  if(!resp)$('pP').onchange=vis;vis();
+  $('pP').onchange=vis;vis();
   const sugerir=()=>{if($('pU')&&!$('pU').disabled&&!$('pU')._t)$('pU').value=slug(($('pN').value.split(' ')[0]||'')+' '+($('pA').value.split(' ')[0]||'')).replace(/-/g,'').slice(0,20)};
   $('pN').oninput=sugerir;$('pA').oninput=sugerir;if($('pU'))$('pU').oninput=()=>$('pU')._t=1;
   if($('pAcc'))$('pAcc').onchange=()=>{$('wU').style.display=$('pAcc').checked?'':'none';sugerir()};
   $('mUser').classList.add('show');setTimeout(()=>$('pN').focus(),100);
   $('usOk').onclick=async()=>{
-    const p=resp?'colaborador':$('pP').value;
+    const p=$('pP').value;
     const v={perfil:p,nombres:$('pN').value.trim(),apellidos:$('pA').value.trim(),cedula:$('pC').value.trim(),cargo:{bodega:'Operador de bodega',responsable:'Administrador de tienda',colaborador:'Vendedor/a',director:'Director',evaluador:'Evaluador',admin:'Administrador general'}[p],
       tienda:(p==='responsable'||p==='colaborador'||p==='bodega')?$('pT').value:'',seccion:p==='colaborador'?$('pS').value.trim():'',correo:p==='colaborador'?'':$('pM').value.trim()};
     const err=m=>{$('usErr').textContent=m};
+    if(resp&&(!PRESP.includes(p)||!misTiendas().includes(v.tienda)))return err('Solo puedes registrar vendedores y operadores de bodega de tu tienda');
     if(!v.nombres)return err('Escriba los nombres');
-    if((p==='responsable'||p==='colaborador'||p==='bodega')&&!v.tienda)return err('Seleccione la tienda o bodega');if(p==='bodega'&&!($('pAcc')&&$('pAcc').checked)&&adm&&!u)return err('El operador de bodega necesita acceso: marca "Tiene acceso a la app"');
+    if((p==='responsable'||p==='colaborador'||p==='bodega')&&!v.tienda)return err('Seleccione la tienda o bodega');if(p==='bodega'&&!($('pAcc')&&$('pAcc').checked)&&(adm||resp)&&!u)return err('El operador de bodega necesita acceso: marca "Tiene acceso a la app"');
     if(v.correo&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.correo))return err('Correo no válido');
     if(v.cedula&&activos('personas').some(o=>o.id!==id&&o.cedula===v.cedula))return err('Ya existe una persona con esa cédula');
-    const acc=adm&&p!=='colaborador'&&$('pAcc')&&$('pAcc').checked;let un='',pw='';
+    const acc=(adm||resp)&&p!=='colaborador'&&$('pAcc')&&$('pAcc').checked;let un='',pw='';
     if(acc){un=($('pU').value||'').trim().toLowerCase();pw=$('pK').value;
       if(!u){if(!/^[a-z0-9.]{3,20}$/.test(un))return err('Usuario: letras minúsculas y números (3 a 20)');if(USUARIOS.some(o=>o.usuario===un&&!o.del))return err('Ese usuario ya existe');if(pw.length<6)return err('La contraseña debe tener al menos 6 caracteres')}
       else if(pw&&pw.length<6)return err('La contraseña debe tener al menos 6 caracteres');}
@@ -2796,7 +2812,7 @@ function abrirPersona(id,pre,despues){
       else{obj=Object.assign({id:nid('p')},v,{upd:Date.now()});CONF.personas.push(obj)}
       if(p==='director')obj.tiendas=acc?leerTiendas():[];
       await guardarConf(true);
-      if(adm){let cu=false;const cur=usrDe(obj);
+      if(adm||resp){let cu=false;const cur=usrDe(obj);
         if(acc){let o=cur;if(!o){o={usuario:un,personaId:obj.id};USUARIOS=USUARIOS.filter(z=>z.usuario!==un);USUARIOS.push(o)}
           Object.assign(o,{nombre:(obj.nombres+' '+obj.apellidos).trim(),rol:p,tiendas:(p==='responsable'||p==='bodega')?[obj.tienda]:p==='director'?leerTiendas():[],upd:Date.now()});delete o.del;
           if(pw){o.cred=await cifrar(getTok(),pw);o.cambiar=true}cu=true}
@@ -2812,11 +2828,11 @@ function abrirPersona(id,pre,despues){
   };
 }
 async function borrarPersona(id){const x=CONF.personas.find(o=>o.id===id);if(!x)return;const u=usrDe(x);
-  if(ROL()==='responsable'&&(perfilDe(x)!=='colaborador'||!misTiendas().includes(x.tienda)))return;
+  if(ROL()==='responsable'&&(!PRESP.includes(perfilDe(x))||!misTiendas().includes(x.tienda)))return;
   if(u&&u.usuario===(getSes()||{}).usuario){toast('No puedes eliminar tu propio usuario');return}
   if(!confirm(`¿Eliminar a ${nomPer(x)||x.nombres}?${u?'\n\nTambién se quitará su acceso a la app.':''}\n\nSus evaluaciones ya hechas NO se borran.`))return;
   x.del=true;x.upd=Date.now();await guardarConf(true);
-  if(u&&ROL()==='admin'){u.del=true;delete u.cred;u.upd=Date.now();try{await guardarUsuarios()}catch(e){toast('No se pudo quitar el acceso: '+e.message)}}
+  if(u&&(ROL()==='admin'||ROL()==='responsable')){u.del=true;delete u.cred;u.upd=Date.now();try{await guardarUsuarios()}catch(e){toast('No se pudo quitar el acceso: '+e.message)}}
   refrescarListas();pintarGente();toast('Eliminado');sincronizar(true)}
 // ---- Migración: une personal, colaboradores, directores y usuarios en "personas" ----
 async function migrarPersonas(){
@@ -2865,7 +2881,17 @@ function ptDeudaDe(t,f,pid){
 async function ptCargarTodo(){PT.all=(await idbAll()).filter(e=>e.tipo==='pare')}
 function ptNuevo(t,f){return {id:'PT-'+slug(t)+'-'+f,tipo:'pare',tienda:t,fecha:f,fechaHora:f+'T12:00:00',cfg:ptCfgDefecto(t),vend:[],upd:Date.now()}}
 function ptAlinear(rec){const n=ptCortes(rec.cfg).length;rec.vend.forEach(v=>{v.extras=v.extras||['',''];v.per=v.per||[];while(v.per.length<n)v.per.push({meta:{},real:{}});if(v.per.length>n)v.per.length=n})}
-async function abrirPare(){
+// Versión 23-28 podía crear vendedores desde la imagen: se fusionan con el vendedor original (registrado por el administrador)
+async function limpiarDupOCR(){const r=ROL();if(!(r==='admin'||r==='responsable'))return;
+  const dup=activos('personas').filter(x=>perfilDe(x)==='colaborador'&&!('cargo' in x)&&Array.isArray(x.ocr)&&(r==='admin'||misTiendas().includes(x.tienda)));if(!dup.length)return;
+  let cambio=false;const mapa={};
+  for(const d of dup){const orig=activos('personas').filter(o=>o.id!==d.id&&perfilDe(o)==='colaborador'&&o.tienda===d.tienda&&!dup.includes(o)).map(o=>[ocrSim(d.ocr[0]||nomPer(d),nomPer(o)),o]).sort((a,b)=>b[0]-a[0])[0];
+    if(!orig||orig[0]<.6)continue;const o=orig[1];o.ocr=[...new Set([...(o.ocr||[]),...d.ocr])];o.upd=Date.now();d.del=true;d.upd=Date.now();mapa[d.id]=o;cambio=true}
+  if(!cambio)return;try{await guardarConf(true)}catch(x){}
+  const T=(await idbAll()).filter(e=>e.tipo==='pare'&&(e.vend||[]).some(v=>mapa[v.pid]));
+  for(const e of T){e.vend.forEach(v=>{const o=mapa[v.pid];if(o){v.pid=o.id;v.nombre=nomPer(o)||o.nombres}});const vis=new Set();e.vend=e.vend.filter(v=>!vis.has(v.pid)&&vis.add(v.pid));e.upd=Date.now();e._sync=false;await idbPut(e)}
+  toast(`Se unieron ${Object.keys(mapa).length} vendedor(es) duplicados con su registro original ✓`,5000);sincronizar(true)}
+async function abrirPare(){try{await limpiarDupOCR()}catch(x){}
   await ptCargarTodo();const T=ptTiendas();
   const tv=$('ptTienda').value;$('ptTienda').innerHTML=T.map(t=>`<option>${esc(t)}</option>`).join('');$('ptTienda').value=T.includes(tv)?tv:T[0]||'';
   if(!$('ptFecha').value)$('ptFecha').value=hoyISO();
@@ -2918,7 +2944,7 @@ function ptRender(){
     $('ptPrev').onclick=()=>{PT.selV=Math.max(0,i-1);ptRender();ptFoco()};
     $('ptNext').onclick=()=>{if(i<rec.vend.length-1){PT.selV=i+1;ptRender();ptFoco()}else{const f=rec.vend.length-nHechos;toast(f?`Faltan ${f} asesor(es) por completar en este horario.`:'✓ Pare técnico de este horario completo.',4000);$('ptRes').scrollIntoView({behavior:'smooth'})}};}
   $('ptAdd').classList.toggle('hidden',!ed);$('ptFotoW').classList.toggle('hidden',!ed);
-  $('ptBorrarDia').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local')||!PT.all.some(r=>r.id===rec.id));
+  $('ptBorrarDia').classList.toggle('hidden',!puedeBorrar(rec)||!PT.all.some(r=>r.id===rec.id));
   ptCalc();
 }
 function ptCalc(){
@@ -2951,7 +2977,7 @@ document.addEventListener('click',e=>{const d=e.target.closest&&e.target.closest
 $('ptBorrarDia').onclick=async()=>{const r=PT.all.find(x=>x.id===PT.rec.id);if(!r)return;if(!confirm(`¿Borrar el pare técnico de ${r.tienda} del ${fmtFecha(r.fecha+'T12:00')}?\n\nSe borra para todos. No se puede deshacer.`))return;if(await borrarRegistro(r)){PT.all=PT.all.filter(x=>x.id!==r.id);ptCambiar()}};
 $('ptTienda').onchange=ptCambiar;$('ptFecha').onchange=ptCambiar;
 $('docBorrar').onclick=async()=>{const ev=currentDoc;if(!ev)return;if(!confirm('¿Eliminar esta evaluación de forma definitiva?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.'))return;if(await borrarRegistro(ev))show('hist')};
-let PT_HOJA=null;function ptMostrarHoja(r){PT_HOJA=r;const c=JSON.parse(JSON.stringify(r));ptAlinear(c);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(c);$('ptBorrarHoja').classList.toggle('hidden',!((ROL()==='admin'||ROL()==='local')&&PT.all.some(x=>x.id===r.id)));show('ptdoc');window.scrollTo(0,0)}
+let PT_HOJA=null;function ptMostrarHoja(r){PT_HOJA=r;const c=JSON.parse(JSON.stringify(r));ptAlinear(c);$('ptDoc').innerHTML=`<style>${PT_CSS}</style>`+ptHoja(c);$('ptBorrarHoja').classList.toggle('hidden',!(puedeBorrar(r)&&PT.all.some(x=>x.id===r.id)));show('ptdoc');window.scrollTo(0,0)}
 $('ptBorrarHoja').onclick=async()=>{const r=PT_HOJA&&PT.all.find(x=>x.id===PT_HOJA.id);if(!r)return;if(!confirm(`¿Eliminar el pare técnico de ${r.tienda} del ${fmtFecha(r.fecha+'T12:00')}?\n\nSe borra de la app y de la nube para todos. No se puede deshacer.`))return;
   if(await borrarRegistro(r)){PT.all=PT.all.filter(x=>x.id!==r.id);if(PT.rec&&PT.rec.id===r.id)PT.rec=null;if(PT_DESDE_HIST){PT_DESDE_HIST=false;show('pthist')}else{show('pare')}}};
 $('ptAdd').onclick=()=>{const rec=PT.rec,ya=new Set(rec.vend.map(v=>v.pid));const L=ptVendedores(rec.tienda).filter(x=>!ya.has(x.id));
@@ -2985,7 +3011,8 @@ const ocrNorm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCa
 function ocrLev(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let d=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){let pr=d[0];d[0]=i;for(let j=1;j<=n;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,pr+(a[i-1]===b[j-1]?0:1));pr=t}}return d[n]}
 function ocrSim(a,b){a=ocrNorm(a);b=ocrNorm(b);if(!a||!b)return 0;const r=1-ocrLev(a,b)/Math.max(a.length,b.length);
   const A=a.split(' '),B=b.split(' ');let hit=0;A.forEach(t=>{if(B.some(u=>t.length>1&&u.length>1&&1-ocrLev(t,u)/Math.max(t.length,u.length)>=.75))hit++});
-  return Math.max(r,hit/Math.max(A.length,B.length))}
+  const cub=hit>=Math.min(2,A.length)?hit/A.length:0;
+  return Math.max(r,hit/Math.max(A.length,B.length),cub*.95)}
 function ocrNum(t){t=t.replace(/[\s$S]/g,'');const neg=/-/.test(t);t=t.replace(/-/g,'');const m=t.match(/^(\d{1,3}(?:[.,]\d{3})*|\d+)([.,]\d{2})$/);if(!m)return null;return (neg?-1:1)*parseFloat(m[1].replace(/[.,]/g,'')+'.'+m[2].slice(1))}
 const OCR_NO=/^(VENDEDOR|TOTAL|PPTO|VENTA|DIFERENCIA|CUMPLIMIENTO|ARTICULO|PRODUCTO|TICKET|FACTURA|CONVERSION|VISITA)/;
 function ocrLeer(txt){const out={fecha:null,tienda:null,filas:[]};const L=String(txt).split(/\n/).map(l=>l.trim()).filter(Boolean);
@@ -3025,12 +3052,12 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
   const avF=R.fecha?(R.fecha===rec.fecha?`<p class="ocrok">📅 Fecha de la imagen: ${fmtFecha(R.fecha+'T12:00')} ✓</p>`:`<p class="ocrmal">⚠️ La imagen es del <b>${fmtFecha(R.fecha+'T12:00')}</b> y el pare técnico es del <b>${fmtFecha(rec.fecha+'T12:00')}</b>. Revisa que sea la imagen correcta.</p>`):'<p class="ocrmal">⚠️ No pude leer la fecha de la imagen.</p>';
   const avT=R.tienda&&R.tienda!==rec.tienda?`<p class="ocrmal">⚠️ La imagen parece de <b>${esc(R.tienda)}</b>, no de ${esc(rec.tienda)}.</p>`:'';
   const tit=t=>t.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
-  const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+(r.adm?'':`<option value="n" ${sel?'':'selected'}>➕ Crear vendedor: ${esc(tit(r.nombre))}</option>`);
+  const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+'';
   const falt=rec.vend.filter((v,i)=>!F.some(r=>r.dest==='v'+i)).map(v=>v.nombre);
   $('usTit').textContent='📷 Ventas leídas de la imagen';
   $('usBody').innerHTML=`${avF}${avT}<label class="f"><b>¿A qué hora corresponde este reporte?</b></label><select class="t" id="ocrCorte"><option value="">— Elige la hora —</option>${ops.map(([v,l])=>`<option value="${v}">${l}${String(v)===String(auto)?' · sugerido':''}</option>`).join('')}</select>
     <p class="desc" style="margin:10px 0 4px">Revisa que cada número sea igual al de la imagen. Si alguno está mal, corrígelo aquí.</p>
-    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.adm?' <span class="desc" style="display:inline">· administradora de tienda, no participa en el pare</span>':r.dest?'':' <span class="ocrmal" style="display:inline">· no está registrado</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
+    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.adm?' <span class="desc" style="display:inline">· administradora de tienda, no participa en el pare</span>':r.dest?'':' <span class="ocrmal" style="display:inline">· no lo encontré: elígelo de la lista</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
     ${falt.length?`<p class="desc">No aparecen en la imagen: ${falt.map(esc).join(', ')}</p>`:''}<p class="ocrmal hidden" id="ocrAv"></p>`;
   $('usOk').disabled=false;
   const revisar=()=>{const k=$('ocrCorte').value;if(k===''){$('ocrAv').classList.add('hidden');return}let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
@@ -3042,7 +3069,6 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
   $('usOk').onclick=async()=>{const k=$('ocrCorte').value;if(k===''){$('usErr').textContent='Elige a qué hora corresponde el reporte.';$('ocrCorte').focus();return}const ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0,conf=false;
     const aprender=(x,nm)=>{if(!x)return;x.ocr=x.ocr||[];if(!x.ocr.includes(nm)){x.ocr.push(nm);x.upd=Date.now();conf=true}};
     F.forEach((r,q)=>{let d=document.querySelector(`[data-ocrd="${q}"]`).value;const val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||val==null)return;
-      if(d==='n'){const pa=tit(r.nombre).split(' '),x={id:nid('p'),nombres:pa[0],apellidos:pa.slice(1).join(' '),perfil:'colaborador',tienda:rec.tienda,ocr:[r.nombre],upd:Date.now()};CONF.personas.push(x);conf=true;d='p'+x.id}
       if(d.startsWith('p')){const id=d.slice(1),x=CONF.personas.find(o=>o.id===id);if(!x)return;rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]});ptAlinear(rec);d='v'+(rec.vend.length-1)}
       const v=rec.vend[+d.slice(1)];if(!v)return;aprender(per(v.pid),r.nombre);if(k==='ini')v.ini=val;else v.per[+k].real.v=val;v.hr=v.hr||{};if(!v.hr[key])v.hr[key]=ahora;n++});
     if(!n){$('usErr').textContent='No hay ningún vendedor asignado.';return}
@@ -3597,8 +3623,10 @@ async function revisarLlave(tree,repo){if(!esSuper()||!LLAVE||window._llaveOk)re
 const BORR_PATH='config/borrados.json';let BORRADOS=new Set();
 (async()=>{try{BORRADOS=new Set((await kvGet('borrados'))||[])}catch(e){}})();
 async function idbDel(id){const d=await idb();return new Promise(res=>{const t=d.transaction('ev','readwrite');t.objectStore('ev').delete(id);t.oncomplete=()=>res();t.onerror=()=>res()})}
+// Admin general: todo. Administrador de tienda: evaluaciones de vendedores y pare técnico de su tienda.
+function puedeBorrar(e){const r=ROL();if(r==='admin'||r==='local')return true;return r==='responsable'&&!!e&&(e.tipo==='colaborador'||e.tipo==='pare')&&misTiendas().includes(e.tienda)}
 async function borrarRegistro(e){
-  if(!(ROL()==='admin'||ROL()==='local')){toast('Solo el administrador general puede borrar');return false}
+  if(!puedeBorrar(e)){toast('No tienes permiso para borrar este registro');return false}
   toast('Borrando…');
   try{if(getTok()){
     const r=await leerRemoto(BORR_PATH);const ids=new Set((r&&r.obj.ids)||[]);ids.add(e.id);
@@ -3610,7 +3638,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v27';
+let TREE0=[],ESTADOS={};const VERSION_APP='v30';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
