@@ -205,7 +205,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v25</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v26</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -2874,6 +2874,7 @@ async function ptCambiar(){await ptCargarTodo();const t=$('ptTienda').value,f=$(
   if(!t){$('ptVend').innerHTML='<div class="card"><p class="desc">No hay tiendas registradas.</p></div>';return}
   PT.rec=PT.all.find(r=>r.id==='PT-'+slug(t)+'-'+f)||ptNuevo(t,f);
   if(PT.rec.fecha>=hoyISO()&&String(PT.rec.cfg.horas)!==String(PT_HORAS)&&ptPuedeEditar(PT.rec)){PT.rec.cfg=ptCfgDefecto(t);if(PT.all.some(r=>r.id===PT.rec.id))setTimeout(ptGuardar,0)}
+  if(ptPuedeEditar(PT.rec))PT.rec.vend=PT.rec.vend.filter(v=>{const x=CONF.personas.find(o=>o.id===v.pid);return !(x&&perfilDe(x)==='responsable')});
   ptAlinear(PT.rec);
   // la deuda se recalcula con los días anteriores
   PT.rec.vend.forEach(v=>v.deuda=ptDeudaDe(t,f,v.pid));
@@ -3007,20 +3008,24 @@ function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
   const usados=new Set();
   // 1º: nombre ya aprendido (cómo sale en la imagen) · 2º: parecido del nombre, sin importar el orden
   const sc=(r,c)=>{const x=per(c.pid);return x&&(x.ocr||[]).includes(r.nombre)?2:ocrSim(r.nombre,c.n)};
-  const F=R.filas.map(r=>({...r,dest:''}));
+  // La administradora de la tienda supervisa: no participa en el pare técnico
+  const ses=getSes(),adms=activos('personas').filter(x=>perfilDe(x)==='responsable'&&(x.tienda===rec.tienda||(Array.isArray(x.tiendas)&&x.tiendas.includes(rec.tienda)))).map(x=>({n:nomPer(x),ocr:x.ocr||[]}));
+  if(ses&&ses.nombre)adms.push({n:ses.nombre,ocr:[]});
+  const esAdm=r=>adms.some(a=>a.ocr.includes(r.nombre)||ocrSim(r.nombre,a.n)>=.75);
+  const F=R.filas.map(r=>({...r,dest:'',adm:esAdm(r)}));
   const pares=[];F.forEach((r,q)=>cand.forEach(c=>pares.push([sc(r,c),q,c])));pares.sort((a,b)=>b[0]-a[0]);
-  const fUsada=new Set();pares.forEach(([x,q,c])=>{if(x<.6||fUsada.has(q)||usados.has(c.k))return;F[q].dest=c.k;fUsada.add(q);usados.add(c.k)});
+  const fUsada=new Set();pares.forEach(([x,q,c])=>{if(F[q].adm||x<.6||fUsada.has(q)||usados.has(c.k))return;F[q].dest=c.k;fUsada.add(q);usados.add(c.k)});
   const auto=ocrCorteAuto(rec);
   const ops=[['ini',`Reporte de las ${ptHH(C[0][0])} (inicio)`],...C.map(([a,b],j)=>[j,j===C.length-1?`Reporte del cierre (${ptHH(b)})`:`Reporte de las ${ptHH(b)}`])];
   const avF=R.fecha?(R.fecha===rec.fecha?`<p class="ocrok">📅 Fecha de la imagen: ${fmtFecha(R.fecha+'T12:00')} ✓</p>`:`<p class="ocrmal">⚠️ La imagen es del <b>${fmtFecha(R.fecha+'T12:00')}</b> y el pare técnico es del <b>${fmtFecha(rec.fecha+'T12:00')}</b>. Revisa que sea la imagen correcta.</p>`):'<p class="ocrmal">⚠️ No pude leer la fecha de la imagen.</p>';
   const avT=R.tienda&&R.tienda!==rec.tienda?`<p class="ocrmal">⚠️ La imagen parece de <b>${esc(R.tienda)}</b>, no de ${esc(rec.tienda)}.</p>`:'';
   const tit=t=>t.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
-  const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+`<option value="n" ${sel?'':'selected'}>➕ Crear vendedor: ${esc(tit(r.nombre))}</option>`;
+  const opV=(sel,r)=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('')+(r.adm?'':`<option value="n" ${sel?'':'selected'}>➕ Crear vendedor: ${esc(tit(r.nombre))}</option>`);
   const falt=rec.vend.filter((v,i)=>!F.some(r=>r.dest==='v'+i)).map(v=>v.nombre);
   $('usTit').textContent='📷 Ventas leídas de la imagen';
   $('usBody').innerHTML=`${avF}${avT}<label class="f"><b>¿A qué hora corresponde este reporte?</b></label><select class="t" id="ocrCorte"><option value="">— Elige la hora —</option>${ops.map(([v,l])=>`<option value="${v}">${l}${String(v)===String(auto)?' · sugerido':''}</option>`).join('')}</select>
     <p class="desc" style="margin:10px 0 4px">Revisa que cada número sea igual al de la imagen. Si alguno está mal, corrígelo aquí.</p>
-    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.dest?'':' <span class="ocrmal" style="display:inline">· no está registrado</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
+    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}${r.adm?' <span class="desc" style="display:inline">· administradora de tienda, no participa en el pare</span>':r.dest?'':' <span class="ocrmal" style="display:inline">· no está registrado</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest,r)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
     ${falt.length?`<p class="desc">No aparecen en la imagen: ${falt.map(esc).join(', ')}</p>`:''}<p class="ocrmal hidden" id="ocrAv"></p>`;
   $('usOk').disabled=false;
   const revisar=()=>{const k=$('ocrCorte').value;if(k===''){$('ocrAv').classList.add('hidden');return}let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
@@ -3600,7 +3605,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v25';
+let TREE0=[],ESTADOS={};const VERSION_APP='v26';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
