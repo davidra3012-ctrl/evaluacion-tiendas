@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-21T17:30:29.982Z",
+ "actualizado": "2026-11-22T00:55:54.034Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -62,6 +62,23 @@
     "iter": 310000,
     "ct": "lCiqvU7xk+5Zu9YpKwiVApVNYcjRHuicHRgqAHTABRFu7T/yRUggQVOfooiQymGySL6RVxDyOZjPxsvORCZt0/USgBJqQOT+5NeICmW5ujwrTJ9g/BMGmlRKsHAQOkhDdrNXbj6Jyt3naVUZCQ=="
    }
+  },
+  {
+   "usuario": "deysichimbo",
+   "personaId": "p-mwr4li2fietr",
+   "nombre": "DEYSI CHIMBO",
+   "rol": "responsable",
+   "tiendas": [
+    "San Luis"
+   ],
+   "upd": 1795308953306,
+   "cred": {
+    "salt": "0A74lHdtCY6FOlN7S9jsMQ==",
+    "iv": "tRjsAiAhk+FUP77d",
+    "iter": 310000,
+    "ct": "xHRXCtTIIHXMVHa5dZHuUb5GaL2v/cd3/drjU7xEJ9mtkRxL2OzekUR4sdlSA10Sbgp4LvZZ1VDZMo0GYPurpZ2wNukMWxwwGQeqexftN1/qjet0w3sTfsyaBSYZi0EnTRpgTN1En35frbDREg=="
+   },
+   "cambiar": true
   }
  ]
 }
