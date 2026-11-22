@@ -197,13 +197,14 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
   .paper{min-width:0;zoom:1!important}
   #view-form,#view-hist,#view-pare,#view-home{display:none!important}
 }
+.ocrbar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.ocrbar i{display:block;height:100%;width:0;background:#65a30d;transition:width .3s}.ocrf{border-top:1px solid #eee;padding:8px 0}.ocrn{font-weight:700;font-size:13px;margin-bottom:4px}.ocrok{color:#1f9d55;font-size:13px;margin:4px 0}.ocrmal{color:#c2410c;font-size:13px;margin:4px 0}
 .vok{display:block;color:#1f9d55;font-size:12px}.vwarn{display:block;color:#c2410c;font-size:12px}
 </style>
 </head>
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v22</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v23</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -235,6 +236,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
     <div id="ptAhora"></div>
     <details class="ptcfgw"><summary>⚙️ Horario de cortes</summary><div id="ptCfg"></div></details>
   </div>
+  <div class="card hidden" id="ptFotoW"><button class="btn" style="width:100%" id="ptFoto">📷 Cargar imagen de ventas</button><p class="desc" style="margin:6px 0 0">Sube la imagen del reporte de ventas: la app pone lo vendido por cada vendedor y tú solo colocas la nueva meta.</p><input type="file" id="ptFotoIn" accept="image/*" class="hidden"></div>
   <div id="ptVend"></div>
   <button class="btn" style="width:100%;margin:0 0 14px" id="ptAdd">+ Agregar vendedores</button>
   <div class="card" id="ptRes"></div>
@@ -2840,7 +2842,8 @@ const ptMon=n=>n==null?'—':'$'+Number(n).toLocaleString('es-EC',{minimumFracti
 const ptCant=n=>n==null?'—':Number(n).toLocaleString('es-EC',{maximumFractionDigits:2});
 const ptFmt=(k,n)=>k==='v'?ptMon(n):ptCant(n);
 const ptHH=h=>pad(Math.floor(h))+':'+pad(Math.round((h%1)*60));
-function ptCortes(c){const L=[];for(let h=c.inicio;h<c.cierre-1e-9;h+=c.cada)L.push([h,Math.min(h+c.cada,c.cierre)]);return L}
+function ptCortes(c){const L=[];if(Array.isArray(c.horas)&&c.horas.length){const H=c.horas.filter(h=>h<c.cierre).sort((a,b)=>a-b);H.forEach((h,i)=>L.push([h,i<H.length-1?H[i+1]:c.cierre]));if(L.length)return L}for(let h=c.inicio;h<c.cierre-1e-9;h+=c.cada)L.push([h,Math.min(h+c.cada,c.cierre)]);return L}
+function ptLeerHoras(t){return [...new Set(String(t||'').split(/[,;\s]+/).map(x=>{const m=x.match(/^(\d{1,2})(?:[:.h](\d{2}))?$/);return m?+m[1]+(+(m[2]||0))/60:null}).filter(h=>h!=null&&h>=6&&h<=23))].sort((a,b)=>a-b)}
 function ptTiendas(){const s=getSes(),r=ROL();if((r==='responsable'||r==='director')&&s&&Array.isArray(s.tiendas)&&s.tiendas.length)return s.tiendas;return tiendasAct()}
 function ptPuedeEditar(rec){const r=ROL();if(r==='admin'||r==='local')return true;if(r==='responsable')return misTiendas().includes(rec.tienda)&&rec.fecha>=hoyISO();return false}
 function ptVendedores(t){return activos('personas').filter(x=>perfilDe(x)==='colaborador'&&x.tienda===t).sort((a,b)=>nomPer(a).localeCompare(nomPer(b),'es'))}
@@ -2849,7 +2852,7 @@ function ptLabels(v){return {v:'Venta $',a:'Artículos',e0:v.extras[0]||'Libre 1
 function ptActivos(v){return PT_KEYS.filter(k=>k==='v'||k==='a'||(k==='e0'&&v.extras[0])||(k==='e1'&&v.extras[1]))}
 // Último valor real registrado (cierre parcial o final)
 function ptCierre(v,k){let c=null;for(const p of v.per)if(p&&p.real&&p.real[k]!=null)c=p.real[k];return c}
-function ptMinMeta(v,j,k){let m=null;for(let i=0;i<j;i++){const p=v.per[i]||{};for(const x of [p.meta&&p.meta[k],p.real&&p.real[k]])if(x!=null&&(m==null||x>m))m=x}return m}
+function ptMinMeta(v,j,k){let m=k==='v'&&v.ini!=null?v.ini:null;for(let i=0;i<j;i++){const p=v.per[i]||{};for(const x of [p.meta&&p.meta[k],p.real&&p.real[k]])if(x!=null&&(m==null||x>m))m=x}return m}
 function ptMetaFinal(v){let m=null;for(const p of v.per)if(p&&p.meta&&p.meta.v!=null)m=p.meta.v;return m}
 function ptObjTotal(v){const o=ptMetaFinal(v);return o==null&&!v.deuda?null:(o||0)+(v.deuda||0)}
 function ptDif(v){const o=ptObjTotal(v),c=ptCierre(v,'v');return o==null||c==null?null:c-o}
@@ -2880,10 +2883,12 @@ function ptRender(){
   const rec=PT.rec,ed=ptPuedeEditar(rec),C=ptCortes(rec.cfg),now=ptAhora(rec),dis=ed?'':'disabled';
   const hs=(id,val,ops)=>`<select class="t" id="${id}" ${dis}>${ops.map(([v,l])=>`<option value="${v}" ${+val===+v?'selected':''}>${l}</option>`).join('')}</select>`;
   $('ptCfg').innerHTML=`<div class="row2" style="grid-template-columns:1fr 1fr 1fr"><div><label class="f">Inicio</label>${hs('ptIni',rec.cfg.inicio,[8,9,10,11,12,13,14].map(h=>[h,ptHH(h)]))}</div>
-    <div><label class="f">Corte cada</label>${hs('ptCada',rec.cfg.cada,[[1,'1 hora'],[2,'2 horas'],[3,'3 horas']])}</div>
+    <div><label class="f">Corte cada</label>${hs('ptCada',rec.cfg.horas&&rec.cfg.horas.length?0:rec.cfg.cada,[[1,'1 hora'],[2,'2 horas'],[3,'3 horas'],[0,'Horas de reporte']])}</div>
     <div><label class="f">Cierre</label>${hs('ptFin',rec.cfg.cierre,[17,18,19,20,21,22].map(h=>[h,ptHH(h)]))}</div></div>
+    <div id="ptHorasW" class="${rec.cfg.horas&&rec.cfg.horas.length?'':'hidden'}"><label class="f">Horas en que la tienda reporta (antes del cierre)</label><input class="t" id="ptHoras" value="${(rec.cfg.horas||[]).map(ptHH).join(', ')}" placeholder="Ej.: 12, 14, 17, 19" ${dis}></div>
     <p class="desc" style="margin:6px 0 0">Cortes: ${C.map(([a,b])=>ptHH(a)+'–'+ptHH(b)).join(' · ')}</p>`;
-  ['ptIni','ptCada','ptFin'].forEach(id=>$(id).onchange=()=>{const n={inicio:+$('ptIni').value,cada:+$('ptCada').value,cierre:+$('ptFin').value};
+  ['ptIni','ptCada','ptFin','ptHoras'].forEach(id=>$(id).onchange=()=>{let n={inicio:+$('ptIni').value,cada:+$('ptCada').value,cierre:+$('ptFin').value};
+    if(n.cada===0){const H=ptLeerHoras($('ptHoras').value).filter(h=>h<n.cierre);if(!H.length){$('ptHorasW').classList.remove('hidden');if(id!=='ptHoras'){$('ptHoras').focus();return}toast('Escribe las horas, ej.: 12, 14, 17, 19');return}n={inicio:H[0],cada:rec.cfg.cada||3,cierre:n.cierre,horas:H}}
     if(n.cierre<=n.inicio){toast('El cierre debe ser después del inicio');ptRender();return}
     const tiene=rec.vend.some(v=>v.per.some(p=>Object.keys(p.meta||{}).length||Object.keys(p.real||{}).length));
     if(tiene&&!confirm('Ya hay metas registradas hoy. Al cambiar el horario, los cortes se reorganizan por orden. ¿Continuar?')){ptRender();return}
@@ -2894,13 +2899,14 @@ function ptRender(){
   $('ptVend').innerHTML=rec.vend.map((v,i)=>{const L=ptLabels(v),K=ptActivos(v);
     return `<div class="card ptv"><div class="ptvh"><b>🧑‍💼 ${esc(v.nombre)}</b>${ed?`<button class="ico" data-ptdel="${i}" title="Quitar">🗑️</button>`:''}</div>
     <label class="f">Deuda de días anteriores</label><div class="ptdeuda ${v.deuda?'neg':''}">${v.deuda?ptMon(v.deuda)+' — se suma a la meta final de hoy':'Sin deuda'}</div>
+    <label class="f">Vendido antes de empezar (a las ${ptHH(C[0][0])})</label><input class="t" data-ptini="${i}" inputmode="decimal" value="${v.ini??''}" placeholder="Se llena con la imagen de las ${ptHH(C[0][0])}" ${dis}>
     <div class="row2"><div><label class="f">Meta libre 1 (nombre)</label><input class="t" data-ptx="${i}|0" value="${esc(v.extras[0])}" placeholder="Ej.: licuadoras" ${dis}></div><div><label class="f">Meta libre 2 (nombre)</label><input class="t" data-ptx="${i}|1" value="${esc(v.extras[1])}" placeholder="Ej.: sartenes" ${dis}></div></div>
     ${C.map(([a,b],j)=>`<details class="ptp ${j===now?'now':''}" ${(now<0||j===now||j===now-1)?'open':''}><summary>${ptHH(a)} → ${ptHH(b)}${j===now?' <span class="ptya">AHORA</span>':''}${j===C.length-1?' <span class="ptcz">CIERRE</span>':''}<span class="ptsum" data-ptsum="${i}|${j}"></span></summary>
       <table class="ptt"><tr><th></th><th>Meta hasta ${ptHH(b)}</th><th>Vendido a las ${ptHH(b)}</th><th>Dif.</th></tr>
       ${K.map(k=>`<tr><td>${esc(L[k])}</td><td><input data-ptm="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].meta[k]??''}" ${dis}></td><td><input data-ptr="${i}|${j}|${k}" inputmode="decimal" value="${v.per[j].real[k]??''}" ${dis}></td><td class="ptd" data-ptd="${i}|${j}|${k}"></td></tr>`).join('')}</table>
       <div class="ptmsg" data-ptmsg="${i}|${j}"></div></details>`).join('')}
     <div class="ptfin" data-ptfin="${i}"></div></div>`}).join('')||`<div class="card"><p class="desc" style="margin:0">Agrega a los vendedores que participan hoy${ed?' con el botón de abajo':''}.</p></div>`;
-  $('ptAdd').classList.toggle('hidden',!ed);
+  $('ptAdd').classList.toggle('hidden',!ed);$('ptFotoW').classList.toggle('hidden',!ed);
   $('ptBorrarDia').classList.toggle('hidden',!(ROL()==='admin'||ROL()==='local')||!PT.all.some(r=>r.id===rec.id));
   ptCalc();
 }
@@ -2923,6 +2929,7 @@ function ptCalc(){
 }
 document.addEventListener('change',e=>{const el=e.target,rec=PT.rec;if(!rec||!el.closest||!el.closest('#view-pare'))return;
   if(el.dataset.ptx){const[i,n]=el.dataset.ptx.split('|').map(Number);rec.vend[i].extras[n]=el.value.trim();ptGuardar();ptRender();return}
+  if(el.dataset.ptini!=null){const v=rec.vend[+el.dataset.ptini],n=ptNum(el.value);if(n==null)delete v.ini;else{v.ini=n;v.hr=v.hr||{};if(!v.hr.ini)v.hr.ini=new Date().toISOString();ptMarcar(rec,'ini')}el.value=n??'';ptGuardar();ptCalc();return}
   const a=el.dataset.ptm||el.dataset.ptr;if(!a)return;const[i,j,k]=a.split('|');const v=rec.vend[+i],p=v.per[+j];let n=ptNum(el.value);
   if(el.dataset.ptm){const mn=ptMinMeta(v,+j,k);if(n!=null&&mn!=null&&n<=mn){n=mn+1;toast(`La meta siempre debe subir: tiene que ser mayor a ${ptFmt(k,mn)}. Se ajustó a ${ptFmt(k,n)}.`,5000)}
     if(n==null)delete p.meta[k];else p.meta[k]=n}
@@ -2942,11 +2949,85 @@ $('ptAdd').onclick=()=>{const rec=PT.rec,ya=new Set(rec.vend.map(v=>v.pid));cons
   $('usOk').onclick=()=>{const sel=[...document.querySelectorAll('.ptSel:checked')].map(x=>x.value);
     sel.forEach(id=>{const x=CONF.personas.find(o=>o.id===id);rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]})});
     ptAlinear(rec);$('mUser').classList.remove('show');if(sel.length){ptGuardar();ptRender()}}};
+
+// ---- Leer la imagen del reporte de ventas (OCR en el celular, gratis) ----
+const OCR_JS='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';let OCR_W=null,OCR_PROG=()=>{};
+async function ocrTexto(canvas){
+  if(!window.Tesseract)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src=OCR_JS;sc.onload=ok;sc.onerror=()=>ko(new Error('No se pudo descargar el lector de imágenes. Revisa el internet e inténtalo otra vez.'));document.head.appendChild(sc)});
+  if(!OCR_W){OCR_W=await Tesseract.createWorker('spa',1,{logger:m=>{if(m.status==='recognizing text')OCR_PROG(Math.round(m.progress*100))}});await OCR_W.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'})}
+  const r=await OCR_W.recognize(canvas);return r.data.text}
+// Limpia la imagen: blanco y negro, sin colores de fondo ni líneas de la tabla
+function ocrPreparar(img){const sc=img.width<1300?2:img.width>2600?.66:1,W=Math.round(img.width*sc),H=Math.round(img.height*sc);
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(img,0,0,W,H);
+  const d=x.getImageData(0,0,W,H),p=d.data,b=new Uint8Array(W*H),rm=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++)b[i]=(.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2])<140?1:0;
+  const LH=Math.round(W/8),LV=Math.max(30,Math.round(W*.035));
+  for(let y=0;y<H;y++){let st=-1;for(let q=0;q<=W;q++){const v=q<W&&b[y*W+q];if(v&&st<0)st=q;if(!v&&st>=0){if(q-st>=LH)for(let k=st;k<q;k++)rm[y*W+k]=1;st=-1}}}
+  for(let q=0;q<W;q++){let st=-1;for(let y=0;y<=H;y++){const v=y<H&&b[y*W+q];if(v&&st<0)st=y;if(!v&&st>=0){if(y-st>=LV)for(let k=st;k<y;k++)rm[k*W+q]=1;st=-1}}}
+  for(let i=0;i<W*H;i++){const v=b[i]&&!rm[i]?0:255;p[i*4]=p[i*4+1]=p[i*4+2]=v;p[i*4+3]=255}
+  x.putImageData(d,0,0);return c}
+const ocrNorm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z ]/g,' ').replace(/\s+/g,' ').trim();
+function ocrLev(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let d=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){let pr=d[0];d[0]=i;for(let j=1;j<=n;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,pr+(a[i-1]===b[j-1]?0:1));pr=t}}return d[n]}
+function ocrSim(a,b){a=ocrNorm(a);b=ocrNorm(b);if(!a||!b)return 0;const r=1-ocrLev(a,b)/Math.max(a.length,b.length);
+  const A=a.split(' '),B=b.split(' ');let hit=0;A.forEach(t=>{if(B.some(u=>t.length>1&&u.length>1&&1-ocrLev(t,u)/Math.max(t.length,u.length)>=.75))hit++});
+  return Math.max(r,hit/Math.max(A.length,B.length))}
+function ocrNum(t){t=t.replace(/[\s$S]/g,'');const neg=/-/.test(t);t=t.replace(/-/g,'');const m=t.match(/^(\d{1,3}(?:[.,]\d{3})*|\d+)([.,]\d{2})$/);if(!m)return null;return (neg?-1:1)*parseFloat(m[1].replace(/[.,]/g,'')+'.'+m[2].slice(1))}
+const OCR_NO=/^(VENDEDOR|TOTAL|PPTO|VENTA|DIFERENCIA|CUMPLIMIENTO|ARTICULO|PRODUCTO|TICKET|FACTURA|CONVERSION|VISITA)/;
+function ocrLeer(txt){const out={fecha:null,tienda:null,filas:[]};const L=String(txt).split(/\n/).map(l=>l.trim()).filter(Boolean);
+  for(const l of L){const f=l.match(/(\d{1,2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(20\d{2})/);if(f){out.fecha=`${f[3]}-${pad(+f[2])}-${pad(+f[1])}`;break}}
+  const T=tiendasAct();let best=0;L.slice(0,4).forEach(l=>T.forEach(t=>{const x=ocrSim(l,t);if(x>best&&x>=.6){best=x;out.tienda=t}}));
+  for(const l of L){const k=l.search(/[\d$]/);if(k<1)continue;const nom=ocrNorm(l.slice(0,k));if(nom.replace(/ /g,'').length<4||OCR_NO.test(nom))continue;
+    const nums=(l.slice(k).match(/-?\s*[$S]?\s*-?\s*\d[\d.,]*[.,]\d{2}(?!\d)/g)||[]).map(ocrNum).filter(n=>n!=null);if(!nums.length)continue;
+    const pc=(l.match(/(\d{1,4})\s*%/)||[])[1];let ppto=null,venta,ok=false;
+    if(nums.length>=2){ppto=nums[0];venta=nums[1];ok=(nums[2]!=null&&Math.abs(Math.abs(venta-ppto)-Math.abs(nums[2]))<1.01)||(pc!=null&&ppto>0&&Math.abs(Math.round(venta/ppto*100)-+pc)<=1)}else venta=nums[0];
+    out.filas.push({nombre:nom,venta:Math.abs(venta),ppto,ok})}
+  return out}
+function ocrCorteAuto(rec){const C=ptCortes(rec.cfg),d=new Date(),h=d.getHours()+d.getMinutes()/60;if(rec.fecha!==hoyISO())return 'ini';let j=-1;C.forEach(([a,b],i)=>{if(h>=b-.75)j=i});return j<0?'ini':j}
+$('ptFoto').onclick=()=>{$('ptFotoIn').value='';$('ptFotoIn').click()};
+$('ptFotoIn').onchange=async()=>{const f=$('ptFotoIn').files[0];if(!f)return;const rec=PT.rec;
+  $('usTit').textContent='📷 Leyendo la imagen…';$('usErr').textContent='';$('usOk').disabled=true;$('usOk').textContent='Guardar ventas';
+  $('usBody').innerHTML='<p class="desc" id="ocrEst">Preparando la imagen…</p><div class="ocrbar"><i id="ocrBar"></i></div><p class="desc">La primera vez tarda un poco más porque descarga el lector (solo una vez).</p>';$('mUser').classList.add('show');
+  OCR_PROG=n=>{if($('ocrBar'))$('ocrBar').style.width=n+'%';if($('ocrEst'))$('ocrEst').textContent='Leyendo los números… '+n+'%'};
+  let R;try{const img=await new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('No se pudo abrir la imagen.'));im.src=URL.createObjectURL(f)});
+    if($('ocrEst'))$('ocrEst').textContent='Descargando el lector…';R=ocrLeer(await ocrTexto(ocrPreparar(img)))}catch(x){$('usTit').textContent='📷 No se pudo leer';$('usBody').innerHTML=`<p>${esc(x.message||x)}</p>`;return}
+  ocrMostrar(rec,R)};
+function ocrMostrar(rec,R){const C=ptCortes(rec.cfg);
+  if(!R.filas.length){$('usTit').textContent='📷 No encontré vendedores';$('usBody').innerHTML='<p>No pude leer la tabla de vendedores. Usa una captura de pantalla clara del reporte (no una foto a la pantalla) e inténtalo otra vez.</p>';return}
+  const cand=[...rec.vend.map((v,i)=>({k:'v'+i,n:v.nombre})),...ptVendedores(rec.tienda).filter(x=>!rec.vend.some(v=>v.pid===x.id)).map(x=>({k:'p'+x.id,n:nomPer(x),nuevo:1}))];
+  const usados=new Set();
+  const F=R.filas.map(r=>{let b=null,bs=0;cand.forEach(c=>{if(usados.has(c.k))return;const x=ocrSim(r.nombre,c.n);if(x>bs){bs=x;b=c}});if(bs<.6)b=null;if(b)usados.add(b.k);return{...r,dest:b?b.k:''}});
+  const auto=ocrCorteAuto(rec);
+  const ops=[['ini',`Vendido antes de empezar (${ptHH(C[0][0])})`],...C.map(([a,b],j)=>[j,`Vendido a las ${ptHH(b)}${j===C.length-1?' (cierre)':''}`])];
+  const avF=R.fecha?(R.fecha===rec.fecha?`<p class="ocrok">📅 Fecha de la imagen: ${fmtFecha(R.fecha+'T12:00')} ✓</p>`:`<p class="ocrmal">⚠️ La imagen es del <b>${fmtFecha(R.fecha+'T12:00')}</b> y el pare técnico es del <b>${fmtFecha(rec.fecha+'T12:00')}</b>. Revisa que sea la imagen correcta.</p>`):'<p class="ocrmal">⚠️ No pude leer la fecha de la imagen.</p>';
+  const avT=R.tienda&&R.tienda!==rec.tienda?`<p class="ocrmal">⚠️ La imagen parece de <b>${esc(R.tienda)}</b>, no de ${esc(rec.tienda)}.</p>`:'';
+  const opV=sel=>`<option value="">— No registrar —</option>`+cand.map(c=>`<option value="${c.k}" ${c.k===sel?'selected':''}>${esc(c.n)}${c.nuevo?' (agregar al pare)':''}</option>`).join('');
+  const falt=rec.vend.filter((v,i)=>!F.some(r=>r.dest==='v'+i)).map(v=>v.nombre);
+  $('usTit').textContent='📷 Ventas leídas de la imagen';
+  $('usBody').innerHTML=`${avF}${avT}<label class="f">Registrar como</label><select class="t" id="ocrCorte">${ops.map(([v,l])=>`<option value="${v}" ${String(v)===String(auto)?'selected':''}>${l}</option>`).join('')}</select>
+    <p class="desc" style="margin:10px 0 4px">Revisa que cada número sea igual al de la imagen. Si alguno está mal, corrígelo aquí.</p>
+    ${F.map((r,n)=>`<div class="ocrf"><div class="ocrn">${esc(r.nombre)}${r.ok?'':' <span class="ocrmal" style="display:inline">⚠️ revisa</span>'}</div><div class="row2" style="grid-template-columns:1.3fr 1fr"><select class="t" data-ocrd="${n}">${opV(r.dest)}</select><input class="t" data-ocrv="${n}" inputmode="decimal" value="${r.venta.toFixed(2)}"></div></div>`).join('')}
+    ${falt.length?`<p class="desc">No aparecen en la imagen: ${falt.map(esc).join(', ')}</p>`:''}<p class="ocrmal hidden" id="ocrAv"></p>`;
+  $('usOk').disabled=false;
+  const revisar=()=>{const k=$('ocrCorte').value;let iguales=0,baja=[],n=0;F.forEach((r,q)=>{const d=document.querySelector(`[data-ocrd="${q}"]`).value,val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||!d.startsWith('v')||val==null)return;const v=rec.vend[+d.slice(1)];n++;
+      let prev=v.ini??null;if(k!=='ini')for(let j=0;j<+k;j++){const x=v.per[j]&&v.per[j].real.v;if(x!=null)prev=x}
+      if(prev!=null&&k!=='ini'&&Math.abs(prev-val)<.005)iguales++;if(prev!=null&&val<prev-.005)baja.push(v.nombre)});
+    const m=[];if(n&&iguales===n)m.push('Los valores son iguales a los del corte anterior. ¿Es la imagen nueva?');if(baja.length)m.push('La venta no puede bajar durante el día: revisa '+baja.join(', ')+'.');
+    $('ocrAv').innerHTML=m.map(x=>'⚠️ '+x).join('<br>');$('ocrAv').classList.toggle('hidden',!m.length)};
+  $('ocrCorte').onchange=revisar;document.querySelectorAll('[data-ocrv],[data-ocrd]').forEach(e=>e.onchange=revisar);revisar();
+  $('usOk').onclick=()=>{const k=$('ocrCorte').value,ahora=new Date().toISOString(),key=k==='ini'?'ini':'r'+k;let n=0;
+    F.forEach((r,q)=>{let d=document.querySelector(`[data-ocrd="${q}"]`).value;const val=ptNum(document.querySelector(`[data-ocrv="${q}"]`).value);if(!d||val==null)return;
+      if(d.startsWith('p')){const id=d.slice(1),x=CONF.personas.find(o=>o.id===id);if(!x)return;rec.vend.push({pid:id,nombre:nomPer(x)||x.nombres,deuda:ptDeudaDe(rec.tienda,rec.fecha,id),extras:['',''],per:[]});ptAlinear(rec);d='v'+(rec.vend.length-1)}
+      const v=rec.vend[+d.slice(1)];if(!v)return;if(k==='ini')v.ini=val;else v.per[+k].real.v=val;v.hr=v.hr||{};if(!v.hr[key])v.hr[key]=ahora;n++});
+    if(!n){$('usErr').textContent='No hay ningún vendedor asignado.';return}
+    ptMarcar(rec,key);rec.cargas=rec.cargas||[];rec.cargas.push({h:ahora,corte:key,n,fecha:R.fecha||'',fuente:'imagen'});
+    $('mUser').classList.remove('show');ptGuardar();ptRender();
+    const sig=k==='ini'?0:+k+1;toast(sig<C.length?`✓ Ventas de ${n} vendedor(es) cargadas. Ahora pon la nueva meta hasta las ${ptHH(C[sig][1])}.`:`✓ Cierre cargado para ${n} vendedor(es).`,6000);
+    if(sig<C.length){const e=document.querySelector(`[data-ptm="0|${sig}|v"]`);if(e){const dt=e.closest('details');if(dt)dt.open=true;e.scrollIntoView({block:'center'});setTimeout(()=>e.focus(),300)}}}}
 // ---- Hoja imprimible (igual a la hoja física) ----
 // ---- Control de hora y ubicación del pare técnico ----
 function ptMarcar(rec,key){rec.reg=rec.reg||{};if(rec.reg[key])return;const s=getSes();const o={h:new Date().toISOString(),por:s?s.nombre:getEvaluador()};rec.reg[key]=o;
   getUbicacion().then(u=>{if(u&&!u.error){o.la=u.lat;o.lo=u.lon;o.p=u.precision}else o.ue=(u&&u.error)||'no disponible';if(PT.rec===rec)ptGuardar();else{rec.upd=Date.now();rec._sync=false;idbPut(rec)}})}
-function ptVentana(rec,key){const C=ptCortes(rec.cfg),j=+key.slice(1),c=C[j];if(!c)return null;const[a,b]=c,ult=j===C.length-1;return key[0]==='m'?[a-1,a+1]:ult?[b-1,b+2]:[b-.5,b+1.5]}
+function ptVentana(rec,key){const C=ptCortes(rec.cfg);if(key==='ini')return [C[0][0]-.5,C[0][0]+1];const j=+key.slice(1),c=C[j];if(!c)return null;const[a,b]=c,ult=j===C.length-1;return key[0]==='m'?[a-1,a+1]:ult?[b-1,b+2]:[b-.5,b+1.5]}
 function ptEstadoH(rec,key,iso){if(!iso)return null;const d=new Date(iso);if(diaLocal(iso)!==rec.fecha)return'otro día';const w=ptVentana(rec,key);if(!w)return'ok';const h=d.getHours()+d.getMinutes()/60;return h<w[0]?'antes':h>w[1]?'tarde':'ok'}
 function ptEstado(rec,key){const g=(rec.reg||{})[key];if(!g)return null;const d=new Date(g.h);if(diaLocal(g.h)!==rec.fecha)return'otro día';const w=ptVentana(rec,key);if(!w)return'ok';const h=d.getHours()+d.getMinutes()/60;return h<w[0]?'antes':h>w[1]?'tarde':'ok'}
 function ptVerif(rec){const k=Object.keys(rec.reg||{});return{n:k.length,ok:k.filter(x=>ptEstado(rec,x)==='ok').length,gps:k.some(x=>rec.reg[x].la!=null)}}
@@ -2958,9 +3039,10 @@ function ptQR(rec){const R=ptResumen(rec),G=rec.reg||{};const C=ptCortes(rec.cfg
   const d={k:'p',id:rec.id,t:rec.tienda,f:rec.fecha,v:rec.por||'',n:R.p,vc:R.ok+'/'+R.n,c:C.map(([a,b],j)=>ptHH(a)+'-'+(j===C.length-1?'cierre':ptHH(b))),r};
   return APP_BASE+'verificar.html#'+b64url(JSON.stringify(d))}
 function ptHr(rec,v,key){const t=(v.hr||{})[key];if(!t)return'';const d=new Date(t),e=ptEstadoH(rec,key,t);return `<br><small class="pthr ${e==='ok'?'':'neg'}">🕐${pad(d.getHours())}:${pad(d.getMinutes())}${e==='ok'?'':' '+(e==='otro día'?fmtFecha(t).slice(0,5):e)}</small>`}
+function ptIniHTML(rec,v){return v.ini!=null?`<br><small style="font-weight:400">Inicio: ${ptMon(v.ini)}</small>${ptHr(rec,v,'ini')}`:''}
 function ptHoja(rec){const C=ptCortes(rec.cfg);
   const filas=rec.vend.map(v=>{const L=ptLabels(v),K=ptActivos(v);const d=ptDif(v);
-    return K.map((k,ri)=>`<tr${ri===0?' class="top"':''}>${ri===0?`<td rowspan="${K.length}" class="nom">${esc(v.nombre)}${v.deuda?`<br><small>Deuda ant.: ${ptMon(v.deuda)}</small>`:''}</td>`:''}
+    return K.map((k,ri)=>`<tr${ri===0?' class="top"':''}>${ri===0?`<td rowspan="${K.length}" class="nom">${esc(v.nombre)}${v.deuda?`<br><small>Deuda ant.: ${ptMon(v.deuda)}</small>`:''}${ptIniHTML(rec,v)}</td>`:''}
       ${C.map((c,j)=>`<td class="lb">${esc(L[k])}</td><td>${ptFmt(k,v.per[j].meta[k])}${ri===0?ptHr(rec,v,'m'+j):''}</td><td>${ptFmt(k,v.per[j].real[k])}${ri===0?ptHr(rec,v,'r'+j):''}</td>`).join('')}
       ${ri===0?`<td rowspan="${K.length}">${ptMon(ptObjTotal(v))}</td><td rowspan="${K.length}">${ptMon(ptCierre(v,'v'))}</td><td rowspan="${K.length}" class="${d==null?'':d>=0?'pos':'neg'}">${d==null?'—':(d>=0?'+':'-')+ptMon(Math.abs(d))}</td>`:''}</tr>`).join('')}).join('');
   return `<div class="pth"><div class="ptbrand">Gestión Tiendas</div><div>Fecha: <b>${fmtFecha(rec.fecha+'T12:00')}</b> · Tienda: <b>${esc(rec.tienda)}</b></div></div>
@@ -3500,7 +3582,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v22';
+let TREE0=[],ESTADOS={};const VERSION_APP='v23';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;
