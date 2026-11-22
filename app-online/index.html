@@ -205,7 +205,7 @@ nav.tabs button{font-size:12px;line-height:1.25;padding:8px 2px}
 <body>
 <div id="bRespaldo" class="hidden no-print" style="position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#1f2a1f;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:620px;margin:auto"></div>
 <header class="top">
-  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v32</b></div></div>
+  <div><div class="brand">Gestión Tiendas</div><div class="sub"><span id="hdrSub">Evaluación de Administradores de Tienda</span> · <b>v33</b></div></div>
   <div class="sp"></div>
   <button id="btnCel" title="Abrir en celular">📱 Celular</button>
 </header>
@@ -3019,10 +3019,17 @@ const OCR_NO=/^(VENDEDOR|TOTAL|PPTO|VENTA|DIFERENCIA|CUMPLIMIENTO|ARTICULO|PRODU
 function ocrLeer(txt){const out={fecha:null,tienda:null,filas:[]};const L=String(txt).split(/\n/).map(l=>l.trim()).filter(Boolean);
   for(const l of L){const f=l.match(/(\d{1,2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(20\d{2})/);if(f){out.fecha=`${f[3]}-${pad(+f[2])}-${pad(+f[1])}`;break}}
   const T=tiendasAct();let best=0;L.slice(0,4).forEach(l=>T.forEach(t=>{const x=ocrSim(l,t);if(x>best&&x>=.6){best=x;out.tienda=t}}));
+  const conPpto=L.some(l=>/PPTO|PRESUPUESTO/i.test(l));
   for(const l of L){const k=l.search(/[\d$]/);if(k<1)continue;const nom=ocrNorm(l.slice(0,k));if(nom.replace(/ /g,'').length<4||OCR_NO.test(nom))continue;
     const nums=(l.slice(k).match(/-?\s*[$S]?\s*-?\s*\d[\d.,]*[.,]\d{2}(?!\d)/g)||[]).map(ocrNum).filter(n=>n!=null);if(!nums.length)continue;
     const pc=(l.match(/(\d{1,4})\s*%/)||[])[1];let ppto=null,venta,ok=false;
-    if(nums.length>=2){ppto=nums[0];venta=nums[1];ok=(nums[2]!=null&&Math.abs(Math.abs(venta-ppto)-Math.abs(nums[2]))<1.01)||(pc!=null&&ppto>0&&Math.abs(Math.round(venta/ppto*100)-+pc)<=1)}else venta=nums[0];
+    // El presupuesto NUNCA se usa como venta. Si la celda de venta está vacía ("$ -"), la venta es 0.
+    if(!conPpto){venta=nums[0];ok=true}
+    else{ppto=nums[0];
+      if(nums.length>=3){venta=nums[1];ok=Math.abs(Math.abs(venta-ppto)-Math.abs(nums[2]))<1.01||(pc!=null&&ppto>0&&Math.abs(Math.round(venta/ppto*100)-+pc)<=1)}
+      else if(nums.length===2){const d=nums[1];const sinVenta=(pc!=null&&+pc===0)||(Math.abs(Math.abs(d)-ppto)<.01&&(d<0||/-\s*[$S]?\s*[\d]/.test(l.slice(k))));
+        if(sinVenta){venta=0;ok=true}else{venta=d;ok=pc!=null&&ppto>0&&Math.abs(Math.round(venta/ppto*100)-+pc)<=1}}
+      else{venta=0;ok=pc==null||+pc===0}}
     out.filas.push({nombre:nom,venta:Math.abs(venta),ppto,ok})}
   return out}
 function ocrCorteAuto(rec){const C=ptCortes(rec.cfg),d=new Date(),h=d.getHours()+d.getMinutes()/60;if(rec.fecha!==hoyISO())return 'ini';let j=-1;C.forEach(([a,b],i)=>{if(h>=b-.75)j=i});return j<0?'ini':j}
@@ -3639,7 +3646,7 @@ async function aplicarBorrados(tree,repo){const it=tree.find(x=>x.path===BORR_PA
   try{const g=await gh('/git/blobs/'+it.sha,null,repo);if(!g.ok)return;const ids=JSON.parse(utf8b64((await g.json()).content)).ids||[];BORRADOS=new Set(ids);await kvSet('borrados',ids);await kvSet('borradosSha',it.sha);
     for(const e of await idbAll())if(BORRADOS.has(e.id))await idbDel(e.id)}catch(e){}}
 // ---------------- Señal de sincronización de cada usuario ----------------
-let TREE0=[],ESTADOS={};const VERSION_APP='v32';
+let TREE0=[],ESTADOS={};const VERSION_APP='v33';
 async function senalSync(tree){
   const s=getSes();if(!s||!s.usuario)return;
   const todos=await idbAll();const mios=visibles(todos);const pend=todos.filter(e=>!e._sync).length;

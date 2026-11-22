@@ -1,5 +1,5 @@
 // Funciona sin internet: guarda la app en el celular y se actualiza cuando hay conexión.
-const C='evaluacion-v34';
+const C='evaluacion-v35';
 const F=['./','./index.html','./verificar.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim()});
