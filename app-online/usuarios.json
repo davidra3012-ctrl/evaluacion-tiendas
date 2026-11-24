@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-23T20:56:47.956Z",
+ "actualizado": "2026-11-24T14:08:48.817Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -78,6 +78,23 @@
     "iter": 310000,
     "ct": "pW7X6FztnmZbxpPZ1hP6sIxrDtQ4QUvFWnFzwbUTnBhjhw3hVryLTRf1CK1dqH64YqxWh6TB2ijHcIAahbAVQ98ZS/mZrYwCRr79kiajdeq5i2aN/wy624HD+dXFNvGSieHZmB+4KWbyJeU7ug=="
    }
+  },
+  {
+   "usuario": "gabrielaromero",
+   "personaId": "p-mwursvpfmz1e",
+   "nombre": "GABRIELA ROMERO",
+   "rol": "responsable",
+   "tiendas": [
+    "Tienda Mabel"
+   ],
+   "upd": 1795529327267,
+   "cred": {
+    "salt": "XWFgkrqOn520ExbtO+bi+A==",
+    "iv": "Zv4sPpvs1lQIj5hz",
+    "iter": 310000,
+    "ct": "P6/w3WByn0ro/b/ODIeBTkkf9GLvWDEz12W3LLbJrz067nLSpqKICENWRAYdTd/58yG+btx4HBJRhRCKYPQOvBRwsx0tJJniMt22z+PXs+THPNInBTSoWlR1JPP7XdZmdJTvW7F77hIZefDeLw=="
+   },
+   "cambiar": true
   }
  ]
 }
