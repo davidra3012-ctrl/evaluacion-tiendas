@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-24T14:08:48.817Z",
+ "actualizado": "2026-11-26T17:15:55.910Z",
  "usuarios": [
   {
    "usuario": "davidrodriguez",
@@ -87,14 +87,13 @@
    "tiendas": [
     "Tienda Mabel"
    ],
-   "upd": 1795529327267,
+   "upd": 1795713355910,
    "cred": {
-    "salt": "XWFgkrqOn520ExbtO+bi+A==",
-    "iv": "Zv4sPpvs1lQIj5hz",
+    "salt": "y5xB+YJKLF3f2nS/SrC/4Q==",
+    "iv": "W4QaXFB7MTBPcYNp",
     "iter": 310000,
-    "ct": "P6/w3WByn0ro/b/ODIeBTkkf9GLvWDEz12W3LLbJrz067nLSpqKICENWRAYdTd/58yG+btx4HBJRhRCKYPQOvBRwsx0tJJniMt22z+PXs+THPNInBTSoWlR1JPP7XdZmdJTvW7F77hIZefDeLw=="
-   },
-   "cambiar": true
+    "ct": "C+Zsdkcc7yHPPIWzVBIgOE1bRq6mT7flUBVpJCkxcZsG4BEuNeJd5Dvos5AOxJUyseltqUFWPAkghvyhIsKXFP3GQau6Ub4qVYgyscuoFlx4lIChmgWOU/0WP56yWJahqBwHXJVmmFcWNOEkEQ=="
+   }
   }
  ]
 }
